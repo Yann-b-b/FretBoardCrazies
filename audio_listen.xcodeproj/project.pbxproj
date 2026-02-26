@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		C8FEA8492F4E604E00CDD077 /* AudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = C8FEA8482F4E604E00CDD077 /* AudioKit */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		C8FEA82B2F4E578400CDD077 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C8FEA8492F4E604E00CDD077 /* AudioKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = audio_listen;
 			packageProductDependencies = (
+				C8FEA8482F4E604E00CDD077 /* AudioKit */,
 			);
 			productName = audio_listen;
 			productReference = C8FEA8192F4E578200CDD077 /* audio_listen.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = C8FEA8102F4E578200CDD077;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C8FEA8472F4E604E00CDD077 /* XCRemoteSwiftPackageReference "AudioKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C8FEA81A2F4E578200CDD077 /* Products */;
 			projectDirPath = "";
@@ -394,6 +403,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"audio_listen/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app listens to your guitar to detect notes for the game.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -431,6 +441,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"audio_listen/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app listens to your guitar to detect notes for the game.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -583,6 +594,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C8FEA8472F4E604E00CDD077 /* XCRemoteSwiftPackageReference "AudioKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AudioKit/AudioKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.6.5;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C8FEA8482F4E604E00CDD077 /* AudioKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C8FEA8472F4E604E00CDD077 /* XCRemoteSwiftPackageReference "AudioKit" */;
+			productName = AudioKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C8FEA8112F4E578200CDD077 /* Project object */;
 }
