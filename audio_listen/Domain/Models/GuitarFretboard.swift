@@ -31,12 +31,21 @@ struct GuitarFretboard {
     
     /// All (string, fret) positions that produce the given note.
     static func positions(for note: Note) -> [FretPosition] {
+        let targetMidi = note.midiNumber
         var result: [FretPosition] = []
+
+        // loop through all strings and frets and check if note is at that position
         for string in 1...6 {
-            for fret in 0...fretCount {
-                if let n = self.note(at: string, fret: fret), n == note {
-                    result.append(FretPosition(string: string, fret: fret))
-                }
+
+
+
+            //get midi number of the base note for the string
+            let baseMidi = standardTuning[string-1].midiNumber 
+
+            let fret = targetMidi - baseMidi
+
+            if fret >= 0 && fret <= fretCount {
+                result.append(FretPosition(string: string, fret: fret))
             }
         }
         return result
