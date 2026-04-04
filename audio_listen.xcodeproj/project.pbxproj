@@ -410,6 +410,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"audio_listen/Preview Content\"";
+				DEVELOPMENT_TEAM = M8T92F2RKH;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app listens to your guitar to detect notes for the game.";
@@ -449,6 +450,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"audio_listen/Preview Content\"";
+				DEVELOPMENT_TEAM = M8T92F2RKH;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app listens to your guitar to detect notes for the game.";

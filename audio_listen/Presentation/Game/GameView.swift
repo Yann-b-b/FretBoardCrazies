@@ -65,10 +65,6 @@ struct GameView: View {
                     .foregroundStyle(.secondary)
             }
 
-            if let averages = viewModel.lastEndedGameNoteAverages {
-                GameSessionMetricsView(averages: averages)
-            }
-
             Button("Start") {
                 viewModel.startGame()
             }

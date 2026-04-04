@@ -10,9 +10,8 @@ import Foundation
 /// Repository implementation using UserDefaults.
 final class UserDefaultsScoreRepository: ScoreRepositoryProtocol {
     private let key = "audio_listen_game_rounds"
-    /// Cap on stored rounds; raise when metrics need longer history.
     private let maxStored = 100
-    
+
     func save(round: GameRound) {
         var rounds = loadRounds()
         rounds.append(round)
@@ -21,7 +20,7 @@ final class UserDefaultsScoreRepository: ScoreRepositoryProtocol {
         }
         saveRounds(rounds)
     }
-    
+
     func bestTimes() -> [Note: TimeInterval] {
         let rounds = loadRounds()
         var best: [Note: TimeInterval] = [:]
@@ -33,7 +32,7 @@ final class UserDefaultsScoreRepository: ScoreRepositoryProtocol {
         }
         return best
     }
-    
+
     func averageTime(forRounds count: Int) -> TimeInterval? {
         let rounds = Array(loadRounds().suffix(count))
         guard !rounds.isEmpty else { return nil }
@@ -41,10 +40,6 @@ final class UserDefaultsScoreRepository: ScoreRepositoryProtocol {
         return sum / Double(rounds.count)
     }
 
-    func averageWrongAttemptsByTargetNote() -> [Note: Double] {
-        NoteMetrics.averageWrongAttemptsPerTargetNote(rounds: loadRounds())
-    }
-    
     private func loadRounds() -> [GameRound] {
         guard let data = UserDefaults.standard.data(forKey: key),
               let decoded = try? JSONDecoder().decode([PersistedGameRound].self, from: data) else {
@@ -69,7 +64,6 @@ struct PersistedGameRound: Codable {
     let targetFret: Int
     let reactionTime: TimeInterval
     let playedAt: Date?
-    let wrongAttemptsBeforeSuccess: Int?
 
     init(from round: GameRound) {
         targetNoteNameRawValue = round.targetNote.name.rawValue
@@ -78,7 +72,6 @@ struct PersistedGameRound: Codable {
         targetFret = round.targetPosition.fret
         reactionTime = round.reactionTime
         playedAt = round.playedAt
-        wrongAttemptsBeforeSuccess = round.wrongAttemptsBeforeSuccess
     }
 
     func toGameRound() -> GameRound {
@@ -89,8 +82,7 @@ struct PersistedGameRound: Codable {
             targetNote: note,
             targetPosition: position,
             reactionTime: reactionTime,
-            playedAt: playedAt ?? .distantPast,
-            wrongAttemptsBeforeSuccess: wrongAttemptsBeforeSuccess ?? 0
+            playedAt: playedAt ?? .distantPast
         )
     }
 }

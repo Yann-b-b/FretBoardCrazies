@@ -88,56 +88,6 @@ struct GameTargetPromptTests {
     }
 }
 
-// MARK: - WrongAttemptCounter
-
-struct WrongAttemptCounterTests {
-    @Test func countsDistinctWrongNotesOnceEach() {
-        var c = WrongAttemptCounter()
-        let target = Note(.c, octave: 4)
-        c.registerDetection(target: target, detected: Note(.d, octave: 4))
-        #expect(c.wrongAttemptsBeforeSuccess == 1)
-        c.registerDetection(target: target, detected: Note(.d, octave: 4))
-        #expect(c.wrongAttemptsBeforeSuccess == 1)
-        c.registerDetection(target: target, detected: Note(.e, octave: 4))
-        #expect(c.wrongAttemptsBeforeSuccess == 2)
-    }
-
-    @Test func ignoresCorrectDetection() {
-        var c = WrongAttemptCounter()
-        let target = Note(.g, octave: 3)
-        c.registerDetection(target: target, detected: target)
-        #expect(c.wrongAttemptsBeforeSuccess == 0)
-    }
-
-    @Test func resetClears() {
-        var c = WrongAttemptCounter()
-        c.registerDetection(target: Note(.a, octave: 4), detected: Note(.b, octave: 4))
-        c.reset()
-        #expect(c.wrongAttemptsBeforeSuccess == 0)
-    }
-}
-
-// MARK: - NoteMetrics
-
-struct NoteMetricsTests {
-    @Test func emptyRoundsYieldsEmptyAverages() {
-        #expect(NoteMetrics.averageWrongAttemptsPerTargetNote(rounds: []).isEmpty)
-    }
-
-    @Test func averagesWrongAttemptsPerTargetNote() {
-        let n1 = Note(.c, octave: 4)
-        let n2 = Note(.d, octave: 4)
-        let rounds = [
-            GameRound(targetNote: n1, targetPosition: FretPosition(string: 2, fret: 1), reactionTime: 1, playedAt: Date(), wrongAttemptsBeforeSuccess: 2),
-            GameRound(targetNote: n1, targetPosition: FretPosition(string: 3, fret: 0), reactionTime: 1, playedAt: Date(), wrongAttemptsBeforeSuccess: 4),
-            GameRound(targetNote: n2, targetPosition: FretPosition(string: 3, fret: 2), reactionTime: 1, playedAt: Date(), wrongAttemptsBeforeSuccess: 1)
-        ]
-        let avg = NoteMetrics.averageWrongAttemptsPerTargetNote(rounds: rounds)
-        #expect(avg[n1] == 3.0)
-        #expect(avg[n2] == 1.0)
-    }
-}
-
 // MARK: - PersistedGameRound / playedAt migration
 
 struct PersistedGameRoundTests {
@@ -151,7 +101,6 @@ struct PersistedGameRoundTests {
         #expect(round.playedAt == .distantPast)
         #expect(round.targetNote == Note(.e, octave: 4))
         #expect(round.reactionTime == 1.2)
-        #expect(round.wrongAttemptsBeforeSuccess == 0)
     }
 
     @Test func roundTripPreservesPlayedAt() throws {
@@ -169,20 +118,6 @@ struct PersistedGameRoundTests {
         #expect(restored.targetNote == round.targetNote)
         #expect(restored.targetPosition == round.targetPosition)
         #expect(restored.reactionTime == round.reactionTime)
-        #expect(restored.wrongAttemptsBeforeSuccess == 0)
-    }
-
-    @Test func roundTripPreservesWrongAttempts() throws {
-        let round = GameRound(
-            targetNote: Note(.c, octave: 4),
-            targetPosition: FretPosition(string: 2, fret: 1),
-            reactionTime: 1.0,
-            playedAt: Date(),
-            wrongAttemptsBeforeSuccess: 4
-        )
-        let data = try JSONEncoder().encode([PersistedGameRound(from: round)])
-        let back = try JSONDecoder().decode([PersistedGameRound].self, from: data)
-        #expect(back[0].toGameRound().wrongAttemptsBeforeSuccess == 4)
     }
 }
 
