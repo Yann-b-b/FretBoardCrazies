@@ -16,16 +16,16 @@ final class AppDependencyContainer {
     private let scoreRepository: ScoreRepositoryProtocol
     
     private init() {
-        let adapter = AudioKitPitchAdapter(minAmplitude: 0.01)
-        pitchDetector = DebouncedPitchDetector(wrapping: adapter, stabilityDuration: 0.15)
+        let adapter = AudioKitPitchAdapter()
+        pitchDetector = DebouncedPitchDetector(wrapping: adapter, stabilityDuration: 0.10)
         noteGenerator = RandomNoteStrategy()
         scoreRepository = UserDefaultsScoreRepository()
     }
-    
+
     @MainActor
     func makeTunerViewModel() -> TunerViewModel {
-        let adapter = AudioKitPitchAdapter(minAmplitude: 0.01)
-        let detector = DebouncedPitchDetector(wrapping: adapter, stabilityDuration: 0.15)
+        let adapter = AudioKitPitchAdapter()
+        let detector = DebouncedPitchDetector(wrapping: adapter, stabilityDuration: 0.10)
         return TunerViewModel(pitchDetector: detector)
     }
     

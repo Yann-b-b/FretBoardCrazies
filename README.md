@@ -6,16 +6,17 @@
 
 - `Game`: prompts the player to find a target note and fret position, starts a timed round, and tracks whether the note was played correctly.
 - `Tuner`: listens to live microphone input and shows the detected note, frequency, and signal amplitude.
-- `Settings`: stores game and audio preferences such as countdown mode, timeout duration, and amplitude threshold.
+- `Settings`: countdown mode, timeout duration, **amplitude threshold** (used by pitch detection), and **“Limit targets to frets 0–12”** for the game.
 
 ## Tech Stack
 
 - `SwiftUI` for the app shell and screens
 - `Combine` for pitch event streams into view models
-- `AVFoundation` for microphone input
-- `Accelerate` for FFT-based frequency analysis
+- `AudioKit` (`5.6.5`+) and **`SoundpipeAudioKit`** (for **`PitchTap`**) via Swift Package Manager
+- `AVFoundation` / `AudioEngine` for microphone input (through AudioKit)
 - `Xcode` project + Apple test targets
-- `AudioKit` `5.6.5` pinned through Swift Package Manager
+
+Pitch is intended for **monophonic** use (one clear note at a time). Chords or multiple ringing strings may confuse the tracker.
 
 ## Repository Layout
 
@@ -37,7 +38,7 @@ FretBoardCrazies/
 
 - `Presentation/` contains the `Game`, `Tuner`, and `Settings` screens plus their view models.
 - `Domain/` contains app-level types such as notes, fret positions, pitch models, protocols, and game use cases.
-- `Infrastructure/` contains microphone capture, note conversion, debounce logic, random note generation, and `UserDefaults` persistence.
+- `Infrastructure/` contains pitch tracking (`AudioKitPitchAdapter`), note conversion, debounce logic, random note generation, and `UserDefaults` persistence.
 - `DI/` contains the composition root that wires concrete implementations into the app.
 
 ## Runtime Architecture
@@ -77,10 +78,9 @@ flowchart TD
     tunerVm --> detector
 
     detector --> pitchAdapter[AudioKitPitchAdapter]
-    pitchAdapter --> audioFacade[AudioInputFacade]
+    pitchAdapter --> audioEngine[AudioKit AudioEngine]
+    pitchAdapter --> pitchTap[SoundpipeAudioKit PitchTap]
     pitchAdapter --> noteConverter[NoteConverter]
-    audioFacade --> avAudioEngine[AVAudioEngine]
-    audioFacade --> fft[AccelerateFFT]
 
     settingsView --> appStorage[AppStorageUserDefaults]
     di --> userDefaults[UserDefaults]
@@ -98,15 +98,15 @@ flowchart TD
 
 `GameViewModel` coordinates the game loop:
 
-1. Generates a target note and fret position.
+1. Generates a target note and fret position (`RandomNoteStrategy`; optional **fret ≤ 12** filter from Settings).
 2. Moves through `idle`, `ready`, `countdown`, `playing`, `success`, and `timeout` using `GameStateMachine`.
 3. Starts microphone listening once the round begins.
-4. Validates detected notes against the target note.
+4. Validates detected notes against the target note (pitch class **and** octave; any string with that pitch counts as correct).
 5. Saves round results through `UserDefaultsScoreRepository`.
 
 #### Tuner Flow
 
-`TunerViewModel` subscribes to the same pitch detection pipeline and exposes:
+`TunerViewModel` subscribes to the pitch detection pipeline and exposes:
 
 - current note name
 - detected frequency in Hz
@@ -117,15 +117,17 @@ flowchart TD
 
 The audio pipeline is entirely local to the app:
 
-1. `AudioInputFacade` taps the microphone with `AVAudioEngine`.
-2. It computes RMS amplitude and runs an FFT with `Accelerate`.
-3. `AudioKitPitchAdapter` converts raw pitch data into `DetectedPitch` values.
-4. `NoteConverter` maps the dominant frequency to the nearest equal-tempered note.
-5. `DebouncedPitchDetector` only emits stable note detections so UI state is less noisy.
+1. `AudioKitPitchAdapter` configures an `AudioEngine`, routes the built-in input through a **silent** `Mixer` (volume 0) so the graph runs without feeding the speaker, and attaches **`PitchTap`** (Soundpipe / pitch tracker) to the input node.
+2. `PitchTap` callbacks provide per-buffer **frequency** and **amplitude** estimates (good fit for **single-note** guitar).
+3. `NoteConverter` maps frequency to the nearest equal-tempered note (`A4` = 440 Hz).
+4. `DebouncedPitchDetector` (~100 ms stability) emits when the same note is stable, reducing UI flicker.
+
+**Amplitude gate**: `AudioKitPitchAdapter` reads the `minAmplitude` value from `UserDefaults` (same key as the Settings slider) on each callback so changes apply without rebuilding the dependency container.
 
 ## Data And Configuration
 
 - Runtime settings are stored with `@AppStorage` and `UserDefaults`, not `.env` files.
+- Keys include `countdownEnabled`, `timeoutSeconds`, `minAmplitude`, and `limitFretsToTwelve`.
 - Game history is persisted in `UserDefaults` under the key `audio_listen_game_rounds`.
 - The project uses Xcode-managed build settings and SwiftPM dependency resolution.
 - The app requests microphone access and is configured for audio input in the Xcode project and entitlements.
@@ -144,15 +146,15 @@ The audio pipeline is entirely local to the app:
 3. Build and run on a simulator or physical device.
 4. Grant microphone permission when prompted.
 
-Swift Package dependencies should resolve automatically when the project opens.
+Swift Package dependencies (`AudioKit`, `SoundpipeAudioKit`, and their transitive packages) should resolve automatically when the project opens.
 
 ## Testing
 
-- `audio_listenTests` exists and currently contains a placeholder test using the `Testing` framework.
-- `audio_listenUITests` exists and currently contains mostly template launch coverage with `XCTest`.
-- Test scaffolding is present, but automated coverage is still minimal.
+- `audio_listenTests` uses the Swift **`Testing`** framework with coverage for `NoteConverter`, `GuitarFretboard` (including fret caps), `ValidateNoteUseCase`, and `DebouncedPitchDetector` (mock-backed).
+- Run tests in Xcode (**Product → Test**) or `xcodebuild test` with an appropriate destination.
+- `audio_listenUITests` still focuses mainly on launch coverage with `XCTest`.
 
 ## Notes
 
 - The repository is a single app project, not a monorepo and not a frontend/backend split.
-- One likely follow-up improvement: `SettingsView` persists `minAmplitude`, but the dependency container currently constructs detectors with a hardcoded `0.01` threshold.
+- `AudioKitPitchAdapter` is named for historical reasons; it now owns the AudioKit engine and **SoundpipeAudioKit** `PitchTap`, not a custom FFT peak detector.

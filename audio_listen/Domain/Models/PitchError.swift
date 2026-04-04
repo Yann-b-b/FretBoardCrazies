@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum PitchError: Error {
+enum PitchError: Error, Equatable {
     case belowThreshold
     case invalidFrequency
 }

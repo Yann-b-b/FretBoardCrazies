@@ -29,22 +29,16 @@ struct GuitarFretboard {
         return Note.from(midiNumber: midiOffset)
     }
     
-    /// All (string, fret) positions that produce the given note.
-    static func positions(for note: Note) -> [FretPosition] {
+    /// All (string, fret) positions that produce the given note, with frets capped at `maxFretInclusive` (e.g. 12 for first-position practice).
+    static func positions(for note: Note, maxFretInclusive: Int = fretCount) -> [FretPosition] {
         let targetMidi = note.midiNumber
         var result: [FretPosition] = []
+        let cap = min(maxFretInclusive, fretCount)
 
-        // loop through all strings and frets and check if note is at that position
         for string in 1...6 {
-
-
-
-            //get midi number of the base note for the string
-            let baseMidi = standardTuning[string-1].midiNumber 
-
+            let baseMidi = standardTuning[string - 1].midiNumber
             let fret = targetMidi - baseMidi
-
-            if fret >= 0 && fret <= fretCount {
+            if fret >= 0 && fret <= cap {
                 result.append(FretPosition(string: string, fret: fret))
             }
         }

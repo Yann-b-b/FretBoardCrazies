@@ -11,7 +11,8 @@ struct SettingsView: View {
     @AppStorage("countdownEnabled") private var countdownEnabled = false
     @AppStorage("timeoutSeconds") private var timeoutSeconds = 5.0
     @AppStorage("minAmplitude") private var minAmplitude = 0.01
-    
+    @AppStorage("limitFretsToTwelve") private var limitFretsToTwelve = false
+
     var body: some View {
         Form {
             Section("Game") {
@@ -19,6 +20,7 @@ struct SettingsView: View {
                 Stepper(value: $timeoutSeconds, in: 3...10, step: 1) {
                     Text("Timeout: \(Int(timeoutSeconds)) seconds")
                 }
+                Toggle("Limit targets to frets 0–12", isOn: $limitFretsToTwelve)
             }
             Section("Audio") {
                 Text("Amplitude threshold: \(String(format: "%.3f", minAmplitude))")
