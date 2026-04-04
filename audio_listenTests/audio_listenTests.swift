@@ -133,6 +133,86 @@ struct NoteConverterTests {
     }
 }
 
+// MARK: - RandomNoteStrategy.filterPositions
+
+struct RandomNoteStrategyFilterTests {
+    @Test func filterKeepsOnlyAllowedStrings() {
+        let positions = [
+            FretPosition(string: 1, fret: 0),
+            FretPosition(string: 3, fret: 2),
+            FretPosition(string: 6, fret: 0)
+        ]
+        let allowed: Set<Int> = [1, 6]
+        let out = RandomNoteStrategy.filterPositions(positions, allowed: allowed)
+        #expect(out.count == 2)
+        #expect(out.contains(FretPosition(string: 1, fret: 0)))
+        #expect(out.contains(FretPosition(string: 6, fret: 0)))
+    }
+
+    @Test func filterEmptyAllowedYieldsEmpty() {
+        let positions = [FretPosition(string: 2, fret: 0)]
+        let out = RandomNoteStrategy.filterPositions(positions, allowed: [])
+        #expect(out.isEmpty)
+    }
+}
+
+// MARK: - GameAllowedStringsStore
+
+struct GameAllowedStringsStoreTests {
+    @Test func roundTripPersistsSubset() throws {
+        let suite = "test.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suite) else {
+            Issue.record("Could not create UserDefaults suite")
+            return
+        }
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let store = GameAllowedStringsStore(defaults: defaults)
+        let original: Set<Int> = [1, 4, 6]
+        store.save(original)
+        let loaded = store.load()
+        #expect(loaded == original)
+    }
+
+    @Test func missingKeyDefaultsToAllStrings() {
+        let suite = "test.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suite) else {
+            Issue.record("Could not create UserDefaults suite")
+            return
+        }
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let store = GameAllowedStringsStore(defaults: defaults)
+        #expect(store.load() == Set(1...6))
+    }
+
+    @Test func emptyArrayRoundTripIsEmpty() throws {
+        let suite = "test.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suite) else {
+            Issue.record("Could not create UserDefaults suite")
+            return
+        }
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        defaults.set(try JSONEncoder().encode([Int]()), forKey: GameAllowedStringsStore.userDefaultsKey)
+        let store = GameAllowedStringsStore(defaults: defaults)
+        #expect(store.load().isEmpty)
+    }
+
+    @Test func onlyOutOfRangeValuesFallsBackToAll() throws {
+        let suite = "test.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suite) else {
+            Issue.record("Could not create UserDefaults suite")
+            return
+        }
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        defaults.set(try JSONEncoder().encode([0, 7, 99]), forKey: GameAllowedStringsStore.userDefaultsKey)
+        let store = GameAllowedStringsStore(defaults: defaults)
+        #expect(store.load() == Set(1...6))
+    }
+}
+
 // MARK: - GuitarFretboard
 
 struct GuitarFretboardTests {

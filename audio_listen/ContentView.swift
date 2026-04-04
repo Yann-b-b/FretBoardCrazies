@@ -12,7 +12,10 @@ struct ContentView: View {
     
     var body: some View {
         TabView {
-            GameView(viewModel: container.makeGameViewModel())
+            GameView(
+                viewModel: container.makeGameViewModel(),
+                allowedStringsStore: container.allowedStringsStore
+            )
                 .tabItem {
                     Label("Game", systemImage: "gamecontroller.fill")
                 }

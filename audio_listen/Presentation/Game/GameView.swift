@@ -9,10 +9,18 @@ import SwiftUI
 
 struct GameView: View {
     @StateObject private var viewModel: GameViewModel
-    
-    init(viewModel: GameViewModel) {
+    private let allowedStringsStore: GameAllowedStringsStore
+
+    @State private var allowedStrings: Set<Int> = Set(1...6)
+
+    init(viewModel: GameViewModel, allowedStringsStore: GameAllowedStringsStore) {
         _viewModel = StateObject(wrappedValue: viewModel)
+        self.allowedStringsStore = allowedStringsStore
     }
+
+    private static let stringLabels: [(number: Int, name: String)] = [
+        (1, "high E"), (2, "B"), (3, "G"), (4, "D"), (5, "A"), (6, "low E")
+    ]
     
     var body: some View {
         VStack(spacing: 24) {
@@ -29,8 +37,11 @@ struct GameView: View {
             gameContent
         }
         .padding()
+        .onAppear {
+            allowedStrings = allowedStringsStore.load()
+        }
     }
-    
+
     @ViewBuilder
     private var gameContent: some View {
         switch viewModel.state {
@@ -38,10 +49,27 @@ struct GameView: View {
             Text("Tap Start to begin")
                 .font(.title2)
                 .foregroundStyle(.secondary)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Strings to practice")
+                    .font(.headline)
+                ForEach(Self.stringLabels, id: \.number) { row in
+                    Toggle("\(row.number) — \(row.name)", isOn: bindingForString(row.number))
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if allowedStrings.isEmpty {
+                Text("Turn on at least one string to start.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
             Button("Start") {
                 viewModel.startGame()
             }
             .buttonStyle(.borderedProminent)
+            .disabled(allowedStrings.isEmpty)
             
         case .countdown(let remaining, let note, let position):
             playingTargetView(note: note, position: position)
@@ -67,6 +95,20 @@ struct GameView: View {
         }
     }
     
+    private func bindingForString(_ string: Int) -> Binding<Bool> {
+        Binding(
+            get: { allowedStrings.contains(string) },
+            set: { on in
+                if on {
+                    allowedStrings.insert(string)
+                } else {
+                    allowedStrings.remove(string)
+                }
+                allowedStringsStore.save(allowedStrings)
+            }
+        )
+    }
+
     private var endButton: some View {
         Button("End") {
             viewModel.stopGame()

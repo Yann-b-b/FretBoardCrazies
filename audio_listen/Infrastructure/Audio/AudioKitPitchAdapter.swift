@@ -84,9 +84,5 @@ final class AudioKitPitchAdapter: PitchDetectorProtocol {
         }
     }
 
-    private static var minAmplitudeThreshold: Float {
-        let stored = UserDefaults.standard.double(forKey: "minAmplitude")
-        if stored > 0 { return Float(stored) }
-        return 0.01
-    }
+    private static let minAmplitudeThreshold: Float = 0.01
 }
