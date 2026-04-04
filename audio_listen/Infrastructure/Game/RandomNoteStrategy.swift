@@ -7,14 +7,14 @@
 
 import Foundation
 
-/// Strategy that picks a random note and a random valid fret position on allowed strings.
+/// Strategy that picks a random note and a valid fret position on allowed strings.
 struct RandomNoteStrategy: NoteGeneratorProtocol {
-    private static let limitFretsKey = "limitFretsToTwelve"
-
     private let allowedStringsProvider: AllowedStringsProviding
+    private let maxFretProvider: MaxFretProviding
 
-    init(allowedStringsProvider: AllowedStringsProviding) {
+    init(allowedStringsProvider: AllowedStringsProviding, maxFretProvider: MaxFretProviding) {
         self.allowedStringsProvider = allowedStringsProvider
+        self.maxFretProvider = maxFretProvider
     }
 
     static func filterPositions(_ positions: [FretPosition], allowed: Set<Int>) -> [FretPosition] {
@@ -26,7 +26,7 @@ struct RandomNoteStrategy: NoteGeneratorProtocol {
         let allowed = rawAllowed.isEmpty ? Set(1...6) : rawAllowed
 
         let notes = GuitarFretboard.playableNotes
-        let maxFret = UserDefaults.standard.bool(forKey: Self.limitFretsKey) ? 12 : GuitarFretboard.fretCount
+        let maxFret = maxFretProvider.maxFretInclusive
 
         for _ in 0..<64 {
             guard let note = notes.randomElement() else { break }
@@ -34,7 +34,7 @@ struct RandomNoteStrategy: NoteGeneratorProtocol {
                 GuitarFretboard.positions(for: note, maxFretInclusive: maxFret),
                 allowed: allowed
             )
-            if let position = positions.randomElement() {
+            if let position = FretPositionSelection.preferredForPractice(positions) {
                 return (note, position)
             }
         }
@@ -50,7 +50,7 @@ struct RandomNoteStrategy: NoteGeneratorProtocol {
                 GuitarFretboard.positions(for: note, maxFretInclusive: maxFret),
                 allowed: allowed
             )
-            if let position = filtered.randomElement() {
+            if let position = FretPositionSelection.preferredForPractice(filtered) {
                 return (note, position)
             }
         }
@@ -59,7 +59,7 @@ struct RandomNoteStrategy: NoteGeneratorProtocol {
             GuitarFretboard.positions(for: fallback, maxFretInclusive: maxFret),
             allowed: allowed
         )
-        if let position = filtered.randomElement() {
+        if let position = FretPositionSelection.preferredForPractice(filtered) {
             return (fallback, position)
         }
         for string in allowed.sorted() {

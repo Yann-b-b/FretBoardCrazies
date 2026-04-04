@@ -4,7 +4,7 @@
 
 ## Features
 
-- `Game`: shows a **note letter + string number** while you play (no octave or fret until you get it right); after success, reveals **string + fret** (`FretPosition.displayString`). Target format is centralized in `GameTargetPrompt`. On the idle screen, **six toggles** choose which strings (1 = high E … 6 = low E) may appear; the choice is **saved in `UserDefaults`** and restored on the next launch. **Start** is disabled until at least one string is on. **Limit frets 0–12** defaults to **on** in Settings (new installs).
+- `Game`: shows a **note letter + string number** while you play (no octave or fret until you get it right); after success, reveals **string + fret** (`FretPosition.displayString`). Target format is centralized in `GameTargetPrompt`. On the idle screen, **six toggles** choose which strings (1 = high E … 6 = low E) may appear; the choice is **saved in `UserDefaults`** and restored on the next launch. **Start** is disabled until at least one string is on. **Limit frets 0–12** defaults to **on** in Settings (new installs), and the generator uses that same default **before** the Settings screen has ever written the key (`UserDefaultsMaxFretProvider`). Among several valid positions for the same target note, the game **prefers the lowest fret** (`FretPositionSelection`) so targets stay easier to reach when multiple strings apply.
 - `Tuner`: listens to live microphone input and shows the detected note, frequency, and signal amplitude.
 - `Settings`: countdown mode, timeout duration, **amplitude threshold** (used by pitch detection), and **“Limit targets to frets 0–12”** for the game.
 
@@ -68,6 +68,7 @@ flowchart TD
     di --> scoreRepo[UserDefaultsScoreRepository]
     di --> allowedStore[GameAllowedStringsStore]
     di --> noteStrategy[RandomNoteStrategy]
+    di --> maxFretProvider[UserDefaultsMaxFretProvider]
     di --> detector[DebouncedPitchDetector]
 
     gameVm --> gameStateMachine[GameStateMachine]
@@ -99,7 +100,7 @@ flowchart TD
 
 `GameViewModel` coordinates the game loop:
 
-1. Generates a target note and fret position (`RandomNoteStrategy`, using **allowed strings** from `GameAllowedStringsStore` via `AllowedStringsProviding`; **fret ≤ 12** when the Settings toggle is on—it defaults to **on**).
+1. Generates a target note and fret position (`RandomNoteStrategy`, using **allowed strings** from `GameAllowedStringsStore` via `AllowedStringsProviding` and **max fret** via `MaxFretProviding` / `UserDefaultsMaxFretProvider`). **Fret ≤ 12** when limiting is on, including when the key has never been written. Among candidates, `FretPositionSelection` picks the **lowest-fret** shape.
 2. Moves through `idle`, `countdown`, `playing`, and `success` via `GameStateMachine`.
 3. Starts microphone listening once the round begins (after optional countdown).
 4. Validates detected notes against the target note (pitch class **and** octave; any string with that pitch counts as correct).
@@ -130,7 +131,7 @@ The audio pipeline is entirely local to the app:
 ## Data And Configuration
 
 - Runtime settings are stored with `@AppStorage` and `UserDefaults`, not `.env` files.
-- Keys include `countdownEnabled`, `timeoutSeconds`, `minAmplitude`, `limitFretsToTwelve`, and `audio_listen_game_allowed_strings` (JSON array of string numbers 1–6 for the game string chooser).
+- Keys include `countdownEnabled`, `timeoutSeconds`, `minAmplitude`, `limitFretsToTwelve` (shared constant `GameSettingsKeys.limitFretsToTwelve` for Settings and `UserDefaultsMaxFretProvider`), and `audio_listen_game_allowed_strings` (JSON array of string numbers 1–6 for the game string chooser).
 - Game history is persisted in `UserDefaults` under the key `audio_listen_game_rounds`.
 - The project uses Xcode-managed build settings and SwiftPM dependency resolution.
 - The app requests microphone access and is configured for audio input in the Xcode project and entitlements.
@@ -153,7 +154,7 @@ Swift Package dependencies (`AudioKit`, `SoundpipeAudioKit`, and their transitiv
 
 ## Testing
 
-- `audio_listenTests` uses the Swift **`Testing`** framework with coverage for `NoteConverter`, `GuitarFretboard` (including fret caps), `ValidateNoteUseCase`, `RandomNoteStrategy.filterPositions`, `GameAllowedStringsStore` persistence, and `DebouncedPitchDetector` (mock-backed).
+- `audio_listenTests` uses the Swift **`Testing`** framework with coverage for `NoteConverter`, `GuitarFretboard` (including fret caps), `ValidateNoteUseCase`, `RandomNoteStrategy.filterPositions`, `FretPositionSelection`, `UserDefaultsMaxFretProvider`, `GameAllowedStringsStore` persistence, and `DebouncedPitchDetector` (mock-backed).
 - Run tests in Xcode (**Product → Test**) or `xcodebuild test` with an appropriate destination.
 - `audio_listenUITests` still focuses mainly on launch coverage with `XCTest`.
 

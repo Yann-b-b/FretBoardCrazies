@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @AppStorage("countdownEnabled") private var countdownEnabled = false
-    @AppStorage("limitFretsToTwelve") private var limitFretsToTwelve = true
+    @AppStorage(GameSettingsKeys.limitFretsToTwelve) private var limitFretsToTwelve = true
 
     var body: some View {
         Form {

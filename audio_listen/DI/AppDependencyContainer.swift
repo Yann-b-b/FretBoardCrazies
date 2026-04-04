@@ -17,14 +17,19 @@ final class AppDependencyContainer {
     private let noteGenerator: NoteGeneratorProtocol
     private let scoreRepository: ScoreRepositoryProtocol
     private let allowedStringsProvider: AllowedStringsProviding
+    private let maxFretProvider: MaxFretProviding
 
     private init() {
         allowedStringsStore = GameAllowedStringsStore()
         allowedStringsProvider = UserDefaultsAllowedStringsProvider(store: allowedStringsStore)
+        maxFretProvider = UserDefaultsMaxFretProvider()
 
         let adapter = AudioKitPitchAdapter()
         pitchDetector = DebouncedPitchDetector(wrapping: adapter, stabilityDuration: 0.10)
-        noteGenerator = RandomNoteStrategy(allowedStringsProvider: allowedStringsProvider)
+        noteGenerator = RandomNoteStrategy(
+            allowedStringsProvider: allowedStringsProvider,
+            maxFretProvider: maxFretProvider
+        )
         scoreRepository = UserDefaultsScoreRepository()
     }
 

@@ -133,6 +133,75 @@ struct NoteConverterTests {
     }
 }
 
+// MARK: - FretPositionSelection
+
+struct FretPositionSelectionTests {
+    @Test func prefersLowestFret() {
+        let positions = [
+            FretPosition(string: 6, fret: 15),
+            FretPosition(string: 3, fret: 0),
+            FretPosition(string: 4, fret: 5)
+        ]
+        let chosen = FretPositionSelection.preferredForPractice(positions)
+        #expect(chosen == FretPosition(string: 3, fret: 0))
+    }
+
+    @Test func tieBreaksToLowerStringNumber() {
+        let positions = [
+            FretPosition(string: 5, fret: 3),
+            FretPosition(string: 2, fret: 3)
+        ]
+        let chosen = FretPositionSelection.preferredForPractice(positions)
+        #expect(chosen == FretPosition(string: 2, fret: 3))
+    }
+
+    @Test func emptyReturnsNil() {
+        #expect(FretPositionSelection.preferredForPractice([]) == nil)
+    }
+}
+
+// MARK: - UserDefaultsMaxFretProvider
+
+struct UserDefaultsMaxFretProviderTests {
+    @Test func missingKeyMeansCap12() {
+        let suite = "test.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suite) else {
+            Issue.record("Could not create UserDefaults suite")
+            return
+        }
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let provider = UserDefaultsMaxFretProvider(defaults: defaults)
+        #expect(provider.maxFretInclusive == 12)
+    }
+
+    @Test func explicitFalseMeansFullFretboard() {
+        let suite = "test.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suite) else {
+            Issue.record("Could not create UserDefaults suite")
+            return
+        }
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        defaults.set(false, forKey: GameSettingsKeys.limitFretsToTwelve)
+        let provider = UserDefaultsMaxFretProvider(defaults: defaults)
+        #expect(provider.maxFretInclusive == GuitarFretboard.fretCount)
+    }
+
+    @Test func explicitTrueMeansCap12() {
+        let suite = "test.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suite) else {
+            Issue.record("Could not create UserDefaults suite")
+            return
+        }
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        defaults.set(true, forKey: GameSettingsKeys.limitFretsToTwelve)
+        let provider = UserDefaultsMaxFretProvider(defaults: defaults)
+        #expect(provider.maxFretInclusive == 12)
+    }
+}
+
 // MARK: - RandomNoteStrategy.filterPositions
 
 struct RandomNoteStrategyFilterTests {
