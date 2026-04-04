@@ -10,7 +10,7 @@ import SwiftUI
 struct SettingsView: View {
     @AppStorage("countdownEnabled") private var countdownEnabled = false
     @AppStorage("minAmplitude") private var minAmplitude = 0.01
-    @AppStorage("limitFretsToTwelve") private var limitFretsToTwelve = false
+    @AppStorage("limitFretsToTwelve") private var limitFretsToTwelve = true
 
     var body: some View {
         Form {

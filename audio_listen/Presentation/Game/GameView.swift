@@ -44,20 +44,20 @@ struct GameView: View {
             .buttonStyle(.borderedProminent)
             
         case .countdown(let remaining, let note, let position):
-            targetDisplay(note: note, position: position)
+            playingTargetView(note: note, position: position)
             Text("\(remaining)")
                 .font(.system(size: 64, weight: .bold))
             endButton
             
         case .playing(_, let note, let position):
-            targetDisplay(note: note, position: position)
+            playingTargetView(note: note, position: position)
             Text("Detected: \(viewModel.detectedNote)")
                 .font(.headline)
                 .foregroundStyle(.secondary)
             endButton
             
         case .success(let time, let note, let position):
-            targetDisplay(note: note, position: position)
+            successTargetView(note: note, position: position)
             Text("Correct!")
                 .font(.title)
                 .foregroundStyle(.green)
@@ -75,13 +75,26 @@ struct GameView: View {
         .tint(.red)
     }
     
-    private func targetDisplay(note: Note, position: FretPosition) -> some View {
+    private func playingTargetView(note: Note, position: FretPosition) -> some View {
         VStack(spacing: 8) {
             Text("Play")
                 .font(.headline)
                 .foregroundStyle(.secondary)
-            Text(note.displayName)
+            Text(GameTargetPrompt.playingLine(note: note, string: position.string))
                 .font(.system(size: 56, weight: .bold))
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+    }
+
+    private func successTargetView(note: Note, position: FretPosition) -> some View {
+        VStack(spacing: 8) {
+            Text("Play")
+                .font(.headline)
+                .foregroundStyle(.secondary)
+            Text(GameTargetPrompt.playingLine(note: note, string: position.string))
+                .font(.system(size: 40, weight: .bold))
+                .multilineTextAlignment(.center)
             Text(position.displayString)
                 .font(.title3)
                 .foregroundStyle(.secondary)

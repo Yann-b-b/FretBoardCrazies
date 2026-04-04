@@ -4,7 +4,7 @@
 
 ## Features
 
-- `Game`: prompts the player to find a target note and fret position, starts a timed round, and tracks whether the note was played correctly.
+- `Game`: shows a **note letter + string number** while you play (no octave or fret until you get it right); after success, reveals **string + fret** (`FretPosition.displayString`). Target format is centralized in `GameTargetPrompt`. **Limit frets 0–12** defaults to **on** in Settings (new installs).
 - `Tuner`: listens to live microphone input and shows the detected note, frequency, and signal amplitude.
 - `Settings`: countdown mode, timeout duration, **amplitude threshold** (used by pitch detection), and **“Limit targets to frets 0–12”** for the game.
 
@@ -98,11 +98,13 @@ flowchart TD
 
 `GameViewModel` coordinates the game loop:
 
-1. Generates a target note and fret position (`RandomNoteStrategy`; optional **fret ≤ 12** filter from Settings).
-2. Moves through `idle`, `ready`, `countdown`, `playing`, `success`, and `timeout` using `GameStateMachine`.
-3. Starts microphone listening once the round begins.
+1. Generates a target note and fret position (`RandomNoteStrategy`; **fret ≤ 12** when the Settings toggle is on—it defaults to **on**).
+2. Moves through `idle`, `countdown`, `playing`, and `success` via `GameStateMachine`.
+3. Starts microphone listening once the round begins (after optional countdown).
 4. Validates detected notes against the target note (pitch class **and** octave; any string with that pitch counts as correct).
-5. Saves round results through `UserDefaultsScoreRepository`.
+5. Saves round results (including `playedAt`) through `UserDefaultsScoreRepository`.
+
+**Prompt copy:** While counting down or playing, the UI shows `GameTargetPrompt.playingLine` (e.g. `C string 4`). On success, the same line appears with `FretPosition.displayString` underneath so the fret is revealed.
 
 #### Tuner Flow
 

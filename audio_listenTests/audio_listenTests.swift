@@ -52,6 +52,21 @@ struct GameSessionConfigurationTests {
     }
 }
 
+// MARK: - GameTargetPrompt
+
+struct GameTargetPromptTests {
+    @Test func playingLineUsesLetterAndStringNumber() {
+        let line = GameTargetPrompt.playingLine(note: Note(.cSharp, octave: 4), string: 2)
+        #expect(line == "C# string 2")
+    }
+
+    @Test func playingLineOmitsOctave() {
+        let line = GameTargetPrompt.playingLine(note: Note(.a, octave: 2), string: 6)
+        #expect(line == "A string 6")
+        #expect(!line.contains("2"))
+    }
+}
+
 // MARK: - PersistedGameRound / playedAt migration
 
 struct PersistedGameRoundTests {
