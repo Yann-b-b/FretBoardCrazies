@@ -65,6 +65,10 @@ struct GameView: View {
                     .foregroundStyle(.secondary)
             }
 
+            if let averages = viewModel.lastEndedGameNoteAverages {
+                GameSessionMetricsView(averages: averages)
+            }
+
             Button("Start") {
                 viewModel.startGame()
             }
@@ -122,7 +126,7 @@ struct GameView: View {
             Text("Play")
                 .font(.headline)
                 .foregroundStyle(.secondary)
-            Text(GameTargetPrompt.playingLine(note: note, string: position.string))
+            Text(GameTargetPrompt.playingLine(note: note, position: position))
                 .font(.system(size: 56, weight: .bold))
                 .multilineTextAlignment(.center)
         }
@@ -134,7 +138,7 @@ struct GameView: View {
             Text("Play")
                 .font(.headline)
                 .foregroundStyle(.secondary)
-            Text(GameTargetPrompt.playingLine(note: note, string: position.string))
+            Text(GameTargetPrompt.playingLine(note: note, position: position))
                 .font(.system(size: 40, weight: .bold))
                 .multilineTextAlignment(.center)
             Text(position.displayString)

@@ -2,7 +2,7 @@
 //  MaxFretProviding.swift
 //  audio_listen
 //
-//  Supplies the inclusive upper fret bound for target generation (e.g. 12 vs full board).
+//  Supplies the inclusive upper fret bound for target generation (e.g. limited 0…11 vs full board).
 //
 
 import Foundation

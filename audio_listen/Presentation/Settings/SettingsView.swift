@@ -15,7 +15,7 @@ struct SettingsView: View {
         Form {
             Section("Game") {
                 Toggle("Countdown (3-2-1)", isOn: $countdownEnabled)
-                Toggle("Limit targets to frets 0–12", isOn: $limitFretsToTwelve)
+                Toggle("Limit targets to frets 0–11", isOn: $limitFretsToTwelve)
             }
         }
         .navigationTitle("Settings")

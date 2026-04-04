@@ -40,6 +40,10 @@ final class UserDefaultsScoreRepository: ScoreRepositoryProtocol {
         let sum = rounds.map(\.reactionTime).reduce(0, +)
         return sum / Double(rounds.count)
     }
+
+    func averageWrongAttemptsByTargetNote() -> [Note: Double] {
+        NoteMetrics.averageWrongAttemptsPerTargetNote(rounds: loadRounds())
+    }
     
     private func loadRounds() -> [GameRound] {
         guard let data = UserDefaults.standard.data(forKey: key),
@@ -65,6 +69,7 @@ struct PersistedGameRound: Codable {
     let targetFret: Int
     let reactionTime: TimeInterval
     let playedAt: Date?
+    let wrongAttemptsBeforeSuccess: Int?
 
     init(from round: GameRound) {
         targetNoteNameRawValue = round.targetNote.name.rawValue
@@ -73,6 +78,7 @@ struct PersistedGameRound: Codable {
         targetFret = round.targetPosition.fret
         reactionTime = round.reactionTime
         playedAt = round.playedAt
+        wrongAttemptsBeforeSuccess = round.wrongAttemptsBeforeSuccess
     }
 
     func toGameRound() -> GameRound {
@@ -83,7 +89,8 @@ struct PersistedGameRound: Codable {
             targetNote: note,
             targetPosition: position,
             reactionTime: reactionTime,
-            playedAt: playedAt ?? .distantPast
+            playedAt: playedAt ?? .distantPast,
+            wrongAttemptsBeforeSuccess: wrongAttemptsBeforeSuccess ?? 0
         )
     }
 }

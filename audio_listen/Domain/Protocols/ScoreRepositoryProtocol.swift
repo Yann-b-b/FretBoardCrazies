@@ -17,4 +17,7 @@ protocol ScoreRepositoryProtocol {
     
     /// Average reaction time over last N rounds.
     func averageTime(forRounds count: Int) -> TimeInterval?
+
+    /// Mean wrong attempts before success, grouped by target note (all stored rounds).
+    func averageWrongAttemptsByTargetNote() -> [Note: Double]
 }

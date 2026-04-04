@@ -13,7 +13,9 @@ final class GameViewModel: ObservableObject {
     @Published private(set) var state: GameState = .idle
     @Published private(set) var detectedNote: String = "—"
     @Published var errorMessage: String?
-    
+    /// Populated when the user ends a session; cleared when starting a new game. All-time averages from saved rounds.
+    @Published private(set) var lastEndedGameNoteAverages: [Note: Double]?
+
     private let pitchDetector: PitchDetectorProtocol
     private let generateNoteUseCase: GenerateTargetNoteUseCase
     private let validateNoteUseCase: ValidateNoteUseCase
@@ -26,7 +28,8 @@ final class GameViewModel: ObservableObject {
     private var countdownTimer: Timer?
     private var autoAdvanceTask: Task<Void, Never>?
     private var engineStarted = false
-    
+    private var wrongAttemptCounter = WrongAttemptCounter()
+
     init(
         pitchDetector: PitchDetectorProtocol,
         generateNoteUseCase: GenerateTargetNoteUseCase,
@@ -54,6 +57,7 @@ final class GameViewModel: ObservableObject {
     /// Start the game session. Generates the first note and begins listening.
     func startGame() {
         errorMessage = nil
+        lastEndedGameNoteAverages = nil
         if allowedStringsProvider.allowedStrings.isEmpty {
             errorMessage = "Select at least one string to practice."
             return
@@ -77,9 +81,12 @@ final class GameViewModel: ObservableObject {
         stateMachine.transition(to: .idle)
         state = stateMachine.state
         detectedNote = "—"
+        lastEndedGameNoteAverages = scoreRepository.averageWrongAttemptsByTargetNote()
+        wrongAttemptCounter.reset()
     }
-    
+
     private func beginPlaying(targetNote: Note, targetPosition: FretPosition) {
+        wrongAttemptCounter.reset()
         if stateMachine.transition(to: .playing(startTime: Date(), targetNote: targetNote, targetPosition: targetPosition)) {
             state = stateMachine.state
             startPitchListening()
@@ -108,6 +115,7 @@ final class GameViewModel: ObservableObject {
     }
     
     private func advanceToNextNote() {
+        wrongAttemptCounter.reset()
         let (note, position) = generateNoteUseCase.execute()
         stateMachine.transition(to: .playing(startTime: Date(), targetNote: note, targetPosition: position))
         state = stateMachine.state
@@ -146,6 +154,8 @@ final class GameViewModel: ObservableObject {
             let reactionTime = Date().timeIntervalSince(startTime)
             stateMachine.transition(to: .success(time: reactionTime, targetNote: targetNote, targetPosition: targetPosition))
             state = stateMachine.state
+        } else {
+            wrongAttemptCounter.registerDetection(target: targetNote, detected: pitch.note)
         }
     }
     
@@ -159,7 +169,8 @@ final class GameViewModel: ObservableObject {
             targetNote: targetNote,
             targetPosition: targetPosition,
             reactionTime: time,
-            playedAt: Date()
+            playedAt: Date(),
+            wrongAttemptsBeforeSuccess: wrongAttemptCounter.wrongAttemptsBeforeSuccess
         ))
         
         // Auto-advance to next note after a brief pause
