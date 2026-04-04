@@ -31,7 +31,6 @@ final class AppDependencyContainer {
     
     @MainActor
     func makeGameViewModel() -> GameViewModel {
-        let timeout = UserDefaults.standard.object(forKey: "timeoutSeconds") as? Double ?? 5
         let countdown = UserDefaults.standard.bool(forKey: "countdownEnabled")
         return GameViewModel(
             pitchDetector: pitchDetector,
@@ -39,7 +38,6 @@ final class AppDependencyContainer {
             validateNoteUseCase: ValidateNoteUseCase(),
             stateMachine: GameStateMachine(),
             scoreRepository: scoreRepository,
-            timeoutSeconds: timeout,
             countdownEnabled: countdown
         )
     }

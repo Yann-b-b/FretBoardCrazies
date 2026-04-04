@@ -20,11 +20,11 @@ final class GameViewModel: ObservableObject {
     private let stateMachine: GameStateMachine
     private let scoreRepository: ScoreRepositoryProtocol
     
-    private var cancellables = Set<AnyCancellable>()
-    private let timeoutSeconds: TimeInterval
+    private var pitchSubscription: AnyCancellable?
     private let countdownEnabled: Bool
-    private var timeoutTimer: Timer?
     private var countdownTimer: Timer?
+    private var autoAdvanceTask: Task<Void, Never>?
+    private var engineStarted = false
     
     init(
         pitchDetector: PitchDetectorProtocol,
@@ -32,7 +32,6 @@ final class GameViewModel: ObservableObject {
         validateNoteUseCase: ValidateNoteUseCase,
         stateMachine: GameStateMachine,
         scoreRepository: ScoreRepositoryProtocol,
-        timeoutSeconds: TimeInterval = 5,
         countdownEnabled: Bool = true
     ) {
         self.pitchDetector = pitchDetector
@@ -40,57 +39,47 @@ final class GameViewModel: ObservableObject {
         self.validateNoteUseCase = validateNoteUseCase
         self.stateMachine = stateMachine
         self.scoreRepository = scoreRepository
-        self.timeoutSeconds = timeoutSeconds
         self.countdownEnabled = countdownEnabled
         
         stateMachine.setCallbacks(GameStateMachineCallbacks(
-            onPlayingStarted: { [weak self] in
-                Task { @MainActor in self?.startTimeoutTimer() }
-            },
             onSuccess: { [weak self] time in
                 Task { @MainActor in self?.handleSuccess(time: time) }
-            },
-            onTimeout: { [weak self] in
-                Task { @MainActor in self?.handleTimeout() }
             }
         ))
     }
     
-    func startRound() {
+    /// Start the game session. Generates the first note and begins listening.
+    func startGame() {
         errorMessage = nil
         let (note, position) = generateNoteUseCase.execute()
-        if stateMachine.transition(to: .ready(targetNote: note, targetPosition: position)) {
-            state = stateMachine.state
-        }
-    }
-    
-    func beginRound() {
-        guard case .ready(let targetNote, let targetPosition) = state else { return }
-        if countdownEnabled {
-            startCountdown()
-        } else {
-            goToPlaying()
-        }
-    }
-    
-    private func goToPlaying() {
-        let targetNote: Note?
-        let targetPosition: FretPosition?
-        switch state {
-        case .ready(let note, let pos): targetNote = note; targetPosition = pos
-        case .countdown(_, let note, let pos): targetNote = note; targetPosition = pos
-        default: targetNote = nil; targetPosition = nil
-        }
-        guard let note = targetNote, let pos = targetPosition else { return }
         
-        if stateMachine.transition(to: .playing(startTime: Date(), targetNote: note, targetPosition: pos)) {
+        if countdownEnabled {
+            startCountdown(targetNote: note, targetPosition: position)
+        } else {
+            beginPlaying(targetNote: note, targetPosition: position)
+        }
+    }
+    
+    /// Stop the game session and return to idle.
+    func stopGame() {
+        autoAdvanceTask?.cancel()
+        autoAdvanceTask = nil
+        countdownTimer?.invalidate()
+        countdownTimer = nil
+        stopPitchListening()
+        stateMachine.transition(to: .idle)
+        state = stateMachine.state
+        detectedNote = "—"
+    }
+    
+    private func beginPlaying(targetNote: Note, targetPosition: FretPosition) {
+        if stateMachine.transition(to: .playing(startTime: Date(), targetNote: targetNote, targetPosition: targetPosition)) {
             state = stateMachine.state
             startPitchListening()
         }
     }
     
-    func startCountdown() {
-        guard case .ready(let targetNote, let targetPosition) = state else { return }
+    private func startCountdown(targetNote: Note, targetPosition: FretPosition) {
         stateMachine.transition(to: .countdown(remaining: 3, targetNote: targetNote, targetPosition: targetPosition))
         state = stateMachine.state
         
@@ -104,30 +93,31 @@ final class GameViewModel: ObservableObject {
                 } else {
                     timer.invalidate()
                     self?.countdownTimer = nil
-                    self?.goToPlaying()
+                    self?.beginPlaying(targetNote: targetNote, targetPosition: targetPosition)
                 }
             }
         }
         RunLoop.main.add(countdownTimer!, forMode: .common)
     }
     
-    func nextRound() {
-        stopPitchListening()
-        cancelTimers()
-        stateMachine.transition(to: .idle)
+    private func advanceToNextNote() {
+        let (note, position) = generateNoteUseCase.execute()
+        stateMachine.transition(to: .playing(startTime: Date(), targetNote: note, targetPosition: position))
         state = stateMachine.state
-        startRound()
+        startPitchListening()
     }
     
     private func startPitchListening() {
         do {
-            pitchDetector.currentPitch
+            if !engineStarted {
+                try pitchDetector.start()
+                engineStarted = true
+            }
+            pitchSubscription = pitchDetector.currentPitch
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] pitch in
                     self?.handleDetectedPitch(pitch)
                 }
-                .store(in: &cancellables)
-            try pitchDetector.start()
             detectedNote = "—"
         } catch {
             errorMessage = "Could not start microphone: \(error.localizedDescription)"
@@ -135,8 +125,8 @@ final class GameViewModel: ObservableObject {
     }
     
     private func stopPitchListening() {
-        pitchDetector.stop()
-        cancellables.removeAll()
+        pitchSubscription?.cancel()
+        pitchSubscription = nil
     }
     
     private func handleDetectedPitch(_ pitch: DetectedPitch) {
@@ -145,22 +135,11 @@ final class GameViewModel: ObservableObject {
         guard case .playing(let startTime, let targetNote, let targetPosition) = state else { return }
         
         if validateNoteUseCase.execute(detected: pitch.note, target: targetNote) {
-            cancelTimers()
             stopPitchListening()
             let reactionTime = Date().timeIntervalSince(startTime)
             stateMachine.transition(to: .success(time: reactionTime, targetNote: targetNote, targetPosition: targetPosition))
             state = stateMachine.state
         }
-    }
-    
-    private func startTimeoutTimer() {
-        timeoutTimer?.invalidate()
-        timeoutTimer = Timer.scheduledTimer(withTimeInterval: timeoutSeconds, repeats: false) { [weak self] _ in
-            Task { @MainActor in
-                self?.handleTimeout()
-            }
-        }
-        RunLoop.main.add(timeoutTimer!, forMode: .common)
     }
     
     private func handleSuccess(time: TimeInterval) {
@@ -172,33 +151,15 @@ final class GameViewModel: ObservableObject {
         scoreRepository.save(round: GameRound(
             targetNote: targetNote,
             targetPosition: targetPosition,
-            wasCorrect: true,
-            reactionTime: time
+            reactionTime: time,
+            playedAt: Date()
         ))
-    }
-    
-    private func handleTimeout() {
-        guard case .playing(_, let targetNote, let targetPosition) = state else { return }
-        #if os(iOS)
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.warning)
-        #endif
-        cancelTimers()
-        stopPitchListening()
-        stateMachine.transition(to: .timeout(targetNote: targetNote, targetPosition: targetPosition))
-        state = stateMachine.state
-        scoreRepository.save(round: GameRound(
-            targetNote: targetNote,
-            targetPosition: targetPosition,
-            wasCorrect: false,
-            reactionTime: nil
-        ))
-    }
-    
-    private func cancelTimers() {
-        timeoutTimer?.invalidate()
-        timeoutTimer = nil
-        countdownTimer?.invalidate()
-        countdownTimer = nil
+        
+        // Auto-advance to next note after a brief pause
+        autoAdvanceTask = Task {
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
+            advanceToNextNote()
+        }
     }
 }

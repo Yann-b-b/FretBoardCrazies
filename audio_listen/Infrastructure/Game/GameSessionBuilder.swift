@@ -9,15 +9,8 @@ import Foundation
 
 /// Fluent builder for game session configuration.
 struct GameSessionBuilder {
-    private var timeoutSeconds: TimeInterval = 5
     private var countdownEnabled = false
     private var minAmplitude: Float = 0.01
-    
-    func timeout(_ seconds: TimeInterval) -> GameSessionBuilder {
-        var copy = self
-        copy.timeoutSeconds = seconds
-        return copy
-    }
     
     func countdown(_ enabled: Bool) -> GameSessionBuilder {
         var copy = self
@@ -33,7 +26,6 @@ struct GameSessionBuilder {
     
     func build() -> GameSessionConfig {
         GameSessionConfig(
-            timeoutSeconds: timeoutSeconds,
             countdownEnabled: countdownEnabled,
             minAmplitude: minAmplitude
         )
@@ -42,7 +34,6 @@ struct GameSessionBuilder {
 
 /// Configuration for a game session.
 struct GameSessionConfig {
-    let timeoutSeconds: TimeInterval
     let countdownEnabled: Bool
     let minAmplitude: Float
 }

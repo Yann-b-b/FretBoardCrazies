@@ -2,7 +2,7 @@
 //  GameView.swift
 //  audio_listen
 //
-//  Main game view: target note, Go button, reaction time.
+//  Main game view: continuous note recognition game.
 //
 
 import SwiftUI
@@ -39,30 +39,22 @@ struct GameView: View {
                 .font(.title2)
                 .foregroundStyle(.secondary)
             Button("Start") {
-                viewModel.startRound()
+                viewModel.startGame()
             }
             .buttonStyle(.borderedProminent)
-            
-        case .ready(let note, let position):
-            targetDisplay(note: note, position: position)
-            Button("Go!") {
-                viewModel.beginRound()
-            }
-            .buttonStyle(.borderedProminent)
-            .font(.title2)
             
         case .countdown(let remaining, let note, let position):
             targetDisplay(note: note, position: position)
             Text("\(remaining)")
                 .font(.system(size: 64, weight: .bold))
+            endButton
             
         case .playing(_, let note, let position):
             targetDisplay(note: note, position: position)
-            Text("Playing...")
-                .font(.title2)
             Text("Detected: \(viewModel.detectedNote)")
                 .font(.headline)
                 .foregroundStyle(.secondary)
+            endButton
             
         case .success(let time, let note, let position):
             targetDisplay(note: note, position: position)
@@ -71,21 +63,16 @@ struct GameView: View {
                 .foregroundStyle(.green)
             Text(String(format: "%.2f seconds", time))
                 .font(.title2)
-            Button("Next") {
-                viewModel.nextRound()
-            }
-            .buttonStyle(.borderedProminent)
-            
-        case .timeout(let note, let position):
-            targetDisplay(note: note, position: position)
-            Text("Time's up!")
-                .font(.title)
-                .foregroundStyle(.orange)
-            Button("Next") {
-                viewModel.nextRound()
-            }
-            .buttonStyle(.borderedProminent)
+            endButton
         }
+    }
+    
+    private var endButton: some View {
+        Button("End") {
+            viewModel.stopGame()
+        }
+        .buttonStyle(.bordered)
+        .tint(.red)
     }
     
     private func targetDisplay(note: Note, position: FretPosition) -> some View {

@@ -9,9 +9,7 @@ import Foundation
 
 /// Callbacks for state machine side effects.
 struct GameStateMachineCallbacks {
-    var onPlayingStarted: (() -> Void)?
     var onSuccess: ((TimeInterval) -> Void)?
-    var onTimeout: (() -> Void)?
 }
 
 /// State machine for game flow transitions.
@@ -26,15 +24,15 @@ final class GameStateMachine {
     @discardableResult
     func transition(to newState: GameState) -> Bool {
         switch (state, newState) {
-        case (.idle, .ready):
-            break
-        case (.ready, .countdown), (.ready, .playing):
+        case (.idle, .countdown), (.idle, .playing):
             break
         case (.countdown, .playing):
             break
-        case (.playing, .success), (.playing, .timeout):
+        case (.playing, .success):
             break
-        case (.success, .idle), (.success, .ready), (.timeout, .idle), (.timeout, .ready):
+        case (.success, .playing):
+            break
+        case (.playing, .idle), (.success, .idle):
             break
         default:
             return false
@@ -42,12 +40,8 @@ final class GameStateMachine {
         state = newState
         
         switch newState {
-        case .playing:
-            callbacks.onPlayingStarted?()
         case .success(let time, _, _):
             callbacks.onSuccess?(time)
-        case .timeout:
-            callbacks.onTimeout?()
         default:
             break
         }

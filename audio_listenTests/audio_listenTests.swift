@@ -8,6 +8,83 @@ import Foundation
 import Testing
 @testable import audio_listen
 
+// MARK: - GameSessionConfiguration
+
+struct GameSessionConfigurationTests {
+    @Test func defaultAllStringsIsValid() {
+        let c = GameSessionConfiguration.defaultAllStrings()
+        #expect(c.isValid)
+        #expect(c.allowedStrings == Set(1...6))
+        #expect(c.showStringAndFret)
+    }
+
+    @Test func validatedAcceptsSingleString() throws {
+        let c = GameSessionConfiguration(showStringAndFret: false, allowedStrings: Set([3]))
+        _ = try c.validated()
+    }
+
+    @Test func emptyAllowedStringsInvalid() {
+        let c = GameSessionConfiguration(allowedStrings: Set())
+        #expect(!c.isValid)
+        #expect(throws: GameSessionConfiguration.ValidationError.self) {
+            try c.validated()
+        }
+    }
+
+    @Test func outOfRangeStringInvalid() {
+        let c = GameSessionConfiguration(allowedStrings: Set([1, 7]))
+        #expect(!c.isValid)
+        do {
+            _ = try c.validated()
+            Issue.record("Expected validation to throw")
+        } catch let e as GameSessionConfiguration.ValidationError {
+            #expect(e == .stringOutOfRange(7))
+        } catch {
+            Issue.record("Wrong error type: \(error)")
+        }
+    }
+
+    @Test func codableRoundTrip() throws {
+        let original = try GameSessionConfiguration(showStringAndFret: false, allowedStrings: Set([1, 4])).validated()
+        let data = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(GameSessionConfiguration.self, from: data)
+        #expect(decoded == original)
+    }
+}
+
+// MARK: - PersistedGameRound / playedAt migration
+
+struct PersistedGameRoundTests {
+    @Test func legacyJsonWithoutPlayedAtMapsToDistantPast() throws {
+        let json = """
+        [{"targetNoteNameRawValue":4,"targetNoteOctave":4,"targetString":1,"targetFret":0,"reactionTime":1.2}]
+        """
+        let decoded = try JSONDecoder().decode([PersistedGameRound].self, from: Data(json.utf8))
+        #expect(decoded.count == 1)
+        let round = decoded[0].toGameRound()
+        #expect(round.playedAt == .distantPast)
+        #expect(round.targetNote == Note(.e, octave: 4))
+        #expect(round.reactionTime == 1.2)
+    }
+
+    @Test func roundTripPreservesPlayedAt() throws {
+        let playedAt = Date(timeIntervalSince1970: 1_700_000_000)
+        let round = GameRound(
+            targetNote: Note(.a, octave: 3),
+            targetPosition: FretPosition(string: 5, fret: 2),
+            reactionTime: 0.42,
+            playedAt: playedAt
+        )
+        let data = try JSONEncoder().encode([PersistedGameRound(from: round)])
+        let back = try JSONDecoder().decode([PersistedGameRound].self, from: data)
+        let restored = back[0].toGameRound()
+        #expect(restored.playedAt.timeIntervalSince1970 == playedAt.timeIntervalSince1970)
+        #expect(restored.targetNote == round.targetNote)
+        #expect(restored.targetPosition == round.targetPosition)
+        #expect(restored.reactionTime == round.reactionTime)
+    }
+}
+
 // MARK: - NoteConverter
 
 struct NoteConverterTests {
