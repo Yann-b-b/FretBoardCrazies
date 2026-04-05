@@ -22,7 +22,8 @@ final class GameViewModel: ObservableObject {
     private let validateNoteUseCase: ValidateNoteUseCase
     private let stateMachine: GameStateMachine
     private let scoreRepository: ScoreRepositoryProtocol
-    private let allowedStringsProvider: AllowedStringsProviding
+    /// Returns a user-facing error if starting is not allowed; `nil` means OK.
+    private let startGate: () -> String?
 
     private var pitchSubscription: AnyCancellable?
     private let countdownEnabled: Bool
@@ -36,7 +37,7 @@ final class GameViewModel: ObservableObject {
         validateNoteUseCase: ValidateNoteUseCase,
         stateMachine: GameStateMachine,
         scoreRepository: ScoreRepositoryProtocol,
-        allowedStringsProvider: AllowedStringsProviding,
+        startGate: @escaping () -> String?,
         countdownEnabled: Bool = true
     ) {
         self.pitchDetector = pitchDetector
@@ -44,7 +45,7 @@ final class GameViewModel: ObservableObject {
         self.validateNoteUseCase = validateNoteUseCase
         self.stateMachine = stateMachine
         self.scoreRepository = scoreRepository
-        self.allowedStringsProvider = allowedStringsProvider
+        self.startGate = startGate
         self.countdownEnabled = countdownEnabled
 
         stateMachine.setCallbacks(GameStateMachineCallbacks(
@@ -57,8 +58,8 @@ final class GameViewModel: ObservableObject {
     /// Start the game session. Generates the first note and begins listening.
     func startGame() {
         errorMessage = nil
-        if allowedStringsProvider.allowedStrings.isEmpty {
-            errorMessage = "Select at least one string to practice."
+        if let gateError = startGate() {
+            errorMessage = gateError
             return
         }
         let (note, position) = generateNoteUseCase.execute()

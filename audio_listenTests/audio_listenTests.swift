@@ -303,6 +303,110 @@ struct GameAllowedStringsStoreTests {
     }
 }
 
+// MARK: - GameAllowedNoteNamesStore
+
+struct GameAllowedNoteNamesStoreTests {
+    @Test func roundTripPersistsSubset() throws {
+        let suite = "test.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suite) else {
+            Issue.record("Could not create UserDefaults suite")
+            return
+        }
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let store = GameAllowedNoteNamesStore(defaults: defaults)
+        let original: Set<NoteName> = [.c, .fSharp, .b]
+        store.save(original)
+        let loaded = store.load()
+        #expect(loaded == original)
+    }
+
+    @Test func missingKeyDefaultsToAllNoteNames() {
+        let suite = "test.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suite) else {
+            Issue.record("Could not create UserDefaults suite")
+            return
+        }
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let store = GameAllowedNoteNamesStore(defaults: defaults)
+        #expect(store.load() == Set(NoteName.allCases))
+    }
+
+    @Test func emptyArrayRoundTripIsEmpty() throws {
+        let suite = "test.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suite) else {
+            Issue.record("Could not create UserDefaults suite")
+            return
+        }
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        defaults.set(try JSONEncoder().encode([Int]()), forKey: GameAllowedNoteNamesStore.userDefaultsKey)
+        let store = GameAllowedNoteNamesStore(defaults: defaults)
+        #expect(store.load().isEmpty)
+    }
+
+    @Test func onlyOutOfRangeValuesFallsBackToAll() throws {
+        let suite = "test.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suite) else {
+            Issue.record("Could not create UserDefaults suite")
+            return
+        }
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        defaults.set(try JSONEncoder().encode([99, 100]), forKey: GameAllowedNoteNamesStore.userDefaultsKey)
+        let store = GameAllowedNoteNamesStore(defaults: defaults)
+        #expect(store.load() == Set(NoteName.allCases))
+    }
+}
+
+// MARK: - RandomNoteNamePositionStrategy
+
+struct RandomNoteNamePositionStrategyTests {
+    @Test func matchingTargetsEmptyAllowedNamesYieldsEmpty() {
+        let out = RandomNoteNamePositionStrategy.matchingTargets(
+            allowedNoteNames: [],
+            maxFretInclusive: 12,
+            allowedStrings: Set(1...6)
+        )
+        #expect(out.isEmpty)
+    }
+
+    @Test func matchingTargetsEmptyAllowedStringsYieldsEmpty() {
+        let out = RandomNoteNamePositionStrategy.matchingTargets(
+            allowedNoteNames: Set(NoteName.allCases),
+            maxFretInclusive: 12,
+            allowedStrings: []
+        )
+        #expect(out.isEmpty)
+    }
+
+    @Test func matchingTargetsRespectsMaxFret() {
+        let out = RandomNoteNamePositionStrategy.matchingTargets(
+            allowedNoteNames: Set(NoteName.allCases),
+            maxFretInclusive: 3,
+            allowedStrings: Set(1...6)
+        )
+        #expect(!out.isEmpty)
+        #expect(out.allSatisfy { $0.1.fret <= 3 })
+    }
+
+    @Test func matchingTargetsEveryPairMatchesBoardAndAllowedNames() {
+        let allowedNames: Set<NoteName> = [.c, .gSharp, .e]
+        let pairs = RandomNoteNamePositionStrategy.matchingTargets(
+            allowedNoteNames: allowedNames,
+            maxFretInclusive: 12,
+            allowedStrings: Set([2, 4, 5])
+        )
+        #expect(!pairs.isEmpty)
+        for (note, position) in pairs {
+            #expect(allowedNames.contains(note.name))
+            let board = GuitarFretboard.note(at: position.string, fret: position.fret)
+            #expect(board == note)
+        }
+    }
+}
+
 // MARK: - GuitarFretboard
 
 struct GuitarFretboardTests {

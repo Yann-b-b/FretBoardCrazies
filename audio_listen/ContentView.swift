@@ -19,6 +19,13 @@ struct ContentView: View {
                 .tabItem {
                     Label("Game", systemImage: "gamecontroller.fill")
                 }
+            NoteNameGameView(
+                viewModel: container.makeNoteNameGameViewModel(),
+                allowedNoteNamesStore: container.allowedNoteNamesStore
+            )
+                .tabItem {
+                    Label("Find note", systemImage: "music.note")
+                }
             TunerView(viewModel: container.makeTunerViewModel())
                 .tabItem {
                     Label("Tuner", systemImage: "tuningfork")
