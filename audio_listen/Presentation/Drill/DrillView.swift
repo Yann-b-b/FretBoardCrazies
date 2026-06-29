@@ -3,6 +3,7 @@ import SwiftUI
 struct DrillView: View {
     @StateObject private var viewModel: DrillViewModel
     private let allowedStringsStore: GameAllowedStringsStore
+    private let comboSound = ComboSoundPlayer()
 
     @State private var allowedStrings: Set<Int> = Set(1...6)
 
@@ -23,6 +24,11 @@ struct DrillView: View {
         .padding(24)
         .frame(minWidth: 640, minHeight: 480)
         .onAppear { allowedStrings = allowedStringsStore.load() }
+        .onChange(of: viewModel.comboCount) { oldValue, newValue in
+            if newValue > oldValue {
+                comboSound.play(combo: newValue)
+            }
+        }
     }
 
     private var header: some View {
