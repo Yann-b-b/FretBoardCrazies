@@ -3,9 +3,9 @@ import SwiftUI
 struct DrillView: View {
     @StateObject private var viewModel: DrillViewModel
     private let allowedStringsStore: GameAllowedStringsStore
-    private let comboSound = ComboSoundPlayer()
 
     @State private var allowedStrings: Set<Int> = Set(1...6)
+    @State private var comboSound = ComboSoundPlayer()
 
     init(viewModel: DrillViewModel, allowedStringsStore: GameAllowedStringsStore) {
         _viewModel = StateObject(wrappedValue: viewModel)
