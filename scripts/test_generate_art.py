@@ -172,7 +172,11 @@ def test_generate_one_uses_generations_for_anchor_or_missing_anchor(monkeypatch)
     def fake_post_generation(url, payload, api_key):
         return b"GENERATED"
 
+    def fail_post_edit(*args, **kwargs):
+        raise AssertionError("post_edit must not be called on the generations path")
+
     monkeypatch.setattr(generate_art, "post_generation", fake_post_generation)
+    monkeypatch.setattr(generate_art, "post_edit", fail_post_edit)
 
     anchor_asset = Asset("_anchor", "anchor", "body", "1024x1024", False, False)
     assert (

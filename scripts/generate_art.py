@@ -10,9 +10,9 @@ import base64
 import hashlib
 import json
 import os
-import uuid
 import urllib.error
 import urllib.request
+import uuid
 from dataclasses import dataclass
 
 API_GENERATIONS_URL = "https://api.openai.com/v1/images/generations"
@@ -220,8 +220,10 @@ def encode_multipart(fields, files):
     parts = []
     for name, value in fields.items():
         parts.append(
-            f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n'
-            f"{value}\r\n".encode("utf-8")
+            (
+                f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n'
+                f"{value}\r\n"
+            ).encode("utf-8")
         )
     for name, (filename, content, content_type) in files.items():
         header = (
