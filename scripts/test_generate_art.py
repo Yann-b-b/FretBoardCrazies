@@ -313,6 +313,23 @@ def test_run_skips_existing_without_force(tmp_path, monkeypatch):
     assert (tmp_path / "belt-white.png").read_bytes() == b"OLD"
 
 
+def test_run_records_anchor_hash_for_assets_after_anchor(tmp_path, monkeypatch):
+    monkeypatch.setattr(generate_art, "OUTPUT_DIR", str(tmp_path))
+    monkeypatch.setattr(generate_art, "CANDIDATES_DIR", str(tmp_path / "_candidates"))
+    monkeypatch.setattr(generate_art, "ANCHOR_PATH", str(tmp_path / "_anchor.png"))
+    monkeypatch.setattr(generate_art, "GALLERY_PATH", str(tmp_path / "index.html"))
+    monkeypatch.setattr(generate_art, "generate_one", lambda *a, **k: b"ANCHORBYTES")
+
+    args = parse_args(["_anchor", "belt-white", "--yes"])
+    run(args, generate_art.ASSETS, "key", "2026-06-29T00:00:00Z")
+
+    expected = hashlib.sha256(b"ANCHORBYTES").hexdigest()
+    belt_sidecar = json.loads((tmp_path / "belt-white.json").read_text())
+    assert belt_sidecar["anchor_hash"] == expected
+    anchor_sidecar = json.loads((tmp_path / "_anchor.json").read_text())
+    assert anchor_sidecar["anchor_hash"] is None
+
+
 def test_run_promote_branch(tmp_path, monkeypatch):
     monkeypatch.setattr(generate_art, "OUTPUT_DIR", str(tmp_path))
     monkeypatch.setattr(generate_art, "CANDIDATES_DIR", str(tmp_path / "_candidates"))

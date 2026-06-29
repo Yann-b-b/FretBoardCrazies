@@ -9,9 +9,11 @@ shares one visual identity. See scripts/README.md.
 import argparse
 import base64
 import hashlib
+import html
 import json
 import os
 import shutil
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -291,9 +293,9 @@ def render_gallery(entries):
     figures = []
     for entry in entries:
         figures.append(
-            f'<figure><img src="{entry["image"]}" width="256" loading="lazy">'
-            f"<figcaption><b>{entry['name']}</b> ({entry['quality']})<br>"
-            f"{entry['prompt']}</figcaption></figure>"
+            f'<figure><img src="{html.escape(entry["image"], quote=True)}" width="256" loading="lazy">'
+            f"<figcaption><b>{html.escape(entry['name'])}</b> ({html.escape(entry['quality'])})<br>"
+            f"{html.escape(entry['prompt'])}</figcaption></figure>"
         )
     return (
         "<!doctype html><meta charset=utf-8><title>FretBoardCrazies art</title>"
@@ -362,15 +364,18 @@ def _gallery_entries(directory, quality, src_prefix=""):
         name = filename[:-4]
         sidecar_path = os.path.join(directory, f"{name}.json")
         prompt = ""
+        entry_quality = quality
         if os.path.exists(sidecar_path):
             with open(sidecar_path) as handle:
-                prompt = json.load(handle).get("prompt", "")
+                data = json.load(handle)
+            prompt = data.get("prompt", "")
+            entry_quality = data.get("quality", quality)
         entries.append(
             {
                 "name": name,
                 "image": src_prefix + filename,
                 "prompt": prompt,
-                "quality": quality,
+                "quality": entry_quality,
             }
         )
     return entries
@@ -401,9 +406,9 @@ def run(args, assets, api_key, timestamp):
             print("Aborted.")
             return 1
 
-    digest = anchor_hash(ANCHOR_PATH)
     spent = 0.0
     for asset in selected:
+        digest = anchor_hash(ANCHOR_PATH)
         prompt = build_prompt(asset, STYLE_PREFIX)
         final_path = os.path.join(OUTPUT_DIR, f"{asset.name}.png")
         if args.variants == 1 and should_skip(final_path, args.force):
@@ -470,7 +475,7 @@ def main():
         print(f"OpenAI API error: HTTP {error.code} {detail[:300]}")
         sys.exit(1)
     if code == 0 and not args.list and not args.promote:
-        os.system(f"open {GALLERY_PATH}")
+        subprocess.run(["open", GALLERY_PATH], check=False)
     sys.exit(code)
 
 
