@@ -1,0 +1,115 @@
+import SwiftUI
+
+struct DrillView: View {
+    @StateObject private var viewModel: DrillViewModel
+    private let allowedStringsStore: GameAllowedStringsStore
+    private let allowedNoteNamesStore: GameAllowedNoteNamesStore
+
+    @State private var allowedStrings: Set<Int> = Set(1...6)
+
+    init(viewModel: DrillViewModel, allowedStringsStore: GameAllowedStringsStore, allowedNoteNamesStore: GameAllowedNoteNamesStore) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+        self.allowedStringsStore = allowedStringsStore
+        self.allowedNoteNamesStore = allowedNoteNamesStore
+    }
+
+    var body: some View {
+        VStack(spacing: 20) {
+            header
+            if let error = viewModel.errorMessage {
+                Text(error).foregroundStyle(.red).multilineTextAlignment(.center)
+            }
+            content
+        }
+        .padding(24)
+        .frame(minWidth: 640, minHeight: 480)
+        .onAppear { allowedStrings = allowedStringsStore.load() }
+    }
+
+    private var header: some View {
+        HStack {
+            Text("Fretboard Drill").font(.title2).bold()
+            Spacer()
+            Text("Today: \(viewModel.todayCount)").foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch viewModel.state {
+        case .idle:
+            idleSetup
+        case .countdown(let remaining, let prompt):
+            promptView(prompt, reveal: false)
+            Text("\(remaining)").font(.system(size: 56, weight: .bold))
+            controlButtons
+        case .playing(_, let prompt):
+            promptView(prompt, reveal: false)
+            Text("Detected: \(viewModel.detectedNote)").foregroundStyle(.secondary)
+            controlButtons
+        case .success(let time, let prompt):
+            promptView(prompt, reveal: true)
+            Text("Correct!  \(String(format: "%.2f s", time))").foregroundStyle(.green).bold()
+            controlButtons
+        }
+    }
+
+    private var idleSetup: some View {
+        VStack(spacing: 16) {
+            Text("Pick strings, then press Space to start").foregroundStyle(.secondary)
+            HStack {
+                ForEach(StringSetPresets.all) { preset in
+                    Button(preset.label) {
+                        allowedStrings = preset.strings
+                        allowedStringsStore.save(preset.strings)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+            FretboardView(heatmap: [:])
+            Button("Start") { viewModel.start() }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.space, modifiers: [])
+                .disabled(allowedStrings.isEmpty)
+        }
+    }
+
+    private func promptView(_ prompt: DrillPrompt, reveal: Bool) -> some View {
+        VStack(spacing: 12) {
+            switch prompt.direction {
+            case .findPosition:
+                Text("\(prompt.targetNote.name.displayName) — string \(prompt.string)")
+                    .font(.system(size: 48, weight: .bold))
+                FretboardView(
+                    highlightedString: prompt.string,
+                    highlightedPosition: reveal ? position(for: prompt) : nil,
+                    revealLabel: reveal ? prompt.targetNote.name.displayName : nil
+                )
+            case .nameNote:
+                Text(reveal ? prompt.targetNote.name.displayName : "Name this note")
+                    .font(.system(size: 40, weight: .bold))
+                FretboardView(
+                    highlightedPosition: position(for: prompt),
+                    revealLabel: reveal ? prompt.targetNote.name.displayName : nil
+                )
+            }
+        }
+    }
+
+    private func position(for prompt: DrillPrompt) -> FretPosition? {
+        GuitarFretboard.positions(for: prompt.targetNote)
+            .first { $0.string == prompt.string }
+    }
+
+    private var controlButtons: some View {
+        HStack(spacing: 16) {
+            Button("Skip") { viewModel.skip() }
+                .keyboardShortcut("s", modifiers: [])
+            Button("End") { viewModel.stop() }
+                .keyboardShortcut(.cancelAction)
+                .tint(.red)
+            Button("Next") { viewModel.start() }
+                .keyboardShortcut(.space, modifiers: [])
+        }
+    }
+}
