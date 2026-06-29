@@ -1,5 +1,8 @@
 import hashlib
 import json
+import struct
+import zlib
+
 import pytest
 
 import generate_art
@@ -19,7 +22,41 @@ from generate_art import (
     resolve_selection,
     run,
     should_skip,
+    verify_transparency,
 )
+
+
+def _png_chunk(tag, data):
+    return (
+        struct.pack(">I", len(data))
+        + tag
+        + data
+        + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+    )
+
+
+def _make_rgba_png(width, height, alpha):
+    ihdr = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
+    pixel = bytes([255, 128, 0, alpha])
+    raw = b"".join(b"\x00" + pixel * width for _ in range(height))
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + _png_chunk(b"IHDR", ihdr)
+        + _png_chunk(b"IDAT", zlib.compress(raw))
+        + _png_chunk(b"IEND", b"")
+    )
+
+
+def test_verify_transparency_true_for_transparent_corners():
+    assert verify_transparency(_make_rgba_png(4, 4, alpha=0)) is True
+
+
+def test_verify_transparency_false_for_opaque_corners():
+    assert verify_transparency(_make_rgba_png(4, 4, alpha=255)) is False
+
+
+def test_verify_transparency_false_for_non_png():
+    assert verify_transparency(b"not a png") is False
 
 
 def test_registry_has_no_mascot_and_one_anchor():

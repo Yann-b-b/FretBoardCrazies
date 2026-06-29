@@ -18,6 +18,7 @@ import sys
 import urllib.error
 import urllib.request
 import uuid
+import zlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -31,8 +32,8 @@ GALLERY_PATH = os.path.join(OUTPUT_DIR, "index.html")
 
 STYLE_SPEC = {
     "shape_language": "chunky rounded shapes",
-    "line_weight": "thick clean outlines",
-    "lighting": "soft drop shadow and gentle gradients",
+    "line_weight": "thick dark-brown outlines",
+    "lighting": "glossy highlights, soft drop shadow, gentle gradients",
     "palette": (
         "warm orange #FF8A3D and amber #FFB23E primaries, teal #2DD4BF accents, "
         "soft cream #FFF6EC background"
@@ -44,11 +45,17 @@ def build_style_prefix(spec):
     return (
         f"flat vector illustration, playful and friendly, {spec['shape_language']}, "
         f"{spec['line_weight']}, {spec['lighting']}, warm palette ({spec['palette']}), "
-        "Duolingo-style illustration, high detail, centered. "
+        "glossy sticker style with a soft white border, Duolingo-style "
+        "illustration, high detail, centered. "
     )
 
 
 STYLE_PREFIX = build_style_prefix(STYLE_SPEC)
+
+ISOLATION = (
+    " One single isolated subject only, centered on a plain empty background, "
+    "nothing else in frame."
+)
 
 BELT_COLORS = ["white", "yellow", "orange", "green", "blue", "purple", "brown", "black"]
 
@@ -87,12 +94,14 @@ ASSETS = [
         Asset(
             f"belt-{color}",
             "belts",
-            f"a cute knotted martial-arts belt icon in {color}, tied in a bow with "
-            "two hanging ends, glossy, rounded, badge style, with a thin light "
-            "outline so it reads on dark backgrounds",
+            f"a karate martial-arts rank belt in {color}: a thick folded fabric "
+            "belt wrapped horizontally and cinched in a flat square knot at the "
+            "center with two short ends hanging straight down, front view, like a "
+            "judo rank belt (not a ribbon bow), glossy, rounded, badge style, with "
+            "a thin light outline so it reads on dark backgrounds" + ISOLATION,
             "1024x1024",
             True,
-            True,
+            False,
         )
         for color in BELT_COLORS
     ],
@@ -343,6 +352,50 @@ def parse_args(argv):
     return parser.parse_args(argv)
 
 
+def verify_transparency(png_bytes):
+    if png_bytes[:8] != b"\x89PNG\r\n\x1a\n":
+        return False
+    width = int.from_bytes(png_bytes[16:20], "big")
+    bit_depth = png_bytes[24]
+    color_type = png_bytes[25]
+    if color_type != 6 or bit_depth != 8:
+        return False
+    idat = bytearray()
+    position = 8
+    while position < len(png_bytes):
+        length = int.from_bytes(png_bytes[position : position + 4], "big")
+        chunk_type = png_bytes[position + 4 : position + 8]
+        if chunk_type == b"IDAT":
+            idat += png_bytes[position + 8 : position + 8 + length]
+        elif chunk_type == b"IEND":
+            break
+        position += 12 + length
+    raw = zlib.decompress(bytes(idat))
+    bytes_per_pixel = 4
+    stride = width * bytes_per_pixel
+    filter_type = raw[0]
+    line = bytearray(raw[1 : 1 + stride])
+    if filter_type in (1, 4):
+        for i in range(bytes_per_pixel, stride):
+            line[i] = (line[i] + line[i - bytes_per_pixel]) & 0xFF
+    elif filter_type == 3:
+        for i in range(bytes_per_pixel, stride):
+            line[i] = (line[i] + (line[i - bytes_per_pixel] >> 1)) & 0xFF
+    left_alpha = line[3]
+    right_alpha = line[(width - 1) * bytes_per_pixel + 3]
+    return left_alpha < 16 and right_alpha < 16
+
+
+def transparency_tag(asset, image_bytes):
+    if not asset.transparent:
+        return "  [opaque]"
+    return (
+        "  [transparent OK]"
+        if verify_transparency(image_bytes)
+        else "  [NOT TRANSPARENT!]"
+    )
+
+
 def _write_image_and_sidecar(
     directory, filename, image_bytes, asset, prompt, quality, digest, timestamp
 ):
@@ -428,7 +481,8 @@ def run(args, assets, api_key, timestamp):
                     timestamp,
                 )
                 spent += COST_TABLE[(asset.size, quality)]
-                print(f"  candidate {asset.name}-{index}  (~${spent:.2f})")
+                tag = transparency_tag(asset, image_bytes)
+                print(f"  candidate {asset.name}-{index}{tag}  (~${spent:.2f})")
         else:
             image_bytes = generate_one(asset, prompt, quality, api_key, ANCHOR_PATH)
             _write_image_and_sidecar(
@@ -442,7 +496,8 @@ def run(args, assets, api_key, timestamp):
                 timestamp,
             )
             spent += COST_TABLE[(asset.size, quality)]
-            print(f"  {asset.name}  (~${spent:.2f})")
+            tag = transparency_tag(asset, image_bytes)
+            print(f"  {asset.name}{tag}  (~${spent:.2f})")
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     if args.variants > 1:
