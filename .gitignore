@@ -6,3 +6,6 @@ build/
 DerivedData/
 .claude/
 .superpowers/
+.env
+art/_candidates/
+art/index.html
