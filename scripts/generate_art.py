@@ -144,3 +144,55 @@ def resolve_selection(tokens, assets):
 
 def estimate_cost(assets, quality, variants, cost_table):
     return sum(cost_table[(asset.size, quality)] * variants for asset in assets)
+
+
+def build_prompt(asset, style_prefix):
+    return style_prefix + asset.prompt_body
+
+
+def build_generation_payload(asset, prompt, quality):
+    return {
+        "model": MODEL,
+        "prompt": prompt,
+        "size": asset.size,
+        "n": 1,
+        "quality": quality,
+        "background": "transparent" if asset.transparent else "opaque",
+    }
+
+
+def build_edit_fields(asset, prompt, quality):
+    return {
+        "model": MODEL,
+        "prompt": prompt,
+        "size": asset.size,
+        "n": "1",
+        "quality": quality,
+        "background": "transparent" if asset.transparent else "opaque",
+    }
+
+
+def build_sidecar(asset, prompt, quality, anchor_digest, model, timestamp):
+    return {
+        "name": asset.name,
+        "group": asset.group,
+        "prompt": prompt,
+        "size": asset.size,
+        "quality": quality,
+        "transparent": asset.transparent,
+        "anchored": asset.anchored,
+        "anchor_hash": anchor_digest,
+        "model": model,
+        "timestamp": timestamp,
+    }
+
+
+def anchor_hash(path):
+    if not os.path.exists(path):
+        return None
+    with open(path, "rb") as handle:
+        return hashlib.sha256(handle.read()).hexdigest()
+
+
+def should_skip(path, force):
+    return os.path.exists(path) and not force

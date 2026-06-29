@@ -58,3 +58,68 @@ def test_estimate_cost_scales_with_variants():
     one = Asset("x", "g", "body", "1024x1024", True, True)
     assert estimate_cost([one], "low", 1, table) == pytest.approx(0.01)
     assert estimate_cost([one], "low", 3, table) == pytest.approx(0.03)
+
+
+from generate_art import (
+    STYLE_PREFIX,
+    anchor_hash,
+    build_edit_fields,
+    build_generation_payload,
+    build_prompt,
+    build_sidecar,
+    should_skip,
+)
+
+
+def test_build_prompt_prepends_style_prefix():
+    asset = Asset("x", "g", "a red box", "1024x1024", True, True)
+    prompt = build_prompt(asset, STYLE_PREFIX)
+    assert prompt.startswith(STYLE_PREFIX)
+    assert prompt.endswith("a red box")
+
+
+def test_generation_payload_opaque_vs_transparent():
+    opaque = Asset("o", "g", "body", "1024x1024", False, False)
+    clear = Asset("c", "g", "body", "1024x1024", True, True)
+    assert build_generation_payload(opaque, "p", "low")["background"] == "opaque"
+    assert build_generation_payload(clear, "p", "high")["background"] == "transparent"
+    assert build_generation_payload(clear, "p", "high")["quality"] == "high"
+
+
+def test_edit_fields_are_all_strings():
+    asset = Asset("c", "g", "body", "1024x1024", True, True)
+    fields = build_edit_fields(asset, "p", "low")
+    assert all(isinstance(value, str) for value in fields.values())
+    assert fields["background"] == "transparent"
+
+
+def test_sidecar_carries_reproducibility_metadata():
+    asset = Asset("belt-white", "belts", "body", "1024x1024", True, True)
+    sidecar = build_sidecar(asset, "full prompt", "low", "abc123", "gpt-image-1", "2026-06-29T00:00:00Z")
+    assert sidecar["name"] == "belt-white"
+    assert sidecar["prompt"] == "full prompt"
+    assert sidecar["anchor_hash"] == "abc123"
+    assert sidecar["timestamp"] == "2026-06-29T00:00:00Z"
+
+
+def test_anchor_hash_none_when_missing(tmp_path):
+    assert anchor_hash(str(tmp_path / "absent.png")) is None
+
+
+def test_anchor_hash_stable_for_same_bytes(tmp_path):
+    path = tmp_path / "a.png"
+    path.write_bytes(b"hello")
+    assert anchor_hash(str(path)) == hashlib_sha256(b"hello")
+
+
+def hashlib_sha256(data):
+    import hashlib
+    return hashlib.sha256(data).hexdigest()
+
+
+def test_should_skip_only_when_exists_and_not_forced(tmp_path):
+    path = tmp_path / "x.png"
+    assert should_skip(str(path), force=False) is False
+    path.write_bytes(b"x")
+    assert should_skip(str(path), force=False) is True
+    assert should_skip(str(path), force=True) is False
