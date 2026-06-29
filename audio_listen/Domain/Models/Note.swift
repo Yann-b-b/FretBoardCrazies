@@ -34,7 +34,7 @@ struct Note: Hashable, Equatable {
 }
 
 /// Note name without octave (12 chromatic notes)
-enum NoteName: Int, CaseIterable, Hashable {
+enum NoteName: Int, CaseIterable, Hashable, Codable {
     case c = 0
     case cSharp
     case d
