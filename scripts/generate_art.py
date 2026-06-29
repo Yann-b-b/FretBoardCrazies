@@ -10,6 +10,7 @@ import base64
 import hashlib
 import json
 import os
+import shutil
 import urllib.error
 import urllib.request
 import uuid
@@ -281,3 +282,33 @@ def generate_one(asset, prompt, quality, api_key, anchor_path):
     return post_generation(
         API_GENERATIONS_URL, build_generation_payload(asset, prompt, quality), api_key
     )
+
+
+def render_gallery(entries):
+    figures = []
+    for entry in entries:
+        figures.append(
+            f'<figure><img src="{entry["image"]}" width="256" loading="lazy">'
+            f"<figcaption><b>{entry['name']}</b> ({entry['quality']})<br>"
+            f"{entry['prompt']}</figcaption></figure>"
+        )
+    return (
+        "<!doctype html><meta charset=utf-8><title>FretBoardCrazies art</title>"
+        "<style>body{font-family:-apple-system,sans-serif;background:#FFF6EC;padding:24px}"
+        "figure{display:inline-block;width:288px;vertical-align:top;margin:0 16px 24px 0}"
+        "img{background:#e9ddcc;border-radius:12px}"
+        "figcaption{font-size:12px;color:#221A14}</style>"
+        "<body>" + "".join(figures) + "</body>"
+    )
+
+
+def promote(name, index, candidates_dir, output_dir):
+    source_png = os.path.join(candidates_dir, f"{name}-{index}.png")
+    if not os.path.exists(source_png):
+        raise FileNotFoundError(source_png)
+    destination_png = os.path.join(output_dir, f"{name}.png")
+    shutil.copyfile(source_png, destination_png)
+    source_json = os.path.join(candidates_dir, f"{name}-{index}.json")
+    if os.path.exists(source_json):
+        shutil.copyfile(source_json, os.path.join(output_dir, f"{name}.json"))
+    return destination_png

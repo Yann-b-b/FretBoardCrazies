@@ -12,6 +12,8 @@ from generate_art import (
     build_prompt,
     build_sidecar,
     estimate_cost,
+    promote,
+    render_gallery,
     resolve_selection,
     should_skip,
 )
@@ -189,3 +191,44 @@ def test_generate_one_uses_generations_for_anchor_or_missing_anchor(monkeypatch)
         generate_art.generate_one(belt, "p", "low", "key", "missing.png")
         == b"GENERATED"
     )
+
+
+def test_render_gallery_embeds_name_and_prompt():
+    html = render_gallery(
+        [
+            {
+                "name": "belt-white",
+                "image": "belt-white.png",
+                "prompt": "a white belt",
+                "quality": "low",
+            },
+        ]
+    )
+    assert "<img" in html
+    assert "belt-white" in html
+    assert "a white belt" in html
+    assert "belt-white.png" in html
+
+
+def test_promote_copies_png_and_sidecar(tmp_path):
+    candidates = tmp_path / "_candidates"
+    output = tmp_path / "out"
+    candidates.mkdir()
+    output.mkdir()
+    (candidates / "belt-white-2.png").write_bytes(b"PNG2")
+    (candidates / "belt-white-2.json").write_text('{"k": 1}')
+
+    dest = promote("belt-white", 2, str(candidates), str(output))
+
+    assert dest == str(output / "belt-white.png")
+    assert (output / "belt-white.png").read_bytes() == b"PNG2"
+    assert (output / "belt-white.json").read_text() == '{"k": 1}'
+
+
+def test_promote_missing_candidate_raises(tmp_path):
+    candidates = tmp_path / "_candidates"
+    output = tmp_path / "out"
+    candidates.mkdir()
+    output.mkdir()
+    with pytest.raises(FileNotFoundError):
+        promote("belt-white", 9, str(candidates), str(output))
