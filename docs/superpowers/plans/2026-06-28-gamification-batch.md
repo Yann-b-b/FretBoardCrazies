@@ -148,7 +148,7 @@ struct BeltRankTests {
     private func stats(boxes: [Int]) -> [DrillItemKey: ItemStats] {
         var d: [DrillItemKey: ItemStats] = [:]
         for (i, box) in boxes.enumerated() {
-            let key = DrillItemKey(noteName: NoteName(rawValue: i % 12)!, string: (i % 6) + 1)
+            let key = DrillItemKey(noteName: NoteName(rawValue: i / 6)!, string: (i % 6) + 1)
             d[key] = ItemStats(box: box, attempts: 1, correct: 1, lastReactionTime: 1.0, lastSeenAt: Date(timeIntervalSince1970: 1_700_000_000))
         }
         return d
