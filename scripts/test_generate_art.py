@@ -1,4 +1,5 @@
 import hashlib
+import json
 import pytest
 
 import generate_art
@@ -12,9 +13,11 @@ from generate_art import (
     build_prompt,
     build_sidecar,
     estimate_cost,
+    parse_args,
     promote,
     render_gallery,
     resolve_selection,
+    run,
     should_skip,
 )
 
@@ -232,3 +235,92 @@ def test_promote_missing_candidate_raises(tmp_path):
     output.mkdir()
     with pytest.raises(FileNotFoundError):
         promote("belt-white", 9, str(candidates), str(output))
+
+
+def test_parse_args_defaults():
+    args = parse_args(["belts"])
+    assert args.selection == ["belts"]
+    assert args.variants == 1
+    assert args.final is False
+    assert args.force is False
+    assert args.list is False
+
+
+def test_parse_args_flags():
+    args = parse_args(["belt-white", "--variants", "3", "--final", "--force", "--yes"])
+    assert args.selection == ["belt-white"]
+    assert args.variants == 3
+    assert args.final is True
+    assert args.force is True
+    assert args.yes is True
+
+
+def test_parse_args_promote():
+    args = parse_args(["--promote", "belt-white=2"])
+    assert args.promote == "belt-white=2"
+
+
+def test_run_generates_single_asset_with_sidecar(tmp_path, monkeypatch):
+    monkeypatch.setattr(generate_art, "OUTPUT_DIR", str(tmp_path))
+    monkeypatch.setattr(generate_art, "CANDIDATES_DIR", str(tmp_path / "_candidates"))
+    monkeypatch.setattr(generate_art, "ANCHOR_PATH", str(tmp_path / "_anchor.png"))
+    monkeypatch.setattr(generate_art, "GALLERY_PATH", str(tmp_path / "index.html"))
+    monkeypatch.setattr(generate_art, "generate_one", lambda *a, **k: b"PNGBYTES")
+
+    args = parse_args(["belt-white", "--yes"])
+    code = run(args, generate_art.ASSETS, "key", "2026-06-29T00:00:00Z")
+
+    assert code == 0
+    assert (tmp_path / "belt-white.png").read_bytes() == b"PNGBYTES"
+    sidecar = json.loads((tmp_path / "belt-white.json").read_text())
+    assert sidecar["name"] == "belt-white"
+    assert sidecar["quality"] == "low"
+    assert (tmp_path / "index.html").exists()
+
+
+def test_run_variants_write_candidates(tmp_path, monkeypatch):
+    monkeypatch.setattr(generate_art, "OUTPUT_DIR", str(tmp_path))
+    monkeypatch.setattr(generate_art, "CANDIDATES_DIR", str(tmp_path / "_candidates"))
+    monkeypatch.setattr(generate_art, "ANCHOR_PATH", str(tmp_path / "_anchor.png"))
+    monkeypatch.setattr(generate_art, "GALLERY_PATH", str(tmp_path / "index.html"))
+    monkeypatch.setattr(generate_art, "generate_one", lambda *a, **k: b"PNGBYTES")
+
+    args = parse_args(["belt-white", "--variants", "2", "--yes"])
+    code = run(args, generate_art.ASSETS, "key", "2026-06-29T00:00:00Z")
+
+    assert code == 0
+    assert (tmp_path / "_candidates" / "belt-white-1.png").exists()
+    assert (tmp_path / "_candidates" / "belt-white-2.png").exists()
+    assert not (tmp_path / "belt-white.png").exists()
+
+
+def test_run_skips_existing_without_force(tmp_path, monkeypatch):
+    monkeypatch.setattr(generate_art, "OUTPUT_DIR", str(tmp_path))
+    monkeypatch.setattr(generate_art, "CANDIDATES_DIR", str(tmp_path / "_candidates"))
+    monkeypatch.setattr(generate_art, "ANCHOR_PATH", str(tmp_path / "_anchor.png"))
+    monkeypatch.setattr(generate_art, "GALLERY_PATH", str(tmp_path / "index.html"))
+    (tmp_path / "belt-white.png").write_bytes(b"OLD")
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("should not generate when skipping")
+
+    monkeypatch.setattr(generate_art, "generate_one", fail_if_called)
+
+    args = parse_args(["belt-white", "--yes"])
+    code = run(args, generate_art.ASSETS, "key", "2026-06-29T00:00:00Z")
+
+    assert code == 0
+    assert (tmp_path / "belt-white.png").read_bytes() == b"OLD"
+
+
+def test_run_promote_branch(tmp_path, monkeypatch):
+    monkeypatch.setattr(generate_art, "OUTPUT_DIR", str(tmp_path))
+    monkeypatch.setattr(generate_art, "CANDIDATES_DIR", str(tmp_path / "_candidates"))
+    (tmp_path / "_candidates").mkdir()
+    (tmp_path / "_candidates" / "belt-white-1.png").write_bytes(b"CAND")
+
+    args = parse_args(["--promote", "belt-white=1", "--yes"])
+    code = run(args, generate_art.ASSETS, "key", "2026-06-29T00:00:00Z")
+
+    assert code == 0
+    assert (tmp_path / "belt-white.png").read_bytes() == b"CAND"
