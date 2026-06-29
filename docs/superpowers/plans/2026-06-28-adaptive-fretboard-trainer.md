@@ -268,7 +268,10 @@ final class FakeScheduler: DrillScheduler {
         pendingAfter.append(run)
         return AnyCancellable { [weak self] in self?.pendingAfter.removeAll() }
     }
-    func fireRepeatingTick() { repeatingTicks.forEach { $0() } }
+    func fireRepeatingTick() {
+        let ticks = repeatingTicks
+        ticks.forEach { $0() }
+    }
     func firePendingAfter() {
         let runs = pendingAfter
         pendingAfter.removeAll()
@@ -287,10 +290,11 @@ struct ClockSchedulerTests {
     @Test func fakeSchedulerFiresAfter() {
         let s = FakeScheduler()
         var fired = false
-        _ = s.scheduleAfter(1.0) { fired = true }
+        let token = s.scheduleAfter(1.0) { fired = true }
         #expect(!fired)
         s.firePendingAfter()
         #expect(fired)
+        withExtendedLifetime(token) {}
     }
 
     @Test func cancellingAfterPreventsFire() {
