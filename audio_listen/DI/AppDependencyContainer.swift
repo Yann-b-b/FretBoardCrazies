@@ -51,7 +51,7 @@ final class AppDependencyContainer {
     
     @MainActor
     func makeGameViewModel() -> GameViewModel {
-        let countdown = UserDefaults.standard.bool(forKey: "countdownEnabled")
+        let countdown = UserDefaults.standard.bool(forKey: GameSettingsKeys.countdownEnabled)
         let stringsProvider = allowedStringsProvider
         return GameViewModel(
             pitchDetector: pitchDetector,
@@ -70,7 +70,7 @@ final class AppDependencyContainer {
 
     @MainActor
     func makeNoteNameGameViewModel() -> GameViewModel {
-        let countdown = UserDefaults.standard.bool(forKey: "countdownEnabled")
+        let countdown = UserDefaults.standard.bool(forKey: GameSettingsKeys.countdownEnabled)
         let namesProvider = allowedNoteNamesProvider
         return GameViewModel(
             pitchDetector: pitchDetector,
