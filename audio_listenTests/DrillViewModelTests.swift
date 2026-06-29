@@ -49,7 +49,7 @@ private func makeViewModel(
         validateNote: ValidateNoteUseCase(),
         stateMachine: DrillStateMachine(),
         progressRepository: repo,
-        dailyGoalStore: DailyGoalStore(defaults: defaults, calendar: Calendar(identifier: .gregorian)),
+        dailyHistoryStore: DailyHistoryStore(defaults: defaults, calendar: Calendar(identifier: .gregorian)),
         clock: clock,
         scheduler: scheduler,
         allowedStrings: { Set([6]) },
@@ -86,7 +86,7 @@ struct DrillViewModelTests {
             validateNote: ValidateNoteUseCase(),
             stateMachine: DrillStateMachine(),
             progressRepository: UserDefaultsDrillProgressRepository(defaults: defaults),
-            dailyGoalStore: DailyGoalStore(defaults: defaults),
+            dailyHistoryStore: DailyHistoryStore(defaults: defaults),
             clock: FakeClock(),
             scheduler: FakeScheduler(),
             allowedStrings: { [] },
@@ -180,5 +180,82 @@ struct DrillViewModelTests {
         guard case .playing = vm.state else { Issue.record("expected playing after manual start, got \(vm.state)"); return }
         scheduler.firePendingAfter()
         guard case .playing = vm.state else { Issue.record("stale auto-advance fired after manual start"); return }
+    }
+
+    @Test @MainActor func correctAnswerRecordsDailyHistory() async {
+        let detector = StubPitchDetector()
+        let clock = FakeClock()
+        let suite = "test.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        let history = DailyHistoryStore(defaults: defaults, calendar: Calendar(identifier: .gregorian))
+        let vm = DrillViewModel(
+            pitchDetector: detector,
+            selectNextPrompt: SelectNextPromptUseCase(nameNoteProbability: 0.0),
+            updateStats: UpdateItemStatsUseCase(),
+            validateNote: ValidateNoteUseCase(),
+            stateMachine: DrillStateMachine(),
+            progressRepository: UserDefaultsDrillProgressRepository(defaults: defaults),
+            dailyHistoryStore: history,
+            clock: clock,
+            scheduler: FakeScheduler(),
+            allowedStrings: { Set([6]) },
+            allowedNoteNames: { [.e] },
+            maxFretInclusive: { 11 },
+            countdownEnabled: false,
+            randomUnit: { 0.0 }
+        )
+        vm.start()
+        clock.advance(by: 1.5)
+        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(vm.todayCount == 1)
+        #expect(history.todayReps(now: clock.now()) == 1)
+    }
+
+    @Test @MainActor func comboIncrementsOnFastCorrect() async {
+        let detector = StubPitchDetector()
+        let clock = FakeClock()
+        let (vm, _) = makeViewModel(detector: detector, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
+        vm.start()
+        clock.advance(by: 1.0)
+        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(vm.comboCount == 1)
+    }
+
+    @Test @MainActor func comboResetsOnSlowCorrect() async {
+        let detector = StubPitchDetector()
+        let clock = FakeClock()
+        let (vm, _) = makeViewModel(detector: detector, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
+        vm.start()
+        clock.advance(by: 1.0)
+        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(vm.comboCount == 1)
+        vm.start()
+        clock.advance(by: 5.0)
+        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(vm.comboCount == 0)
+    }
+
+    @Test @MainActor func comboResetsOnSkip() async {
+        let detector = StubPitchDetector()
+        let clock = FakeClock()
+        let (vm, _) = makeViewModel(detector: detector, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
+        vm.start()
+        clock.advance(by: 1.0)
+        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(vm.comboCount == 1)
+        vm.skip()
+        #expect(vm.comboCount == 0)
+    }
+
+    @Test @MainActor func beltRankStartsWhite() {
+        let detector = StubPitchDetector()
+        let (vm, _) = makeViewModel(detector: detector, clock: FakeClock(), scheduler: FakeScheduler(), countdownEnabled: false)
+        #expect(vm.beltRank.belt == .white)
+        #expect(vm.beltRank.fraction == 0)
     }
 }

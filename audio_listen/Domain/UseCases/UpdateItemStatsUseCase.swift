@@ -4,7 +4,7 @@ struct UpdateItemStatsUseCase {
     let maxBox: Int
     let fastReactionSeconds: TimeInterval
 
-    init(maxBox: Int = 4, fastReactionSeconds: TimeInterval = 3.0) {
+    init(maxBox: Int = DrillTuning.maxBox, fastReactionSeconds: TimeInterval = DrillTuning.fastReactionSeconds) {
         self.maxBox = maxBox
         self.fastReactionSeconds = fastReactionSeconds
     }
