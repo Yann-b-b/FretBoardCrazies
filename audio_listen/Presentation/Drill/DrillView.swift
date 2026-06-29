@@ -14,6 +14,7 @@ struct DrillView: View {
     var body: some View {
         VStack(spacing: 20) {
             header
+            comboBadge
             if let error = viewModel.errorMessage {
                 Text(error).foregroundStyle(.red).multilineTextAlignment(.center)
             }
@@ -25,10 +26,28 @@ struct DrillView: View {
     }
 
     private var header: some View {
-        HStack {
+        HStack(spacing: 12) {
             Text("Fretboard Drill").font(.title2).bold()
             Spacer()
+            HStack(spacing: 6) {
+                Image(systemName: viewModel.beltRank.belt.symbolName)
+                    .foregroundStyle(viewModel.beltRank.belt.color)
+                Text("\(viewModel.beltRank.belt.displayName) belt")
+                    .foregroundStyle(.secondary)
+            }
             Text("Today: \(viewModel.todayCount)").foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var comboBadge: some View {
+        if viewModel.comboCount >= 2 {
+            let scale = min(1.0 + Double(viewModel.comboCount) * 0.05, 1.6)
+            Text("🔥 \(viewModel.comboCount) combo")
+                .font(.headline)
+                .foregroundStyle(.orange)
+                .scaleEffect(scale)
+                .animation(.spring(response: 0.25, dampingFraction: 0.5), value: viewModel.comboCount)
         }
     }
 
