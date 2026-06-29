@@ -1017,7 +1017,7 @@ struct SelectNextPromptUseCase {
         allowedNoteNames: Set<NoteName>,
         maxFretInclusive: Int,
         stats: [DrillItemKey: ItemStats],
-        now: Date,
+        now _: Date,
         randomUnit: () -> Double
     ) -> DrillPrompt? {
         let keys = candidates(allowedStrings: allowedStrings, allowedNoteNames: allowedNoteNames, maxFretInclusive: maxFretInclusive)
