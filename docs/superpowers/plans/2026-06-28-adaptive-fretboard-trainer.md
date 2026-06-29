@@ -1726,7 +1726,7 @@ git commit -m "feat: add SwiftUI fretboard view"
 - Create: `audio_listen/Presentation/Drill/DrillView.swift`
 
 **Interfaces:**
-- Produces: `struct DrillView: View` with `init(viewModel: DrillViewModel, allowedStringsStore: GameAllowedStringsStore, allowedNoteNamesStore: GameAllowedNoteNamesStore)`.
+- Produces: `struct DrillView: View` with `init(viewModel: DrillViewModel, allowedStringsStore: GameAllowedStringsStore)`.
 - Consumes: `DrillViewModel`, `DrillState`, `DrillPrompt`, `FretboardView`, `StringSetPresets`, `GameAllowedStringsStore`, `GameAllowedNoteNamesStore`, `GuitarFretboard`.
 
 Keyboard: Space = start/next (`.keyboardShortcut(.space, modifiers: [])`), Esc = end (`.keyboardShortcut(.cancelAction)`), S = skip (`.keyboardShortcut("s", modifiers: [])`). For the `nameNote` direction, compute the highlighted `FretPosition` from `(prompt.targetNote, prompt.string)` via `GuitarFretboard.positions(for:)` filtered to the prompt string; hide the fret for `findPosition` and glow the string instead.
@@ -1740,14 +1740,12 @@ import SwiftUI
 struct DrillView: View {
     @StateObject private var viewModel: DrillViewModel
     private let allowedStringsStore: GameAllowedStringsStore
-    private let allowedNoteNamesStore: GameAllowedNoteNamesStore
 
     @State private var allowedStrings: Set<Int> = Set(1...6)
 
-    init(viewModel: DrillViewModel, allowedStringsStore: GameAllowedStringsStore, allowedNoteNamesStore: GameAllowedNoteNamesStore) {
+    init(viewModel: DrillViewModel, allowedStringsStore: GameAllowedStringsStore) {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.allowedStringsStore = allowedStringsStore
-        self.allowedNoteNamesStore = allowedNoteNamesStore
     }
 
     var body: some View {
@@ -2008,8 +2006,7 @@ struct ContentView: View {
         TabView {
             DrillView(
                 viewModel: container.makeDrillViewModel(),
-                allowedStringsStore: container.allowedStringsStore,
-                allowedNoteNamesStore: container.allowedNoteNamesStore
+                allowedStringsStore: container.allowedStringsStore
             )
             .tabItem { Label("Drill", systemImage: "guitars.fill") }
 

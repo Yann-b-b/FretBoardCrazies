@@ -3,14 +3,12 @@ import SwiftUI
 struct DrillView: View {
     @StateObject private var viewModel: DrillViewModel
     private let allowedStringsStore: GameAllowedStringsStore
-    private let allowedNoteNamesStore: GameAllowedNoteNamesStore
 
     @State private var allowedStrings: Set<Int> = Set(1...6)
 
-    init(viewModel: DrillViewModel, allowedStringsStore: GameAllowedStringsStore, allowedNoteNamesStore: GameAllowedNoteNamesStore) {
+    init(viewModel: DrillViewModel, allowedStringsStore: GameAllowedStringsStore) {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.allowedStringsStore = allowedStringsStore
-        self.allowedNoteNamesStore = allowedNoteNamesStore
     }
 
     var body: some View {
