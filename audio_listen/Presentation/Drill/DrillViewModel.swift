@@ -6,6 +6,8 @@ final class DrillViewModel: ObservableObject {
     @Published private(set) var state: DrillState = .idle
     @Published private(set) var detectedNote: String = "—"
     @Published private(set) var todayCount: Int = 0
+    @Published private(set) var comboCount: Int = 0
+    @Published private(set) var beltRank: BeltRank
     @Published var errorMessage: String?
 
     private let pitchDetector: PitchDetectorProtocol
@@ -60,6 +62,7 @@ final class DrillViewModel: ObservableObject {
         self.countdownEnabled = countdownEnabled
         self.randomUnit = randomUnit
         self.todayCount = dailyHistoryStore.todayReps(now: clock.now())
+        self.beltRank = BeltRank.from(stats: progressRepository.loadAll(), maxBox: DrillTuning.maxBox, universeSize: DrillTuning.totalItemCount)
 
         stateMachine.onStateChange = { [weak self] newState in
             self?.state = newState
@@ -69,6 +72,7 @@ final class DrillViewModel: ObservableObject {
     func start() {
         countdownToken = nil
         autoAdvanceToken = nil
+        comboCount = 0
         errorMessage = nil
         guard let prompt = nextPrompt() else {
             errorMessage = "Select at least one string and note to practice."
@@ -90,6 +94,7 @@ final class DrillViewModel: ObservableObject {
     }
 
     func skip() {
+        comboCount = 0
         if case .playing(_, let prompt) = state {
             recordMiss(for: prompt)
         }
@@ -165,6 +170,7 @@ final class DrillViewModel: ObservableObject {
         stopListening()
         let reaction = clock.now().timeIntervalSince(startTime)
         recordCorrect(for: prompt, reactionTime: reaction)
+        comboCount = reaction <= DrillTuning.fastReactionSeconds ? comboCount + 1 : 0
         stateMachine.transition(to: .success(reactionTime: reaction, prompt: prompt))
         autoAdvanceToken = scheduler.scheduleAfter(1.0) { [weak self] in self?.advance() }
     }
@@ -176,6 +182,7 @@ final class DrillViewModel: ObservableObject {
         progressRepository.save(all)
         let mastered = all.values.filter { $0.box >= DrillTuning.maxBox }.count
         todayCount = dailyHistoryStore.recordCorrect(now: clock.now(), reactionTime: reactionTime, masteredCount: mastered)
+        beltRank = BeltRank.from(stats: all, maxBox: DrillTuning.maxBox, universeSize: DrillTuning.totalItemCount)
     }
 
     private func recordMiss(for prompt: DrillPrompt) {

@@ -211,4 +211,51 @@ struct DrillViewModelTests {
         #expect(vm.todayCount == 1)
         #expect(history.todayReps(now: clock.now()) == 1)
     }
+
+    @Test @MainActor func comboIncrementsOnFastCorrect() async {
+        let detector = StubPitchDetector()
+        let clock = FakeClock()
+        let (vm, _) = makeViewModel(detector: detector, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
+        vm.start()
+        clock.advance(by: 1.0)
+        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(vm.comboCount == 1)
+    }
+
+    @Test @MainActor func comboResetsOnSlowCorrect() async {
+        let detector = StubPitchDetector()
+        let clock = FakeClock()
+        let (vm, _) = makeViewModel(detector: detector, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
+        vm.start()
+        clock.advance(by: 1.0)
+        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(vm.comboCount == 1)
+        vm.start()
+        clock.advance(by: 5.0)
+        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(vm.comboCount == 0)
+    }
+
+    @Test @MainActor func comboResetsOnSkip() async {
+        let detector = StubPitchDetector()
+        let clock = FakeClock()
+        let (vm, _) = makeViewModel(detector: detector, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
+        vm.start()
+        clock.advance(by: 1.0)
+        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(vm.comboCount == 1)
+        vm.skip()
+        #expect(vm.comboCount == 0)
+    }
+
+    @Test @MainActor func beltRankStartsWhite() {
+        let detector = StubPitchDetector()
+        let (vm, _) = makeViewModel(detector: detector, clock: FakeClock(), scheduler: FakeScheduler(), countdownEnabled: false)
+        #expect(vm.beltRank.belt == .white)
+        #expect(vm.beltRank.fraction == 0)
+    }
 }
