@@ -13,6 +13,8 @@ final class AppDependencyContainer {
 
     let allowedStringsStore: GameAllowedStringsStore
     let allowedNoteNamesStore: GameAllowedNoteNamesStore
+    let drillProgressRepository: DrillProgressRepositoryProtocol
+    let dailyGoalStore = DailyGoalStore()
 
     private let pitchDetector: PitchDetectorProtocol
     private let noteGenerator: NoteGeneratorProtocol
@@ -28,6 +30,7 @@ final class AppDependencyContainer {
         allowedStringsProvider = UserDefaultsAllowedStringsProvider(store: allowedStringsStore)
         allowedNoteNamesProvider = UserDefaultsAllowedNoteNamesProvider(store: allowedNoteNamesStore)
         maxFretProvider = UserDefaultsMaxFretProvider()
+        drillProgressRepository = UserDefaultsDrillProgressRepository()
 
         let adapter = AudioKitPitchAdapter()
         pitchDetector = DebouncedPitchDetector(wrapping: adapter, stabilityDuration: 0.10)
@@ -48,42 +51,29 @@ final class AppDependencyContainer {
         let detector = DebouncedPitchDetector(wrapping: adapter, stabilityDuration: 0.10)
         return TunerViewModel(pitchDetector: detector)
     }
-    
-    @MainActor
-    func makeGameViewModel() -> GameViewModel {
-        let countdown = UserDefaults.standard.bool(forKey: GameSettingsKeys.countdownEnabled)
-        let stringsProvider = allowedStringsProvider
-        return GameViewModel(
-            pitchDetector: pitchDetector,
-            generateNoteUseCase: GenerateTargetNoteUseCase(noteGenerator: noteGenerator),
-            validateNoteUseCase: ValidateNoteUseCase(),
-            stateMachine: GameStateMachine(),
-            scoreRepository: scoreRepository,
-            startGate: {
-                stringsProvider.allowedStrings.isEmpty
-                    ? "Select at least one string to practice."
-                    : nil
-            },
-            countdownEnabled: countdown
-        )
-    }
 
     @MainActor
-    func makeNoteNameGameViewModel() -> GameViewModel {
-        let countdown = UserDefaults.standard.bool(forKey: GameSettingsKeys.countdownEnabled)
-        let namesProvider = allowedNoteNamesProvider
-        return GameViewModel(
-            pitchDetector: pitchDetector,
-            generateNoteUseCase: GenerateTargetNoteUseCase(noteGenerator: noteNamePositionGenerator),
-            validateNoteUseCase: ValidateNoteUseCase(),
-            stateMachine: GameStateMachine(),
-            scoreRepository: scoreRepository,
-            startGate: {
-                namesProvider.allowedNoteNames.isEmpty
-                    ? "Select at least one note name to practice."
-                    : nil
-            },
-            countdownEnabled: countdown
+    func makeDrillViewModel() -> DrillViewModel {
+        let adapter = AudioKitPitchAdapter()
+        let detector = DebouncedPitchDetector(wrapping: adapter, stabilityDuration: 0.10)
+        let strings = allowedStringsProvider
+        let names = allowedNoteNamesProvider
+        let maxFret = maxFretProvider
+        return DrillViewModel(
+            pitchDetector: detector,
+            selectNextPrompt: SelectNextPromptUseCase(),
+            updateStats: UpdateItemStatsUseCase(),
+            validateNote: ValidateNoteUseCase(),
+            stateMachine: DrillStateMachine(),
+            progressRepository: drillProgressRepository,
+            dailyGoalStore: dailyGoalStore,
+            clock: SystemClock(),
+            scheduler: TimerDrillScheduler(),
+            allowedStrings: { strings.allowedStrings },
+            allowedNoteNames: { names.allowedNoteNames },
+            maxFretInclusive: { maxFret.maxFretInclusive },
+            countdownEnabled: UserDefaults.standard.bool(forKey: GameSettingsKeys.countdownEnabled),
+            randomUnit: { Double.random(in: 0..<1) }
         )
     }
 }
