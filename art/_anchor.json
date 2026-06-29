@@ -1,0 +1,12 @@
+{
+  "name": "_anchor-2",
+  "group": "anchor",
+  "prompt": "flat vector illustration, playful and friendly, chunky rounded shapes, thick clean outlines, soft drop shadow and gentle gradients, warm palette (warm orange #FF8A3D and amber #FFB23E primaries, teal #2DD4BF accents, soft cream #FFF6EC background), Duolingo-style illustration, high detail, centered. a karate martial-arts rank belt \u2014 a thick folded fabric belt wrapped horizontally and cinched in a flat square knot at the center with two short ends hanging straight down, front view, like a judo/karate rank belt (NOT a ribbon bow), shown together with a friendly cartoon flame and a round glossy medal badge with a teal center, arranged to showcase the palette, thick outlines and glossy shading",
+  "size": "1024x1024",
+  "quality": "high",
+  "transparent": false,
+  "anchored": false,
+  "anchor_hash": null,
+  "model": "gpt-image-1",
+  "timestamp": "2026-06-29T22:57:48Z"
+}

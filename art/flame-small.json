@@ -1,0 +1,12 @@
+{
+  "name": "flame-small",
+  "group": "combo",
+  "prompt": "flat vector illustration, playful and friendly, chunky rounded shapes, thick dark-brown outlines, glossy highlights, soft drop shadow, gentle gradients, warm palette (warm orange #FF8A3D and amber #FFB23E primaries, teal #2DD4BF accents, soft cream #FFF6EC background), glossy sticker style with a soft white border, Duolingo-style illustration, high detail, centered. a small friendly cartoon flame spark with a tiny cute smiling face, bright orange-to-amber gradient, glossy One single isolated subject only, centered on a plain empty background, nothing else in frame.",
+  "size": "1024x1024",
+  "quality": "high",
+  "transparent": true,
+  "anchored": false,
+  "anchor_hash": null,
+  "model": "gpt-image-1",
+  "timestamp": "2026-06-29T23:38:35Z"
+}

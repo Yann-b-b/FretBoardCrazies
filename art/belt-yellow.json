@@ -1,0 +1,12 @@
+{
+  "name": "belt-yellow-4",
+  "group": "belts",
+  "prompt": "flat vector illustration, playful and friendly, chunky rounded shapes, thick dark-brown outlines, glossy highlights, soft drop shadow, gentle gradients, warm palette (warm orange #FF8A3D and amber #FFB23E primaries, teal #2DD4BF accents, soft cream #FFF6EC background), glossy sticker style with a soft white border, Duolingo-style illustration, high detail, centered. the exact same karate rank belt, recolored bright yellow, identical belt shape and knot, with a thick dark-brown outline hugging the belt; then OUTSIDE the dark-brown outline add a thick glossy PURE-WHITE offset band (bright opaque white #FFFFFF, uniform and clearly visible) wrapping the entire silhouette including the left side, right side and bottom, like a die-cut sticker halo. Shrink the belt to about 70% size with generous empty padding so the full white border shows on every side and is never cut off. Soft drop shadow under the white border, transparent background. One single isolated subject only, centered on a plain empty background, nothing else in frame.",
+  "size": "1024x1024",
+  "quality": "high",
+  "transparent": true,
+  "anchored": true,
+  "anchor_hash": null,
+  "model": "gpt-image-1",
+  "timestamp": "2026-06-29T23:48:36Z"
+}
