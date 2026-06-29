@@ -17,8 +17,9 @@
 - Default fret range is **0–11** (`GameTargetFretBounds.limitedMaxFretInclusive`); within it each note name appears exactly once per string.
 - No new third-party dependencies. No pitch-detection algorithm changes.
 - No comments in code (per repo style); names must be self-documenting.
-- Test runner: `xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS'`. Do NOT add `__init__`-style index files. New test types live in `audio_listenTests/`.
+- Test runner: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS'`. Do NOT add `__init__`-style index files. New test types live in `audio_listenTests/`.
 - Commit after every task with a `feat:`/`refactor:`/`chore:` prefixed message.
+- **Toolchain:** the machine's active developer dir is the Command Line Tools, so EVERY `xcodebuild` invocation MUST carry the `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` prefix (already baked into every command in this plan). Baseline build and the pre-existing test suite both pass on `platform=macOS` with this prefix; code signing is automatic. A bare `xcodebuild` will fail with "requires Xcode".
 
 ---
 
@@ -83,7 +84,7 @@
 
 Run:
 ```bash
-xcodebuild build -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS'
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild build -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS'
 ```
 Expected: `** BUILD SUCCEEDED **`. If it fails on a missing signing/team, add `CODE_SIGNING_ALLOWED=NO` to the command and retry.
 
@@ -144,7 +145,7 @@ struct GameSettingsKeysTests {
 
 Run:
 ```bash
-xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/GameSettingsKeysTests
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/GameSettingsKeysTests
 ```
 Expected: FAIL — `countdownEnabled` is not a member of `GameSettingsKeys`.
 
@@ -162,7 +163,7 @@ In `AppDependencyContainer.swift:54` and `:73` change `UserDefaults.standard.boo
 
 - [ ] **Step 5: Run test + build**
 
-Run the Step 2 command. Expected: PASS. Then `xcodebuild build ... -destination 'platform=macOS'` → BUILD SUCCEEDED.
+Run the Step 2 command. Expected: PASS. Then `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild build ... -destination 'platform=macOS'` → BUILD SUCCEEDED.
 
 - [ ] **Step 6: Commit**
 
@@ -307,7 +308,7 @@ struct ClockSchedulerTests {
 
 Run:
 ```bash
-xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/ClockSchedulerTests
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/ClockSchedulerTests
 ```
 Expected: PASS (all three).
 
@@ -439,7 +440,7 @@ enum MasteryLevel {
 - [ ] **Step 4: Run tests**
 
 ```bash
-xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/DrillModelTests
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/DrillModelTests
 ```
 Expected: PASS.
 
@@ -557,7 +558,7 @@ struct UserDefaultsDrillProgressRepository: DrillProgressRepositoryProtocol {
 - [ ] **Step 4: Run tests**
 
 ```bash
-xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/DrillProgressRepositoryTests
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/DrillProgressRepositoryTests
 ```
 Expected: PASS.
 
@@ -679,7 +680,7 @@ struct DailyGoalStore {
 - [ ] **Step 3: Run tests**
 
 ```bash
-xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/DailyGoalTests
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/DailyGoalTests
 ```
 Expected: PASS.
 
@@ -800,7 +801,7 @@ struct UpdateItemStatsUseCase {
 - [ ] **Step 3: Run tests**
 
 ```bash
-xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/UpdateItemStatsTests
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/UpdateItemStatsTests
 ```
 Expected: PASS.
 
@@ -874,7 +875,7 @@ enum StringSetPresets {
 - [ ] **Step 3: Run tests**
 
 ```bash
-xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/StringSetPresetsTests
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/StringSetPresetsTests
 ```
 Expected: PASS.
 
@@ -1053,7 +1054,7 @@ struct SelectNextPromptUseCase {
 - [ ] **Step 3: Run tests**
 
 ```bash
-xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/SelectNextPromptTests
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/SelectNextPromptTests
 ```
 Expected: PASS. (If `candidatesCoverEachAllowedNoteNameOncePerString` expects 24 but the fret range yields a different count, confirm `GuitarFretboard.note(at:fret:)` returns a note for frets 0–11 on strings 5–6; adjust the expected count to `allowedStrings.count * 12` only if the board model legitimately differs, and note the reason in the commit.)
 
@@ -1153,7 +1154,7 @@ final class DrillStateMachine {
 - [ ] **Step 3: Run tests**
 
 ```bash
-xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/DrillStateMachineTests
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/DrillStateMachineTests
 ```
 Expected: PASS.
 
@@ -1503,7 +1504,7 @@ Note: `handle` reads `state` (the published mirror updated by `onStateChange`), 
 - [ ] **Step 3: Run tests**
 
 ```bash
-xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/DrillViewModelTests
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/DrillViewModelTests
 ```
 Expected: PASS (all five) plus `DrillStateMachineTests`.
 
@@ -1590,7 +1591,7 @@ struct FretboardGeometry {
 - [ ] **Step 3: Run tests**
 
 ```bash
-xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/FretboardGeometryTests
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS' -only-testing:audio_listenTests/FretboardGeometryTests
 ```
 Expected: PASS.
 
@@ -1699,7 +1700,7 @@ struct FretboardView: View {
 
 Run:
 ```bash
-xcodebuild build -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS'
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild build -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS'
 ```
 Expected: BUILD SUCCEEDED. Open `FretboardView.swift` in Xcode and confirm the Preview renders a board with the C dot on string 5.
 
@@ -1848,7 +1849,7 @@ Note: `Next`/`Start` both call `viewModel.start()`; during `success` the auto-ad
 - [ ] **Step 2: Build**
 
 ```bash
-xcodebuild build -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS'
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild build -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS'
 ```
 Expected: BUILD SUCCEEDED. (This view is not wired into the app until Task 16; build confirms it compiles.)
 
@@ -1933,7 +1934,7 @@ Note: rendering each heatmap cell as a colored dot on the board is a follow-up r
 - [ ] **Step 2: Build**
 
 ```bash
-xcodebuild build -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS'
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild build -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS'
 ```
 Expected: BUILD SUCCEEDED.
 
@@ -2032,8 +2033,8 @@ Then delete the now-unreferenced files (`GameView.swift`, `NoteNameGameView.swif
 - [ ] **Step 4: Full build + full test run**
 
 ```bash
-xcodebuild build -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS'
-xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS'
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild build -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS'
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project audio_listen.xcodeproj -scheme audio_listen -destination 'platform=macOS'
 ```
 Expected: BUILD SUCCEEDED and all tests pass (new drill suites + retained domain suites). Fix any references to removed types.
 
