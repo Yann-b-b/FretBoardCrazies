@@ -1,11 +1,18 @@
+import hashlib
 import pytest
 
 from generate_art import (
     ASSETS,
-    COST_TABLE,
     Asset,
+    STYLE_PREFIX,
+    anchor_hash,
+    build_edit_fields,
+    build_generation_payload,
+    build_prompt,
+    build_sidecar,
     estimate_cost,
     resolve_selection,
+    should_skip,
 )
 
 
@@ -20,8 +27,14 @@ def test_registry_has_no_mascot_and_one_anchor():
 def test_eight_belts_in_canonical_order():
     belts = [asset.name for asset in ASSETS if asset.group == "belts"]
     assert belts == [
-        "belt-white", "belt-yellow", "belt-orange", "belt-green",
-        "belt-blue", "belt-purple", "belt-brown", "belt-black",
+        "belt-white",
+        "belt-yellow",
+        "belt-orange",
+        "belt-green",
+        "belt-blue",
+        "belt-purple",
+        "belt-brown",
+        "belt-black",
     ]
 
 
@@ -32,8 +45,14 @@ def test_resolve_empty_returns_all():
 def test_resolve_group_expands_to_members():
     selected = resolve_selection(["belts"], ASSETS)
     assert [asset.name for asset in selected] == [
-        "belt-white", "belt-yellow", "belt-orange", "belt-green",
-        "belt-blue", "belt-purple", "belt-brown", "belt-black",
+        "belt-white",
+        "belt-yellow",
+        "belt-orange",
+        "belt-green",
+        "belt-blue",
+        "belt-purple",
+        "belt-brown",
+        "belt-black",
     ]
 
 
@@ -60,17 +79,6 @@ def test_estimate_cost_scales_with_variants():
     assert estimate_cost([one], "low", 3, table) == pytest.approx(0.03)
 
 
-from generate_art import (
-    STYLE_PREFIX,
-    anchor_hash,
-    build_edit_fields,
-    build_generation_payload,
-    build_prompt,
-    build_sidecar,
-    should_skip,
-)
-
-
 def test_build_prompt_prepends_style_prefix():
     asset = Asset("x", "g", "a red box", "1024x1024", True, True)
     prompt = build_prompt(asset, STYLE_PREFIX)
@@ -95,7 +103,9 @@ def test_edit_fields_are_all_strings():
 
 def test_sidecar_carries_reproducibility_metadata():
     asset = Asset("belt-white", "belts", "body", "1024x1024", True, True)
-    sidecar = build_sidecar(asset, "full prompt", "low", "abc123", "gpt-image-1", "2026-06-29T00:00:00Z")
+    sidecar = build_sidecar(
+        asset, "full prompt", "low", "abc123", "gpt-image-1", "2026-06-29T00:00:00Z"
+    )
     assert sidecar["name"] == "belt-white"
     assert sidecar["prompt"] == "full prompt"
     assert sidecar["anchor_hash"] == "abc123"
@@ -113,7 +123,6 @@ def test_anchor_hash_stable_for_same_bytes(tmp_path):
 
 
 def hashlib_sha256(data):
-    import hashlib
     return hashlib.sha256(data).hexdigest()
 
 
