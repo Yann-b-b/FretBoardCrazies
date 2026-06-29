@@ -100,13 +100,14 @@ struct DrillViewModelTests {
         #expect(vm.state == .idle)
     }
 
-    @Test @MainActor func correctNoteTransitionsToSuccessAndRecordsReaction() {
+    @Test @MainActor func correctNoteTransitionsToSuccessAndRecordsReaction() async {
         let detector = StubPitchDetector()
         let clock = FakeClock()
         let (vm, repo) = makeViewModel(detector: detector, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
         vm.start()
         clock.advance(by: 2.0)
         detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        try? await Task.sleep(for: .milliseconds(50))
         if case .success(let reaction, _) = vm.state {
             #expect(reaction == 2.0)
         } else {
@@ -137,5 +138,32 @@ struct DrillViewModelTests {
         let key = DrillItemKey(noteName: .e, string: 6)
         #expect(repo.loadAll()[key]?.attempts == 1)
         #expect(repo.loadAll()[key]?.correct == 0)
+    }
+
+    @Test @MainActor func skipDuringCountdownCancelsCountdown() {
+        let detector = StubPitchDetector()
+        let scheduler = FakeScheduler()
+        let (vm, _) = makeViewModel(detector: detector, clock: FakeClock(), scheduler: scheduler, countdownEnabled: true)
+        vm.start()
+        vm.skip()
+        guard case .playing = vm.state else { Issue.record("expected playing after skip from countdown, got \(vm.state)"); return }
+        scheduler.fireRepeatingTick()
+        guard case .playing = vm.state else { Issue.record("stale countdown tick mutated state after skip"); return }
+    }
+
+    @Test @MainActor func skipDuringSuccessDoesNotRecordMiss() async {
+        let detector = StubPitchDetector()
+        let clock = FakeClock()
+        let (vm, repo) = makeViewModel(detector: detector, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
+        vm.start()
+        clock.advance(by: 1.0)
+        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        try? await Task.sleep(for: .milliseconds(50))
+        let key = DrillItemKey(noteName: .e, string: 6)
+        let beforeAttempts = repo.loadAll()[key]?.attempts ?? 0
+        #expect(beforeAttempts == 1)
+        vm.skip()
+        let afterAttempts = repo.loadAll()[key]?.attempts ?? 0
+        #expect(afterAttempts == beforeAttempts)
     }
 }

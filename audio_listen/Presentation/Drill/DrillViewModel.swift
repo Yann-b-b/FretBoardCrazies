@@ -88,8 +88,9 @@ final class DrillViewModel: ObservableObject {
     }
 
     func skip() {
-        guard let prompt = currentPrompt() else { return }
-        recordMiss(for: prompt)
+        if case .playing(_, let prompt) = state {
+            recordMiss(for: prompt)
+        }
         advance()
     }
 
@@ -102,13 +103,6 @@ final class DrillViewModel: ObservableObject {
             now: clock.now(),
             randomUnit: randomUnit
         )
-    }
-
-    private func currentPrompt() -> DrillPrompt? {
-        switch state {
-        case .countdown(_, let p), .playing(_, let p), .success(_, let p): return p
-        case .idle: return nil
-        }
     }
 
     private func beginCountdown(prompt: DrillPrompt) {
@@ -132,6 +126,8 @@ final class DrillViewModel: ObservableObject {
     }
 
     private func advance() {
+        countdownToken = nil
+        autoAdvanceToken = nil
         guard let prompt = nextPrompt() else {
             stop()
             return
@@ -148,6 +144,7 @@ final class DrillViewModel: ObservableObject {
                 engineStarted = true
             }
             pitchSubscription = pitchDetector.currentPitch
+                .receive(on: DispatchQueue.main)
                 .sink { [weak self] pitch in self?.handle(pitch) }
         } catch {
             errorMessage = "Could not start microphone: \(error.localizedDescription)"
