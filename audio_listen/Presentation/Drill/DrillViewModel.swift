@@ -67,6 +67,8 @@ final class DrillViewModel: ObservableObject {
     }
 
     func start() {
+        countdownToken = nil
+        autoAdvanceToken = nil
         errorMessage = nil
         guard let prompt = nextPrompt() else {
             errorMessage = "Select at least one string and note to practice."

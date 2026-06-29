@@ -18,6 +18,7 @@ struct FretboardView: View {
                 if let string = highlightedString {
                     stringGlow(geo, string: string)
                 }
+                heatmapDots(geo)
                 if let position = highlightedPosition {
                     targetDot(geo, position: position)
                 }
@@ -55,6 +56,33 @@ struct FretboardView: View {
             p.addLine(to: CGPoint(x: geo.size.width, y: geo.stringY(string)))
         }
         .stroke(Color.yellow, lineWidth: 3)
+    }
+
+    @ViewBuilder
+    private func heatmapDots(_ geo: FretboardGeometry) -> some View {
+        ForEach(Array(heatmap.keys), id: \.self) { key in
+            if let fret = fret(for: key), let level = heatmap[key] {
+                Circle()
+                    .fill(color(for: level))
+                    .frame(width: 14, height: 14)
+                    .position(geo.point(string: key.string, fret: fret))
+            }
+        }
+    }
+
+    private func fret(for key: DrillItemKey) -> Int? {
+        for fret in 0...fretCount where GuitarFretboard.note(at: key.string, fret: fret)?.name == key.noteName {
+            return fret
+        }
+        return nil
+    }
+
+    private func color(for level: MasteryLevel) -> Color {
+        switch level {
+        case .unseen: return Color.gray.opacity(0.4)
+        case .learning: return .orange
+        case .mastered: return .green
+        }
     }
 
     private func targetDot(_ geo: FretboardGeometry, position: FretPosition) -> some View {

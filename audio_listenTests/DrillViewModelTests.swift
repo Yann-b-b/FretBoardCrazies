@@ -166,4 +166,19 @@ struct DrillViewModelTests {
         let afterAttempts = repo.loadAll()[key]?.attempts ?? 0
         #expect(afterAttempts == beforeAttempts)
     }
+
+    @Test @MainActor func manualStartDuringSuccessCancelsStaleAutoAdvance() async {
+        let detector = StubPitchDetector()
+        let clock = FakeClock()
+        let scheduler = FakeScheduler()
+        let (vm, _) = makeViewModel(detector: detector, clock: clock, scheduler: scheduler, countdownEnabled: false)
+        vm.start()
+        clock.advance(by: 1.0)
+        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        try? await Task.sleep(for: .milliseconds(50))
+        vm.start()
+        guard case .playing = vm.state else { Issue.record("expected playing after manual start, got \(vm.state)"); return }
+        scheduler.firePendingAfter()
+        guard case .playing = vm.state else { Issue.record("stale auto-advance fired after manual start"); return }
+    }
 }

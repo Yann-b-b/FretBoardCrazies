@@ -36,10 +36,16 @@ struct MasteryView: View {
 
     private func reload() {
         let stats = progressRepository.loadAll()
+        let universe = SelectNextPromptUseCase().candidates(
+            allowedStrings: Set(1...6),
+            allowedNoteNames: Set(NoteName.allCases),
+            maxFretInclusive: 11
+        )
         var map: [DrillItemKey: MasteryLevel] = [:]
         var u = 0, l = 0, m = 0
-        for (key, s) in stats {
-            let level = MasteryLevel.from(box: s.box, attempts: s.attempts, masteredBox: masteredBox)
+        for key in universe {
+            let s = stats[key]
+            let level = MasteryLevel.from(box: s?.box ?? 0, attempts: s?.attempts ?? 0, masteredBox: masteredBox)
             map[key] = level
             switch level {
             case .unseen: u += 1
