@@ -1031,12 +1031,13 @@ struct SelectNextPromptUseCase {
         let directionRoll = randomUnit()
         let pick = randomUnit() * total
 
+        let sortedPairs = zip(keys, weights).sorted { $0.1 > $1.1 }
         var cumulative = 0.0
-        var chosen = keys[0]
-        for (index, weight) in weights.enumerated() {
+        var chosen = sortedPairs[0].0
+        for (key, weight) in sortedPairs {
             cumulative += weight
             if pick < cumulative {
-                chosen = keys[index]
+                chosen = key
                 break
             }
         }
