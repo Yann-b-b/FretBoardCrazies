@@ -7,7 +7,7 @@ struct MasteryView: View {
     @State private var heatmap: [DrillItemKey: MasteryLevel] = [:]
     @State private var totals: (unseen: Int, learning: Int, mastered: Int) = (0, 0, 0)
 
-    init(progressRepository: DrillProgressRepositoryProtocol, masteredBox: Int = 4) {
+    init(progressRepository: DrillProgressRepositoryProtocol, masteredBox: Int = DrillTuning.maxBox) {
         self.progressRepository = progressRepository
         self.masteredBox = masteredBox
     }

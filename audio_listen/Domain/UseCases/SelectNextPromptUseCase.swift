@@ -4,7 +4,7 @@ struct SelectNextPromptUseCase {
     let maxBox: Int
     let nameNoteProbability: Double
 
-    init(maxBox: Int = 4, nameNoteProbability: Double = 0.25) {
+    init(maxBox: Int = DrillTuning.maxBox, nameNoteProbability: Double = 0.25) {
         self.maxBox = maxBox
         self.nameNoteProbability = nameNoteProbability
     }
