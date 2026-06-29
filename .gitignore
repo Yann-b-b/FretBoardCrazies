@@ -9,3 +9,4 @@ DerivedData/
 .env
 art/_candidates/
 art/index.html
+__pycache__/
