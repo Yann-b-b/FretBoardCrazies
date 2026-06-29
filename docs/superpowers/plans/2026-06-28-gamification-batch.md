@@ -781,8 +781,12 @@ final class ComboSoundPlayer {
         guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1) else { return }
         engine.attach(source)
         engine.connect(source, to: engine.mainMixerNode, format: format)
-        try? engine.start()
-        started = true
+        do {
+            try engine.start()
+            started = true
+        } catch {
+            engine.detach(source)
+        }
     }
 }
 ```
