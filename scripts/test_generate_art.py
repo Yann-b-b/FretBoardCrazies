@@ -1,6 +1,7 @@
 import hashlib
 import pytest
 
+import generate_art
 from generate_art import (
     ASSETS,
     Asset,
@@ -132,3 +133,55 @@ def test_should_skip_only_when_exists_and_not_forced(tmp_path):
     path.write_bytes(b"x")
     assert should_skip(str(path), force=False) is True
     assert should_skip(str(path), force=True) is False
+
+
+def test_encode_multipart_includes_field_and_file():
+    boundary, body = generate_art.encode_multipart(
+        {"prompt": "hi"}, {"image": ("anchor.png", b"PNGDATA", "image/png")}
+    )
+    assert boundary in body.decode("latin-1")
+    assert 'name="prompt"' in body.decode("latin-1")
+    assert b"PNGDATA" in body
+    assert 'filename="anchor.png"' in body.decode("latin-1")
+
+
+def test_generate_one_routes_to_edits_when_anchored(tmp_path, monkeypatch):
+    anchor = tmp_path / "_anchor.png"
+    anchor.write_bytes(b"anchorbytes")
+    calls = {}
+
+    def fake_post_edit(url, fields, image_path, api_key):
+        calls["edit"] = (url, image_path)
+        return b"EDITED"
+
+    def fake_post_generation(url, payload, api_key):
+        calls["generation"] = url
+        return b"GENERATED"
+
+    monkeypatch.setattr(generate_art, "post_edit", fake_post_edit)
+    monkeypatch.setattr(generate_art, "post_generation", fake_post_generation)
+
+    asset = Asset("belt-white", "belts", "body", "1024x1024", True, True)
+    result = generate_art.generate_one(asset, "p", "low", "key", str(anchor))
+    assert result == b"EDITED"
+    assert "generation" not in calls
+    assert calls["edit"][0] == generate_art.API_EDITS_URL
+
+
+def test_generate_one_uses_generations_for_anchor_or_missing_anchor(monkeypatch):
+    def fake_post_generation(url, payload, api_key):
+        return b"GENERATED"
+
+    monkeypatch.setattr(generate_art, "post_generation", fake_post_generation)
+
+    anchor_asset = Asset("_anchor", "anchor", "body", "1024x1024", False, False)
+    assert (
+        generate_art.generate_one(anchor_asset, "p", "low", "key", "missing.png")
+        == b"GENERATED"
+    )
+
+    belt = Asset("belt-white", "belts", "body", "1024x1024", True, True)
+    assert (
+        generate_art.generate_one(belt, "p", "low", "key", "missing.png")
+        == b"GENERATED"
+    )
