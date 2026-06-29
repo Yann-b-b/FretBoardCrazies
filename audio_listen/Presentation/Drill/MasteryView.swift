@@ -2,29 +2,50 @@ import SwiftUI
 
 struct MasteryView: View {
     private let progressRepository: DrillProgressRepositoryProtocol
+    private let dailyHistoryStore: DailyHistoryStore
     private let masteredBox: Int
 
     @State private var heatmap: [DrillItemKey: MasteryLevel] = [:]
     @State private var totals: (unseen: Int, learning: Int, mastered: Int) = (0, 0, 0)
+    @State private var beltRank: BeltRank = BeltRank.from(stats: [:], maxBox: DrillTuning.maxBox, universeSize: DrillTuning.totalItemCount)
+    @State private var history: [DailyRecord] = []
 
-    init(progressRepository: DrillProgressRepositoryProtocol, masteredBox: Int = DrillTuning.maxBox) {
+    init(progressRepository: DrillProgressRepositoryProtocol, dailyHistoryStore: DailyHistoryStore, masteredBox: Int = DrillTuning.maxBox) {
         self.progressRepository = progressRepository
+        self.dailyHistoryStore = dailyHistoryStore
         self.masteredBox = masteredBox
     }
 
     var body: some View {
-        VStack(spacing: 20) {
-            Text("Progress").font(.title2).bold()
-            FretboardView(heatmap: heatmap)
-            HStack(spacing: 24) {
-                legend(color: .gray, label: "Unseen \(totals.unseen)")
-                legend(color: .orange, label: "Learning \(totals.learning)")
-                legend(color: .green, label: "Mastered \(totals.mastered)")
+        ScrollView {
+            VStack(spacing: 20) {
+                Text("Progress").font(.title2).bold()
+                beltCard
+                FretboardView(heatmap: heatmap)
+                HStack(spacing: 24) {
+                    legend(color: .gray, label: "Unseen \(totals.unseen)")
+                    legend(color: .orange, label: "Learning \(totals.learning)")
+                    legend(color: .green, label: "Mastered \(totals.mastered)")
+                }
+                TrendView(history: history)
             }
+            .padding(24)
+            .frame(minWidth: 640)
         }
-        .padding(24)
-        .frame(minWidth: 640, minHeight: 420)
         .onAppear(perform: reload)
+    }
+
+    private var beltCard: some View {
+        VStack(spacing: 6) {
+            HStack(spacing: 8) {
+                Image(systemName: beltRank.belt.symbolName).foregroundStyle(beltRank.belt.color)
+                Text("\(beltRank.belt.displayName) belt").font(.headline)
+            }
+            ProgressView(value: beltRank.belt == .black ? 1.0 : beltRank.fractionToNext)
+                .frame(maxWidth: 280)
+            Text(beltRank.belt == .black ? "Max rank" : "Progress to next belt")
+                .font(.caption).foregroundStyle(.secondary)
+        }
     }
 
     private func legend(color: Color, label: String) -> some View {
@@ -55,5 +76,7 @@ struct MasteryView: View {
         }
         heatmap = map
         totals = (u, l, m)
+        beltRank = BeltRank.from(stats: stats, maxBox: masteredBox, universeSize: DrillTuning.totalItemCount)
+        history = dailyHistoryStore.history()
     }
 }

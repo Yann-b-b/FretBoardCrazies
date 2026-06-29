@@ -18,8 +18,11 @@ struct ContentView: View {
             )
             .tabItem { Label("Drill", systemImage: "guitars.fill") }
 
-            MasteryView(progressRepository: container.drillProgressRepository)
-                .tabItem { Label("Progress", systemImage: "chart.bar.fill") }
+            MasteryView(
+                progressRepository: container.drillProgressRepository,
+                dailyHistoryStore: container.dailyHistoryStore
+            )
+            .tabItem { Label("Progress", systemImage: "chart.bar.fill") }
 
             TunerView(viewModel: container.makeTunerViewModel())
                 .tabItem { Label("Tuner", systemImage: "tuningfork") }
