@@ -14,7 +14,7 @@ final class AppDependencyContainer {
     let allowedStringsStore: GameAllowedStringsStore
     let allowedNoteNamesStore: GameAllowedNoteNamesStore
     let drillProgressRepository: DrillProgressRepositoryProtocol
-    let dailyGoalStore = DailyGoalStore()
+    let dailyHistoryStore = DailyHistoryStore()
 
     private let allowedStringsProvider: AllowedStringsProviding
     private let allowedNoteNamesProvider: AllowedNoteNamesProviding
@@ -50,7 +50,7 @@ final class AppDependencyContainer {
             validateNote: ValidateNoteUseCase(),
             stateMachine: DrillStateMachine(),
             progressRepository: drillProgressRepository,
-            dailyGoalStore: dailyGoalStore,
+            dailyHistoryStore: dailyHistoryStore,
             clock: SystemClock(),
             scheduler: TimerDrillScheduler(),
             allowedStrings: { strings.allowedStrings },

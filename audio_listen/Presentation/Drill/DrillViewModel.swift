@@ -14,7 +14,7 @@ final class DrillViewModel: ObservableObject {
     private let validateNote: ValidateNoteUseCase
     private let stateMachine: DrillStateMachine
     private let progressRepository: DrillProgressRepositoryProtocol
-    private let dailyGoalStore: DailyGoalStore
+    private let dailyHistoryStore: DailyHistoryStore
     private let clock: Clock
     private let scheduler: DrillScheduler
     private let allowedStrings: () -> Set<Int>
@@ -36,7 +36,7 @@ final class DrillViewModel: ObservableObject {
         validateNote: ValidateNoteUseCase,
         stateMachine: DrillStateMachine,
         progressRepository: DrillProgressRepositoryProtocol,
-        dailyGoalStore: DailyGoalStore,
+        dailyHistoryStore: DailyHistoryStore,
         clock: Clock,
         scheduler: DrillScheduler,
         allowedStrings: @escaping () -> Set<Int>,
@@ -51,7 +51,7 @@ final class DrillViewModel: ObservableObject {
         self.validateNote = validateNote
         self.stateMachine = stateMachine
         self.progressRepository = progressRepository
-        self.dailyGoalStore = dailyGoalStore
+        self.dailyHistoryStore = dailyHistoryStore
         self.clock = clock
         self.scheduler = scheduler
         self.allowedStrings = allowedStrings
@@ -59,7 +59,7 @@ final class DrillViewModel: ObservableObject {
         self.maxFretInclusive = maxFretInclusive
         self.countdownEnabled = countdownEnabled
         self.randomUnit = randomUnit
-        self.todayCount = dailyGoalStore.todayCount(now: clock.now())
+        self.todayCount = dailyHistoryStore.todayReps(now: clock.now())
 
         stateMachine.onStateChange = { [weak self] newState in
             self?.state = newState
@@ -174,7 +174,8 @@ final class DrillViewModel: ObservableObject {
         let current = all[prompt.itemKey] ?? ItemStats.unseen(at: clock.now())
         all[prompt.itemKey] = updateStats.applyCorrect(to: current, reactionTime: reactionTime, now: clock.now())
         progressRepository.save(all)
-        todayCount = dailyGoalStore.recordCorrect(now: clock.now())
+        let mastered = all.values.filter { $0.box >= DrillTuning.maxBox }.count
+        todayCount = dailyHistoryStore.recordCorrect(now: clock.now(), reactionTime: reactionTime, masteredCount: mastered)
     }
 
     private func recordMiss(for prompt: DrillPrompt) {
