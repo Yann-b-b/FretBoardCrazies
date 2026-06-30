@@ -53,3 +53,18 @@ Cost: validation grows a string check, and the input would need to carry the tap
 note alone. Surfaced during touch-mode design — the wrong-answer dot currently derives
 its position on the *asked* string, which is consistent with the note-only judging; if
 we enforce the string, the dot would instead want the literal tapped position.
+
+### iOS landscape layout pass
+
+The screens were designed for a roomy Mac window; on a landscape iPhone (~393pt tall)
+some content overflows. Concretely: on the **Drill** screen the content (header +
+fretboard `minHeight 220` + the large prompt + the control row) is taller than the
+screen, so the bottom Start/End/Next row spills into the bottom safe area and ends up
+**behind the tab bar** (unreachable). Likely affects other tabs with bottom content
+(Tuner's Start/Stop) too.
+
+Not a touch-mode bug — it's a macOS→iOS adaptation gap. Fix direction: make the
+background a `ZStack` (only the background `.ignoresSafeArea()`, content stays above the
+tab bar) AND compact the landscape layout so it fits (smaller fretboard / fonts /
+spacing on iOS). Avoid a `ScrollView` on Drill — it fights the fretboard tap gesture in
+touch mode. Needs iteration on the simulator; worth its own focused pass.
