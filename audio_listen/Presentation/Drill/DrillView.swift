@@ -6,6 +6,7 @@ struct DrillView: View {
 
     @State private var allowedStrings: Set<Int> = Set(1...6)
     @State private var comboSound = ComboSoundPlayer()
+    @State private var checkPop = false
 
     init(viewModel: DrillViewModel, allowedStringsStore: GameAllowedStringsStore) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -87,7 +88,19 @@ struct DrillView: View {
             controlButtons
         case .success(let time, let prompt):
             promptView(prompt, reveal: true)
-            Text("Correct!  \(String(format: "%.2f s", time))").foregroundStyle(.green).bold()
+            HStack(spacing: 8) {
+                Image("correct-sticker")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 28)
+                    .scaleEffect(checkPop ? 1.0 : 0.5)
+                    .opacity(checkPop ? 1 : 0)
+                    .onAppear {
+                        checkPop = false
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) { checkPop = true }
+                    }
+                Text("Correct!  \(String(format: "%.2f s", time))").foregroundStyle(.green).bold()
+            }
             controlButtons
         }
     }
