@@ -30,7 +30,9 @@ struct MasteryView: View {
                 TrendView(history: history)
             }
             .padding(24)
+            #if os(macOS)
             .frame(minWidth: 640)
+            #endif
         }
         .scrollContentBackground(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
