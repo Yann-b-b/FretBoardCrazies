@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     private let container = AppDependencyContainer.shared
+    @AppStorage(GameSettingsKeys.touchMode) private var touchMode = false
 
     var body: some View {
         TabView {
@@ -16,6 +17,7 @@ struct ContentView: View {
                 viewModel: container.makeDrillViewModel(),
                 allowedStringsStore: container.allowedStringsStore
             )
+            .id(touchMode)
             .tabItem { Label("Drill", systemImage: "guitars.fill") }
 
             MasteryView(
