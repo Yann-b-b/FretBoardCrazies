@@ -9,8 +9,10 @@ final class DrillViewModel: ObservableObject {
     @Published private(set) var comboCount: Int = 0
     @Published private(set) var beltRank: BeltRank
     @Published var errorMessage: String?
+    @Published private(set) var lastWrongPosition: FretPosition?
 
-    private let pitchDetector: PitchDetectorProtocol
+    private let input: NoteInputSource
+    private let touchSubmit: ((FretPosition) -> Void)?
     private let selectNextPrompt: SelectNextPromptUseCase
     private let updateStats: UpdateItemStatsUseCase
     private let validateNote: ValidateNoteUseCase
@@ -25,14 +27,15 @@ final class DrillViewModel: ObservableObject {
     private let countdownEnabled: Bool
     private let randomUnit: () -> Double
 
-    private var pitchSubscription: AnyCancellable?
+    private var inputSubscription: AnyCancellable?
     private var countdownToken: AnyCancellable?
     private var autoAdvanceToken: AnyCancellable?
     private var engineStarted = false
     private var countdownRemaining = 0
 
     init(
-        pitchDetector: PitchDetectorProtocol,
+        input: NoteInputSource,
+        touchSubmit: ((FretPosition) -> Void)? = nil,
         selectNextPrompt: SelectNextPromptUseCase,
         updateStats: UpdateItemStatsUseCase,
         validateNote: ValidateNoteUseCase,
@@ -47,7 +50,8 @@ final class DrillViewModel: ObservableObject {
         countdownEnabled: Bool,
         randomUnit: @escaping () -> Double
     ) {
-        self.pitchDetector = pitchDetector
+        self.input = input
+        self.touchSubmit = touchSubmit
         self.selectNextPrompt = selectNextPrompt
         self.updateStats = updateStats
         self.validateNote = validateNote
@@ -73,6 +77,7 @@ final class DrillViewModel: ObservableObject {
         countdownToken = nil
         autoAdvanceToken = nil
         comboCount = 0
+        lastWrongPosition = nil
         errorMessage = nil
         guard let prompt = nextPrompt() else {
             errorMessage = "Select at least one string and note to practice."
@@ -99,6 +104,10 @@ final class DrillViewModel: ObservableObject {
             recordMiss(for: prompt)
         }
         advance()
+    }
+
+    func submitTouch(_ position: FretPosition) {
+        touchSubmit?(position)
     }
 
     private func nextPrompt() -> DrillPrompt? {
@@ -135,6 +144,7 @@ final class DrillViewModel: ObservableObject {
     private func advance() {
         countdownToken = nil
         autoAdvanceToken = nil
+        lastWrongPosition = nil
         guard let prompt = nextPrompt() else {
             stop()
             return
@@ -147,26 +157,30 @@ final class DrillViewModel: ObservableObject {
         detectedNote = "—"
         do {
             if !engineStarted {
-                try pitchDetector.start()
+                try input.start()
                 engineStarted = true
             }
-            pitchSubscription = pitchDetector.currentPitch
+            inputSubscription = input.notes
                 .receive(on: DispatchQueue.main)
-                .sink { [weak self] pitch in self?.handle(pitch) }
+                .sink { [weak self] note in self?.handle(note) }
         } catch {
-            errorMessage = "Could not start microphone: \(error.localizedDescription)"
+            errorMessage = "Could not start input: \(error.localizedDescription)"
         }
     }
 
     private func stopListening() {
-        pitchSubscription?.cancel()
-        pitchSubscription = nil
+        inputSubscription?.cancel()
+        inputSubscription = nil
     }
 
-    private func handle(_ pitch: DetectedPitch) {
-        detectedNote = pitch.note.displayName
+    private func handle(_ note: Note) {
+        detectedNote = note.displayName
         guard case .playing(let startTime, let prompt) = state else { return }
-        guard validateNote.execute(detected: pitch.note, target: prompt.targetNote) else { return }
+        guard validateNote.execute(detected: note, target: prompt.targetNote) else {
+            lastWrongPosition = GuitarFretboard.positions(for: note).first { $0.string == prompt.string }
+            return
+        }
+        lastWrongPosition = nil
         stopListening()
         let reaction = clock.now().timeIntervalSince(startTime)
         recordCorrect(for: prompt, reactionTime: reaction)

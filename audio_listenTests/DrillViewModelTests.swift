@@ -24,9 +24,9 @@ struct DrillStateMachineTests {
     }
 }
 
-private final class StubPitchDetector: PitchDetectorProtocol {
-    let subject = PassthroughSubject<DetectedPitch, Never>()
-    var currentPitch: AnyPublisher<DetectedPitch, Never> { subject.eraseToAnyPublisher() }
+private final class StubNoteInputSource: NoteInputSource {
+    let subject = PassthroughSubject<Note, Never>()
+    var notes: AnyPublisher<Note, Never> { subject.eraseToAnyPublisher() }
     private(set) var startCalled = false
     func start() throws { startCalled = true }
     func stop() {}
@@ -34,7 +34,7 @@ private final class StubPitchDetector: PitchDetectorProtocol {
 
 @MainActor
 private func makeViewModel(
-    detector: StubPitchDetector,
+    source: StubNoteInputSource,
     clock: FakeClock,
     scheduler: FakeScheduler,
     countdownEnabled: Bool
@@ -43,7 +43,7 @@ private func makeViewModel(
     let defaults = UserDefaults(suiteName: suite)!
     let repo = UserDefaultsDrillProgressRepository(defaults: defaults)
     let vm = DrillViewModel(
-        pitchDetector: detector,
+        input: source,
         selectNextPrompt: SelectNextPromptUseCase(nameNoteProbability: 0.0),
         updateStats: UpdateItemStatsUseCase(),
         validateNote: ValidateNoteUseCase(),
@@ -63,8 +63,8 @@ private func makeViewModel(
 
 struct DrillViewModelTests {
     @Test @MainActor func startWithoutCountdownEntersPlaying() {
-        let detector = StubPitchDetector()
-        let (vm, _) = makeViewModel(detector: detector, clock: FakeClock(), scheduler: FakeScheduler(), countdownEnabled: false)
+        let source = StubNoteInputSource()
+        let (vm, _) = makeViewModel(source: source, clock: FakeClock(), scheduler: FakeScheduler(), countdownEnabled: false)
         vm.start()
         if case .playing(_, let prompt) = vm.state {
             #expect(prompt.string == 6)
@@ -72,15 +72,15 @@ struct DrillViewModelTests {
         } else {
             Issue.record("Expected playing state, got \(vm.state)")
         }
-        #expect(detector.startCalled)
+        #expect(source.startCalled)
     }
 
     @Test @MainActor func emptyAllowedSetsShowsError() {
-        let detector = StubPitchDetector()
+        let source = StubNoteInputSource()
         let suite = "test.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         let vm = DrillViewModel(
-            pitchDetector: detector,
+            input: source,
             selectNextPrompt: SelectNextPromptUseCase(),
             updateStats: UpdateItemStatsUseCase(),
             validateNote: ValidateNoteUseCase(),
@@ -101,12 +101,12 @@ struct DrillViewModelTests {
     }
 
     @Test @MainActor func correctNoteTransitionsToSuccessAndRecordsReaction() async {
-        let detector = StubPitchDetector()
+        let source = StubNoteInputSource()
         let clock = FakeClock()
-        let (vm, repo) = makeViewModel(detector: detector, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
+        let (vm, repo) = makeViewModel(source: source, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
         vm.start()
         clock.advance(by: 2.0)
-        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        source.subject.send(Note(.e, octave: 2))
         try? await Task.sleep(for: .milliseconds(50))
         if case .success(let reaction, _) = vm.state {
             #expect(reaction == 2.0)
@@ -119,9 +119,9 @@ struct DrillViewModelTests {
     }
 
     @Test @MainActor func countdownTicksThenPlays() {
-        let detector = StubPitchDetector()
+        let source = StubNoteInputSource()
         let scheduler = FakeScheduler()
-        let (vm, _) = makeViewModel(detector: detector, clock: FakeClock(), scheduler: scheduler, countdownEnabled: true)
+        let (vm, _) = makeViewModel(source: source, clock: FakeClock(), scheduler: scheduler, countdownEnabled: true)
         vm.start()
         if case .countdown(let r, _) = vm.state { #expect(r == 3) } else { Issue.record("expected countdown") }
         scheduler.fireRepeatingTick()
@@ -131,8 +131,8 @@ struct DrillViewModelTests {
     }
 
     @Test @MainActor func skipAppliesMiss() {
-        let detector = StubPitchDetector()
-        let (vm, repo) = makeViewModel(detector: detector, clock: FakeClock(), scheduler: FakeScheduler(), countdownEnabled: false)
+        let source = StubNoteInputSource()
+        let (vm, repo) = makeViewModel(source: source, clock: FakeClock(), scheduler: FakeScheduler(), countdownEnabled: false)
         vm.start()
         vm.skip()
         let key = DrillItemKey(noteName: .e, string: 6)
@@ -141,9 +141,9 @@ struct DrillViewModelTests {
     }
 
     @Test @MainActor func skipDuringCountdownCancelsCountdown() {
-        let detector = StubPitchDetector()
+        let source = StubNoteInputSource()
         let scheduler = FakeScheduler()
-        let (vm, _) = makeViewModel(detector: detector, clock: FakeClock(), scheduler: scheduler, countdownEnabled: true)
+        let (vm, _) = makeViewModel(source: source, clock: FakeClock(), scheduler: scheduler, countdownEnabled: true)
         vm.start()
         vm.skip()
         guard case .playing = vm.state else { Issue.record("expected playing after skip from countdown, got \(vm.state)"); return }
@@ -152,12 +152,12 @@ struct DrillViewModelTests {
     }
 
     @Test @MainActor func skipDuringSuccessDoesNotRecordMiss() async {
-        let detector = StubPitchDetector()
+        let source = StubNoteInputSource()
         let clock = FakeClock()
-        let (vm, repo) = makeViewModel(detector: detector, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
+        let (vm, repo) = makeViewModel(source: source, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
         vm.start()
         clock.advance(by: 1.0)
-        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        source.subject.send(Note(.e, octave: 2))
         try? await Task.sleep(for: .milliseconds(50))
         let key = DrillItemKey(noteName: .e, string: 6)
         let beforeAttempts = repo.loadAll()[key]?.attempts ?? 0
@@ -168,13 +168,13 @@ struct DrillViewModelTests {
     }
 
     @Test @MainActor func manualStartDuringSuccessCancelsStaleAutoAdvance() async {
-        let detector = StubPitchDetector()
+        let source = StubNoteInputSource()
         let clock = FakeClock()
         let scheduler = FakeScheduler()
-        let (vm, _) = makeViewModel(detector: detector, clock: clock, scheduler: scheduler, countdownEnabled: false)
+        let (vm, _) = makeViewModel(source: source, clock: clock, scheduler: scheduler, countdownEnabled: false)
         vm.start()
         clock.advance(by: 1.0)
-        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        source.subject.send(Note(.e, octave: 2))
         try? await Task.sleep(for: .milliseconds(50))
         vm.start()
         guard case .playing = vm.state else { Issue.record("expected playing after manual start, got \(vm.state)"); return }
@@ -183,13 +183,13 @@ struct DrillViewModelTests {
     }
 
     @Test @MainActor func correctAnswerRecordsDailyHistory() async {
-        let detector = StubPitchDetector()
+        let source = StubNoteInputSource()
         let clock = FakeClock()
         let suite = "test.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         let history = DailyHistoryStore(defaults: defaults, calendar: Calendar(identifier: .gregorian))
         let vm = DrillViewModel(
-            pitchDetector: detector,
+            input: source,
             selectNextPrompt: SelectNextPromptUseCase(nameNoteProbability: 0.0),
             updateStats: UpdateItemStatsUseCase(),
             validateNote: ValidateNoteUseCase(),
@@ -206,46 +206,46 @@ struct DrillViewModelTests {
         )
         vm.start()
         clock.advance(by: 1.5)
-        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        source.subject.send(Note(.e, octave: 2))
         try? await Task.sleep(for: .milliseconds(50))
         #expect(vm.todayCount == 1)
         #expect(history.todayReps(now: clock.now()) == 1)
     }
 
     @Test @MainActor func comboIncrementsOnFastCorrect() async {
-        let detector = StubPitchDetector()
+        let source = StubNoteInputSource()
         let clock = FakeClock()
-        let (vm, _) = makeViewModel(detector: detector, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
+        let (vm, _) = makeViewModel(source: source, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
         vm.start()
         clock.advance(by: 1.0)
-        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        source.subject.send(Note(.e, octave: 2))
         try? await Task.sleep(for: .milliseconds(50))
         #expect(vm.comboCount == 1)
     }
 
     @Test @MainActor func comboResetsOnSlowCorrect() async {
-        let detector = StubPitchDetector()
+        let source = StubNoteInputSource()
         let clock = FakeClock()
-        let (vm, _) = makeViewModel(detector: detector, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
+        let (vm, _) = makeViewModel(source: source, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
         vm.start()
         clock.advance(by: 1.0)
-        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        source.subject.send(Note(.e, octave: 2))
         try? await Task.sleep(for: .milliseconds(50))
         #expect(vm.comboCount == 1)
         vm.start()
         clock.advance(by: 5.0)
-        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        source.subject.send(Note(.e, octave: 2))
         try? await Task.sleep(for: .milliseconds(50))
         #expect(vm.comboCount == 0)
     }
 
     @Test @MainActor func comboResetsOnSkip() async {
-        let detector = StubPitchDetector()
+        let source = StubNoteInputSource()
         let clock = FakeClock()
-        let (vm, _) = makeViewModel(detector: detector, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
+        let (vm, _) = makeViewModel(source: source, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
         vm.start()
         clock.advance(by: 1.0)
-        detector.subject.send(DetectedPitch(note: Note(.e, octave: 2), frequency: 82.41, amplitude: 0.1))
+        source.subject.send(Note(.e, octave: 2))
         try? await Task.sleep(for: .milliseconds(50))
         #expect(vm.comboCount == 1)
         vm.skip()
@@ -253,9 +253,33 @@ struct DrillViewModelTests {
     }
 
     @Test @MainActor func beltRankStartsWhite() {
-        let detector = StubPitchDetector()
-        let (vm, _) = makeViewModel(detector: detector, clock: FakeClock(), scheduler: FakeScheduler(), countdownEnabled: false)
+        let source = StubNoteInputSource()
+        let (vm, _) = makeViewModel(source: source, clock: FakeClock(), scheduler: FakeScheduler(), countdownEnabled: false)
         #expect(vm.beltRank.belt == .white)
         #expect(vm.beltRank.fraction == 0)
+    }
+
+    @Test @MainActor func wrongNoteSetsLastWrongPositionOnPromptString() async {
+        let source = StubNoteInputSource()
+        let (vm, _) = makeViewModel(source: source, clock: FakeClock(), scheduler: FakeScheduler(), countdownEnabled: false)
+        vm.start()
+        source.subject.send(Note(.f, octave: 2))
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(vm.lastWrongPosition == FretPosition(string: 6, fret: 1))
+        if case .playing = vm.state {} else { Issue.record("should stay playing after a wrong answer") }
+    }
+
+    @Test @MainActor func correctNoteClearsLastWrongPosition() async {
+        let source = StubNoteInputSource()
+        let clock = FakeClock()
+        let (vm, _) = makeViewModel(source: source, clock: clock, scheduler: FakeScheduler(), countdownEnabled: false)
+        vm.start()
+        source.subject.send(Note(.f, octave: 2))
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(vm.lastWrongPosition != nil)
+        clock.advance(by: 1.0)
+        source.subject.send(Note(.e, octave: 2))
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(vm.lastWrongPosition == nil)
     }
 }

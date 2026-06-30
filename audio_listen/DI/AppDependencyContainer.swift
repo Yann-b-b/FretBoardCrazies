@@ -38,14 +38,31 @@ final class AppDependencyContainer {
 
     @MainActor
     func makeDrillViewModel() -> DrillViewModel {
-        let adapter = AudioKitPitchAdapter()
-        let detector = DebouncedPitchDetector(wrapping: adapter, stabilityDuration: 0.10)
         let strings = allowedStringsProvider
         let names = allowedNoteNamesProvider
         let maxFret = maxFretProvider
+        let touchMode = UserDefaults.standard.bool(forKey: GameSettingsKeys.touchMode)
+
+        let input: NoteInputSource
+        let touchSubmit: ((FretPosition) -> Void)?
+        let nameNoteProbability: Double
+        if touchMode {
+            let touch = TouchInputSource()
+            input = touch
+            touchSubmit = { [weak touch] position in touch?.submit(position) }
+            nameNoteProbability = 0
+        } else {
+            let adapter = AudioKitPitchAdapter()
+            let detector = DebouncedPitchDetector(wrapping: adapter, stabilityDuration: 0.10)
+            input = MicNoteSource(detector: detector)
+            touchSubmit = nil
+            nameNoteProbability = 0.25
+        }
+
         return DrillViewModel(
-            pitchDetector: detector,
-            selectNextPrompt: SelectNextPromptUseCase(),
+            input: input,
+            touchSubmit: touchSubmit,
+            selectNextPrompt: SelectNextPromptUseCase(nameNoteProbability: nameNoteProbability),
             updateStats: UpdateItemStatsUseCase(),
             validateNote: ValidateNoteUseCase(),
             stateMachine: DrillStateMachine(),
