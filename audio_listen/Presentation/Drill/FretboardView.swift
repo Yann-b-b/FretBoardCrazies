@@ -5,6 +5,8 @@ struct FretboardView: View {
     var highlightedPosition: FretPosition? = nil
     var revealLabel: String? = nil
     var heatmap: [DrillItemKey: MasteryLevel] = [:]
+    var onTap: ((FretPosition) -> Void)? = nil
+    var wrongPosition: FretPosition? = nil
 
     private let stringCount = 6
     private let fretCount = 12
@@ -22,7 +24,11 @@ struct FretboardView: View {
                 if let position = highlightedPosition {
                     targetDot(geo, position: position)
                 }
+                if let position = wrongPosition {
+                    wrongDot(geo, position: position)
+                }
             }
+            .modifier(TapToFret(geo: geo, onTap: onTap))
         }
         .frame(minHeight: 220)
         .background(Color(white: 0.12))
@@ -95,9 +101,37 @@ struct FretboardView: View {
             }
         }
     }
+
+    private func wrongDot(_ geo: FretboardGeometry, position: FretPosition) -> some View {
+        Circle()
+            .fill(Color(red: 1.0, green: 0.42, blue: 0.42))
+            .frame(width: 22, height: 22)
+            .position(geo.point(string: position.string, fret: position.fret))
+    }
+}
+
+private struct TapToFret: ViewModifier {
+    let geo: FretboardGeometry
+    let onTap: ((FretPosition) -> Void)?
+
+    func body(content: Content) -> some View {
+        if let onTap {
+            content
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0).onEnded { value in
+                        if let position = geo.hitTest(point: value.location) {
+                            onTap(position)
+                        }
+                    }
+                )
+        } else {
+            content
+        }
+    }
 }
 
 #Preview {
-    FretboardView(highlightedPosition: FretPosition(string: 5, fret: 3), revealLabel: "C")
+    FretboardView(highlightedPosition: FretPosition(string: 6, fret: 1), revealLabel: "")
         .padding()
 }

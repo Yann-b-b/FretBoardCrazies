@@ -9,6 +9,7 @@ struct DrillView: View {
     @State private var checkPop = false
     @State private var beltBurst = false
     @State private var beltPulse = false
+    @AppStorage(GameSettingsKeys.touchMode) private var touchMode = false
 
     init(viewModel: DrillViewModel, allowedStringsStore: GameAllowedStringsStore) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -161,7 +162,9 @@ struct DrillView: View {
                 FretboardView(
                     highlightedString: prompt.string,
                     highlightedPosition: reveal ? position(for: prompt) : nil,
-                    revealLabel: reveal ? prompt.targetNote.name.displayName : nil
+                    revealLabel: reveal ? prompt.targetNote.name.displayName : nil,
+                    onTap: (touchMode && !reveal) ? { viewModel.submitTouch($0) } : nil,
+                    wrongPosition: reveal ? nil : viewModel.lastWrongPosition
                 )
             case .nameNote:
                 Text(reveal ? prompt.targetNote.name.displayName : "Name this note")
