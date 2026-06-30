@@ -10,4 +10,5 @@ import Foundation
 enum GameSettingsKeys {
     static let limitFretsToTwelve = "limitFretsToTwelve"
     static let countdownEnabled = "countdownEnabled"
+    static let touchMode = "touchMode"
 }
