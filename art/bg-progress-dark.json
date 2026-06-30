@@ -1,0 +1,12 @@
+{
+  "name": "bg-progress-dark",
+  "group": "background",
+  "prompt": "a soft warm app background illustration, flat vector, gentle and non-distracting, low-contrast, soft gradients and faint paper texture, NO text, NO words, NO guitar fretboard lines. Keep the CENTER calm and mostly empty for app content. Wide landscape composition. Design language: large soft rounded translucent organic blobs forming gentle soft bands along the top edge and the bottom edge, with a calm center band between them. Cozy dark palette: dark #221A14 center, blobs in muted teal, warm amber glow and soft coral over the dark base. Plus a soft simple progress signifier placed clearly in the VERY TOP-RIGHT corner, high up near the upper-right edge (NOT low, NOT in the middle, NOT at the bottom): a few small ascending rounded bars like a mini bar chart with a gentle upward trend and a small star at the top, suggesting stats and progress; a couple of soft sparkles near the other edges. Absolutely NO martial-arts belt and NO ribbon.",
+  "size": "1536x1024",
+  "quality": "high",
+  "transparent": false,
+  "anchored": false,
+  "anchor_hash": null,
+  "model": "gpt-image-1",
+  "timestamp": "2026-06-30T02:26:41Z"
+}

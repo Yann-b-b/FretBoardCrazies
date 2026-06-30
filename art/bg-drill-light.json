@@ -1,0 +1,12 @@
+{
+  "name": "bg-drill-blob-2",
+  "group": "background",
+  "prompt": "a soft warm app background illustration, flat vector, gentle and non-distracting, low-contrast, soft gradients and faint paper texture, warm palette (soft cream #FFF6EC base, amber #FFB23E and orange #FF8A3D, teal #2DD4BF accents), playful and friendly, NO text, NO words, NO guitar fretboard lines. Keep the CENTER calm and mostly empty for app content. Wide landscape composition. The design language: large soft rounded translucent organic blob shapes. the translucent blobs in teal, coral and amber form gentle soft bands along the top edge and the bottom edge, with a calm cream center band between them",
+  "size": "1536x1024",
+  "quality": "high",
+  "transparent": false,
+  "anchored": false,
+  "anchor_hash": null,
+  "model": "gpt-image-1",
+  "timestamp": "2026-06-30T01:50:17Z"
+}

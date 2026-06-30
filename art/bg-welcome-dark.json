@@ -1,0 +1,12 @@
+{
+  "name": "bg-welcome-dark",
+  "group": "background",
+  "prompt": "a soft warm app background illustration, flat vector, gentle and non-distracting, low-contrast, soft gradients and faint paper texture, NO text, NO words, NO guitar fretboard lines. Keep the CENTER calm and mostly empty for app content. Wide landscape composition. Design language: large soft rounded translucent organic blobs forming gentle soft bands along the top edge and the bottom edge, with a calm center band between them. Cozy dark palette: dark #221A14 center, blobs in muted teal, warm amber glow and soft coral over the dark base. Plus a soft friendly acoustic guitar resting gently in a lower corner among the edge blobs and a couple of small music notes near the top; slightly richer as a welcome screen, center still calm.",
+  "size": "1536x1024",
+  "quality": "high",
+  "transparent": false,
+  "anchored": false,
+  "anchor_hash": null,
+  "model": "gpt-image-1",
+  "timestamp": "2026-06-30T02:06:06Z"
+}

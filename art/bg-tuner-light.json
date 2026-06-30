@@ -1,0 +1,12 @@
+{
+  "name": "bg-tuner-light",
+  "group": "background",
+  "prompt": "a soft warm app background illustration, flat vector, gentle and non-distracting, low-contrast, soft gradients and faint paper texture, NO text, NO words, NO guitar fretboard lines. Keep the CENTER calm and mostly empty for app content. Wide landscape composition. Design language: large soft rounded translucent organic blobs forming gentle soft bands along the top edge and the bottom edge, with a calm center band between them. Warm palette: soft cream #FFF6EC center, blobs in teal #2DD4BF, coral and amber #FFB23E. Plus gentle soft concentric sound-wave ripples among the edge blobs.",
+  "size": "1536x1024",
+  "quality": "high",
+  "transparent": false,
+  "anchored": false,
+  "anchor_hash": null,
+  "model": "gpt-image-1",
+  "timestamp": "2026-06-30T02:03:16Z"
+}
