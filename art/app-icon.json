@@ -1,0 +1,12 @@
+{
+  "name": "app-icon-6str-5",
+  "group": "icon",
+  "prompt": "Keep this exact electric guitar: same diagonal pose (body lower-left, headstock upper-right), same body shape, colors, thick dark-brown outlines, glossy style and transparent background. Change ONE thing: draw the fretboard with EXACTLY SIX strings \u2014 six evenly-spaced parallel strings running the full length of the neck from the headstock down onto the body (count them: 1, 2, 3, 4, 5, 6). Exactly six strings, not four, not five, not seven. Put six matching tuning pegs on the headstock. Keep it a single isolated guitar on a fully transparent background, no face, no other objects.",
+  "size": "1024x1024",
+  "quality": "high",
+  "transparent": true,
+  "anchored": false,
+  "anchor_hash": null,
+  "model": "gpt-image-1",
+  "timestamp": "2026-06-30T00:19:38Z"
+}
