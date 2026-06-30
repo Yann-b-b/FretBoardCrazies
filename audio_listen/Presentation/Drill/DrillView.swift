@@ -58,11 +58,17 @@ struct DrillView: View {
     private var comboBadge: some View {
         if viewModel.comboCount >= 2 {
             let scale = min(1.0 + Double(viewModel.comboCount) * 0.05, 1.6)
-            Text("🔥 \(viewModel.comboCount) combo")
-                .font(.headline)
-                .foregroundStyle(.orange)
-                .scaleEffect(scale)
-                .animation(.spring(response: 0.25, dampingFraction: 0.5), value: viewModel.comboCount)
+            HStack(spacing: 6) {
+                Image(flameAsset(for: viewModel.comboCount))
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 24)
+                Text("\(viewModel.comboCount) combo")
+                    .font(.headline)
+                    .foregroundStyle(.orange)
+            }
+            .scaleEffect(scale)
+            .animation(.spring(response: 0.25, dampingFraction: 0.5), value: viewModel.comboCount)
         }
     }
 
