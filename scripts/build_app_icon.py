@@ -8,10 +8,10 @@ OUT = os.path.join(PROJECT, "audio_listen/Assets.xcassets/AppIcon.appiconset")
 MASTER = 1024
 TOP = (255, 138, 61, 255)
 BOTTOM = (255, 178, 62, 255)
-SIZES = [16, 32, 64, 128, 256, 512, 1024]
+MAC_SIZES = [16, 32, 64, 128, 256, 512, 1024]
 
 
-def rounded_master():
+def gradient_canvas():
     column = Image.new("RGBA", (1, MASTER))
     for y in range(MASTER):
         t = y / (MASTER - 1)
@@ -24,13 +24,10 @@ def rounded_master():
                 255,
             ),
         )
-    gradient = column.resize((MASTER, MASTER))
-    mask = Image.new("L", (MASTER, MASTER), 0)
-    ImageDraw.Draw(mask).rounded_rectangle(
-        [0, 0, MASTER - 1, MASTER - 1], radius=int(MASTER * 0.2237), fill=255
-    )
-    canvas = Image.new("RGBA", (MASTER, MASTER), (0, 0, 0, 0))
-    canvas.paste(gradient, (0, 0), mask)
+    return column.resize((MASTER, MASTER), Image.BILINEAR)
+
+
+def with_guitar(canvas):
     guitar = Image.open(SRC).convert("RGBA")
     target = int(MASTER * 0.72)
     scale = target / max(guitar.size)
@@ -43,13 +40,29 @@ def rounded_master():
     return canvas
 
 
+def rounded_master():
+    mask = Image.new("L", (MASTER, MASTER), 0)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        [0, 0, MASTER - 1, MASTER - 1], radius=int(MASTER * 0.2237), fill=255
+    )
+    canvas = Image.new("RGBA", (MASTER, MASTER), (0, 0, 0, 0))
+    canvas.paste(gradient_canvas(), (0, 0), mask)
+    return with_guitar(canvas)
+
+
+def ios_master():
+    return with_guitar(gradient_canvas()).convert("RGB")
+
+
 def main():
-    master = rounded_master()
-    for size in SIZES:
-        master.resize((size, size), Image.LANCZOS).save(
+    rounded = rounded_master()
+    for size in MAC_SIZES:
+        rounded.resize((size, size), Image.LANCZOS).save(
             os.path.join(OUT, f"icon_{size}.png")
         )
         print(f"wrote icon_{size}.png")
+    ios_master().save(os.path.join(OUT, "icon_ios_1024.png"))
+    print("wrote icon_ios_1024.png")
 
 
 main()
