@@ -7,6 +7,8 @@ struct DrillView: View {
     @State private var allowedStrings: Set<Int> = Set(1...6)
     @State private var comboSound = ComboSoundPlayer()
     @State private var checkPop = false
+    @State private var beltBurst = false
+    @State private var beltPulse = false
 
     init(viewModel: DrillViewModel, allowedStringsStore: GameAllowedStringsStore) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -37,6 +39,19 @@ struct DrillView: View {
                 comboSound.play(combo: newValue)
             }
         }
+        .onChange(of: viewModel.beltRank.belt) { oldBelt, newBelt in
+            guard newBelt.outranks(oldBelt) else { return }
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
+                beltBurst = true
+                beltPulse = true
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                withAnimation(.easeOut(duration: 0.4)) {
+                    beltBurst = false
+                    beltPulse = false
+                }
+            }
+        }
     }
 
     private var header: some View {
@@ -48,6 +63,16 @@ struct DrillView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(height: 32)
+                    .scaleEffect(beltPulse ? 1.3 : 1.0)
+                    .overlay {
+                        Image("combo-burst")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 64)
+                            .opacity(beltBurst ? 1 : 0)
+                            .scaleEffect(beltBurst ? 1.2 : 0.6)
+                            .allowsHitTesting(false)
+                    }
                 Text("\(viewModel.beltRank.belt.displayName) belt")
                     .foregroundStyle(.secondary)
             }
