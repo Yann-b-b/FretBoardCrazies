@@ -46,7 +46,10 @@ struct MasteryView: View {
     private var beltCard: some View {
         VStack(spacing: 6) {
             HStack(spacing: 8) {
-                Image(systemName: beltRank.belt.symbolName).foregroundStyle(beltRank.belt.color)
+                Image(beltRank.belt.assetName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 32)
                 Text("\(beltRank.belt.displayName) belt").font(.headline)
             }
             ProgressView(value: beltRank.belt == .black ? 1.0 : beltRank.fractionToNext)

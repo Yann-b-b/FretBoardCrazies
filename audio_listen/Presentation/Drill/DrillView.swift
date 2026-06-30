@@ -43,8 +43,10 @@ struct DrillView: View {
             Text("Fretboard Drill").font(.title2).bold()
             Spacer()
             HStack(spacing: 6) {
-                Image(systemName: viewModel.beltRank.belt.symbolName)
-                    .foregroundStyle(viewModel.beltRank.belt.color)
+                Image(viewModel.beltRank.belt.assetName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 32)
                 Text("\(viewModel.beltRank.belt.displayName) belt")
                     .foregroundStyle(.secondary)
             }
