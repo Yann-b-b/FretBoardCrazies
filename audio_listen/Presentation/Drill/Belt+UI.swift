@@ -15,4 +15,6 @@ extension Belt {
     }
 
     var symbolName: String { "medal.fill" }
+
+    var assetName: String { "belt-\(displayName.lowercased())" }
 }

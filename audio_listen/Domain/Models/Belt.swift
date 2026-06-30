@@ -15,4 +15,6 @@ enum Belt: Int, CaseIterable {
         case .black: return "Black"
         }
     }
+
+    func outranks(_ other: Belt) -> Bool { rawValue > other.rawValue }
 }
