@@ -32,6 +32,14 @@ struct MasteryView: View {
             .padding(24)
             .frame(minWidth: 640)
         }
+        .scrollContentBackground(.hidden)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            Image("bg-progress")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+        )
         .onAppear(perform: reload)
     }
 

@@ -23,6 +23,13 @@ struct DrillView: View {
         }
         .padding(24)
         .frame(minWidth: 640, minHeight: 480)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            Image("bg-drill")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+        )
         .onAppear { allowedStrings = allowedStringsStore.load() }
         .onChange(of: viewModel.comboCount) { oldValue, newValue in
             if newValue > oldValue {

@@ -18,6 +18,14 @@ struct SettingsView: View {
                 Toggle("Limit targets to frets 0–11", isOn: $limitFretsToTwelve)
             }
         }
+        .scrollContentBackground(.hidden)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            Image("bg-settings")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+        )
         .navigationTitle("Settings")
     }
 }

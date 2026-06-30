@@ -51,6 +51,13 @@ struct TunerView: View {
             .padding(.bottom, 32)
         }
         .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            Image("bg-tuner")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+        )
         .onDisappear {
             viewModel.stopListening()
         }
