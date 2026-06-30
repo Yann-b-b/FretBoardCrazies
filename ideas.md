@@ -40,3 +40,16 @@ become fully platform-agnostic.
 `Form`, and most controls per platform automatically — so most views need no
 conditionals at all; the goal is just to keep the few genuine platform values out of
 shared view bodies.
+
+### Find-position: enforce the asked string (both modes)
+
+Find-position validation is currently **note-only** — it never checks the string.
+"Find C on string 5" is satisfied by answering C on *any* string (the mic can't tell
+which string you used anyway). Consider making find-position actually require the
+asked string, for guitar *and* touch — a stricter, more accurate drill.
+
+Cost: validation grows a string check, and the input would need to carry the tapped
+`FretPosition` (not just the bare `Note`), since the string can't be recovered from a
+note alone. Surfaced during touch-mode design — the wrong-answer dot currently derives
+its position on the *asked* string, which is consistent with the note-only judging; if
+we enforce the string, the dot would instead want the literal tapped position.
