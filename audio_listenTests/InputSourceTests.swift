@@ -24,7 +24,7 @@ struct InputSourceTests {
         let source = TouchInputSource()
         var received: [Note] = []
         let c = source.notes.sink { received.append($0) }
-        source.submit(FretPosition(string: 6, fret: 1))   // low E string, fret 1 = F2
+        source.submit(FretPosition(string: 6, fret: 1))
         c.cancel()
         #expect(received == [Note(.f, octave: 2)])
     }
@@ -33,7 +33,7 @@ struct InputSourceTests {
         let source = TouchInputSource()
         var received: [Note] = []
         let c = source.notes.sink { received.append($0) }
-        source.submit(FretPosition(string: 9, fret: 0))   // no such string
+        source.submit(FretPosition(string: 9, fret: 0))
         c.cancel()
         #expect(received.isEmpty)
     }

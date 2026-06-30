@@ -177,7 +177,7 @@ final class DrillViewModel: ObservableObject {
         detectedNote = note.displayName
         guard case .playing(let startTime, let prompt) = state else { return }
         guard validateNote.execute(detected: note, target: prompt.targetNote) else {
-            lastWrongPosition = GuitarFretboard.positions(for: note).first { $0.string == prompt.string }
+            lastWrongPosition = GuitarFretboard.positions(for: note, maxFretInclusive: 12).first { $0.string == prompt.string }
             return
         }
         lastWrongPosition = nil
