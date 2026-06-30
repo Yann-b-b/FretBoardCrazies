@@ -22,4 +22,18 @@ struct FretboardGeometryTests {
             }
         }
     }
+
+    @Test func hitTestRoundTripsPointForEveryPosition() {
+        for string in 1...6 {
+            for fret in 0...12 {
+                let p = geo.point(string: string, fret: fret)
+                #expect(geo.hitTest(point: p) == FretPosition(string: string, fret: fret))
+            }
+        }
+    }
+
+    @Test func hitTestReturnsNilOutsideTheBoard() {
+        #expect(geo.hitTest(point: CGPoint(x: -10, y: 125)) == nil)
+        #expect(geo.hitTest(point: CGPoint(x: 300, y: 1000)) == nil)
+    }
 }

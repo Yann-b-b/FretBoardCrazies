@@ -21,4 +21,14 @@ struct FretboardGeometry {
         let x = cellWidth * (CGFloat(fret) + 0.5)
         return CGPoint(x: x, y: stringY(string))
     }
+
+    func hitTest(point: CGPoint) -> FretPosition? {
+        let inset = size.height / CGFloat(stringCount + 1)
+        let cellWidth = size.width / CGFloat(fretCount + 1)
+        guard inset > 0, cellWidth > 0 else { return nil }
+        let string = Int((point.y / inset).rounded())
+        let fret = Int((point.x / cellWidth).rounded(.down))
+        guard string >= 1, string <= stringCount, fret >= 0, fret <= fretCount else { return nil }
+        return FretPosition(string: string, fret: fret)
+    }
 }
