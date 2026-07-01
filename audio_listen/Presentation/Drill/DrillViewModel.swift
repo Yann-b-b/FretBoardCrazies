@@ -107,6 +107,10 @@ final class DrillViewModel: ObservableObject {
     }
 
     func submitTouch(_ position: FretPosition) {
+        guard case .playing(_, let prompt) = state else { return }
+        // Only the asked string is live; a misclick on any other string is ignored
+        // so it never registers as an answer.
+        guard position.string == prompt.string else { return }
         touchSubmit?(position)
     }
 

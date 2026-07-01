@@ -61,6 +61,36 @@ private func makeViewModel(
     return (vm, repo)
 }
 
+private final class TouchSubmitSpy {
+    var submitted: [FretPosition] = []
+}
+
+@MainActor
+private func makeTouchViewModel() -> (DrillViewModel, TouchSubmitSpy) {
+    let spy = TouchSubmitSpy()
+    let suite = "test.\(UUID().uuidString)"
+    let defaults = UserDefaults(suiteName: suite)!
+    let repo = UserDefaultsDrillProgressRepository(defaults: defaults)
+    let vm = DrillViewModel(
+        input: StubNoteInputSource(),
+        touchSubmit: { spy.submitted.append($0) },
+        selectNextPrompt: SelectNextPromptUseCase(nameNoteProbability: 0.0),
+        updateStats: UpdateItemStatsUseCase(),
+        validateNote: ValidateNoteUseCase(),
+        stateMachine: DrillStateMachine(),
+        progressRepository: repo,
+        dailyHistoryStore: DailyHistoryStore(defaults: defaults, calendar: Calendar(identifier: .gregorian)),
+        clock: FakeClock(),
+        scheduler: FakeScheduler(),
+        allowedStrings: { Set([6]) },
+        allowedNoteNames: { [.e] },
+        maxFretInclusive: { 11 },
+        countdownEnabled: false,
+        randomUnit: { 0.0 }
+    )
+    return (vm, spy)
+}
+
 struct DrillViewModelTests {
     @Test @MainActor func startWithoutCountdownEntersPlaying() {
         let source = StubNoteInputSource()
@@ -267,6 +297,31 @@ struct DrillViewModelTests {
         try? await Task.sleep(for: .milliseconds(50))
         #expect(vm.lastWrongPosition == FretPosition(string: 6, fret: 1))
         if case .playing = vm.state {} else { Issue.record("should stay playing after a wrong answer") }
+    }
+
+    @Test @MainActor func touchOnAskedStringIsForwarded() {
+        let (vm, spy) = makeTouchViewModel()
+        vm.start()
+        guard case .playing(_, let prompt) = vm.state else { Issue.record("expected playing"); return }
+        #expect(prompt.string == 6)
+        let tap = FretPosition(string: 6, fret: 3)
+        vm.submitTouch(tap)
+        #expect(spy.submitted == [tap])
+    }
+
+    @Test @MainActor func touchOnWrongStringIsIgnored() {
+        let (vm, spy) = makeTouchViewModel()
+        vm.start()
+        vm.submitTouch(FretPosition(string: 2, fret: 5))
+        #expect(spy.submitted.isEmpty)
+        #expect(vm.lastWrongPosition == nil)
+        if case .playing = vm.state {} else { Issue.record("off-string tap must not change state, got \(vm.state)") }
+    }
+
+    @Test @MainActor func touchIgnoredWhenNotPlaying() {
+        let (vm, spy) = makeTouchViewModel()
+        vm.submitTouch(FretPosition(string: 6, fret: 0))
+        #expect(spy.submitted.isEmpty)
     }
 
     @Test @MainActor func correctNoteClearsLastWrongPosition() async {
