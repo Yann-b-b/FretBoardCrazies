@@ -264,7 +264,7 @@ struct GameAllowedStringsStoreTests {
         #expect(loaded == original)
     }
 
-    @Test func missingKeyDefaultsToAllStrings() {
+    @Test func missingKeyDefaultsToEAndA() {
         let suite = "test.\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suite) else {
             Issue.record("Could not create UserDefaults suite")
@@ -273,7 +273,7 @@ struct GameAllowedStringsStoreTests {
         defer { defaults.removePersistentDomain(forName: suite) }
 
         let store = GameAllowedStringsStore(defaults: defaults)
-        #expect(store.load() == Set(1...6))
+        #expect(store.load() == StringSetPresets.defaultStrings)
     }
 
     @Test func emptyArrayRoundTripIsEmpty() throws {
@@ -289,7 +289,7 @@ struct GameAllowedStringsStoreTests {
         #expect(store.load().isEmpty)
     }
 
-    @Test func onlyOutOfRangeValuesFallsBackToAll() throws {
+    @Test func onlyOutOfRangeValuesFallsBackToDefault() throws {
         let suite = "test.\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suite) else {
             Issue.record("Could not create UserDefaults suite")
@@ -299,7 +299,7 @@ struct GameAllowedStringsStoreTests {
 
         defaults.set(try JSONEncoder().encode([0, 7, 99]), forKey: GameAllowedStringsStore.userDefaultsKey)
         let store = GameAllowedStringsStore(defaults: defaults)
-        #expect(store.load() == Set(1...6))
+        #expect(store.load() == StringSetPresets.defaultStrings)
     }
 }
 

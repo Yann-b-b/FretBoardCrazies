@@ -17,14 +17,14 @@ struct GameAllowedStringsStore {
         self.defaults = defaults
     }
 
-    /// Missing key, decode failure, or only out-of-range values → all strings.
+    /// Missing key, decode failure, or only out-of-range values → default strings (E and A).
     /// Successfully stored empty array → empty set (no strings selected).
     func load() -> Set<Int> {
         guard let data = defaults.data(forKey: Self.userDefaultsKey) else {
-            return Set(1...6)
+            return StringSetPresets.defaultStrings
         }
         guard let arr = try? JSONDecoder().decode([Int].self, from: data) else {
-            return Set(1...6)
+            return StringSetPresets.defaultStrings
         }
         let inRange = arr.filter { (1...6).contains($0) }
         let set = Set(inRange)
@@ -32,7 +32,7 @@ struct GameAllowedStringsStore {
             if arr.isEmpty {
                 return []
             }
-            return Set(1...6)
+            return StringSetPresets.defaultStrings
         }
         return set
     }
