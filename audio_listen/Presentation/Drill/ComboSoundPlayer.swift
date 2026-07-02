@@ -1,51 +1,49 @@
 import AVFoundation
 
 final class ComboSoundPlayer {
-    private let engine = AVAudioEngine()
-    private let sampleRate: Double = 44100
-    private var started = false
-    private var phase: Double = 0
-    private var frequency: Double = 440
-    private var remainingSamples: Int = 0
+    private var players: [String: AVAudioPlayer] = [:]
+    private var lastTier: ComboTier = .none
 
-    private lazy var source = AVAudioSourceNode { [weak self] _, _, frameCount, audioBufferList in
-        guard let self else { return noErr }
-        let buffers = UnsafeMutableAudioBufferListPointer(audioBufferList)
-        let twoPi = 2.0 * Double.pi
-        for frame in 0..<Int(frameCount) {
-            var value: Float = 0
-            if self.remainingSamples > 0 {
-                value = Float(sin(self.phase)) * 0.2
-                self.phase += twoPi * self.frequency / self.sampleRate
-                if self.phase > twoPi { self.phase -= twoPi }
-                self.remainingSamples -= 1
-            }
-            for buffer in buffers {
-                let pointer = UnsafeMutableBufferPointer<Float>(buffer)
-                pointer[frame] = value
-            }
-        }
-        return noErr
-    }
+    private let hitFiles: [ComboTier: String] = [
+        .one: "combo-hit-1",
+        .two: "combo-hit-2",
+        .three: "combo-hit-3",
+        .four: "combo-hit-4"
+    ]
+
+    private let tierUpFiles: [ComboTier: String] = [
+        .two: "combo-tierup-2",
+        .three: "combo-tierup-3",
+        .four: "combo-tierup-4"
+    ]
 
     func play(combo: Int) {
-        ensureStarted()
-        let steps: [Double] = [0, 2, 4, 7, 9, 12]
-        let index = min(max(combo - 1, 0), steps.count - 1)
-        frequency = 440 * pow(2.0, steps[index] / 12.0)
-        remainingSamples = Int(sampleRate * 0.15)
+        let tier = ComboTier.tier(for: combo)
+        guard tier != .none else {
+            lastTier = tier
+            return
+        }
+        if tier.rawValue > lastTier.rawValue, let stinger = tierUpFiles[tier] {
+            play(named: stinger)
+        }
+        if let hit = hitFiles[tier] {
+            play(named: hit)
+        }
+        lastTier = tier
     }
 
-    private func ensureStarted() {
-        guard !started else { return }
-        guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1) else { return }
-        engine.attach(source)
-        engine.connect(source, to: engine.mainMixerNode, format: format)
-        do {
-            try engine.start()
-            started = true
-        } catch {
-            engine.detach(source)
-        }
+    private func play(named name: String) {
+        guard let player = player(named: name) else { return }
+        player.currentTime = 0
+        player.play()
+    }
+
+    private func player(named name: String) -> AVAudioPlayer? {
+        if let existing = players[name] { return existing }
+        guard let url = Bundle.main.url(forResource: name, withExtension: "wav"),
+              let player = try? AVAudioPlayer(contentsOf: url) else { return nil }
+        player.prepareToPlay()
+        players[name] = player
+        return player
     }
 }
