@@ -11,7 +11,7 @@ import SwiftUI
 struct audio_listenApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
         }
     }
 }
