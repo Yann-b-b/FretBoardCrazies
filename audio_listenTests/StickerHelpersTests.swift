@@ -4,11 +4,11 @@ import XCTest
 final class StickerHelpersTests: XCTestCase {
     func testSmallFlameForLowCombos() {
         XCTAssertEqual(flameAsset(for: 2), "flame-small")
-        XCTAssertEqual(flameAsset(for: 4), "flame-small")
+        XCTAssertEqual(flameAsset(for: 9), "flame-small")
     }
 
-    func testLargeFlameAtFiveAndAbove() {
-        XCTAssertEqual(flameAsset(for: 5), "flame-large")
-        XCTAssertEqual(flameAsset(for: 12), "flame-large")
+    func testLargeFlameAtTenAndAbove() {
+        XCTAssertEqual(flameAsset(for: 10), "flame-large")
+        XCTAssertEqual(flameAsset(for: 25), "flame-large")
     }
 }

@@ -19,7 +19,7 @@ struct FloatingBeltsView: View {
                 Image(sprite.assetName)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 40, height: 40)
+                    .frame(width: 60, height: 60)
                     .opacity(0.35)
                     .rotationEffect(.degrees(animate ? 8 : -8))
                     .offset(y: animate ? -10 : 10)

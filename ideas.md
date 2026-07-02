@@ -1,8 +1,13 @@
-1. A timer + the number of notes played so far
-2. A streak of some kind ?
+1. A streak of some kind ?
+- fix issue where the fretboard gets smaller when we get a sreak due to hte little flame icon coming up
+- modify the sound being created so it's not just a beep sound. could make a small sound-track for it? not sure. but it sucks right now
+- change the color of the little flame emblem to turn to rainbow or something when you get to 50 and above.
+- add achievements page: for each mode get above 100, get above 50 streak. start with just these two.
+2. generate a mode where we get only one note like E but you have to play it on the string as fast as possible. This, i feel can be on another view. Call it drill_2 or something uninspiring (try to find some better way to define it)
 3. Advance Feature: which frets to play (like frets 0-5 or 6-11)
 4. show the next note before the first is played once you are getting too fast
 5. improvisation of next notes using some machine learning setup or just some basic knowledge of the fretboard and
+6. Add a chord page? how would that look...? starting small could be good.
 
 ---
 
