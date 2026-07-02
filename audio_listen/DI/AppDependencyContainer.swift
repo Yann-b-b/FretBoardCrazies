@@ -77,4 +77,9 @@ final class AppDependencyContainer {
             randomUnit: { Double.random(in: 0..<1) }
         )
     }
+
+    @MainActor
+    func makeRootViewModel() -> RootViewModel {
+        RootViewModel()
+    }
 }
