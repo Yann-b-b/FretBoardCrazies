@@ -7,6 +7,7 @@ struct FretboardView: View {
     var heatmap: [DrillItemKey: MasteryLevel] = [:]
     var onTap: ((FretPosition) -> Void)? = nil
     var wrongPosition: FretPosition? = nil
+    var minHeight: CGFloat = 220
 
     private let stringCount = 6
     private let fretCount = 12
@@ -17,6 +18,7 @@ struct FretboardView: View {
             ZStack {
                 fretLines(geo)
                 stringLines(geo)
+                inlayDots(geo)
                 if let string = highlightedString {
                     stringGlow(geo, string: string)
                 }
@@ -30,7 +32,7 @@ struct FretboardView: View {
             }
             .modifier(TapToFret(geo: geo, onTap: onTap))
         }
-        .frame(minHeight: 220)
+        .frame(minHeight: minHeight)
         .background(Color(white: 0.12))
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
@@ -53,6 +55,29 @@ struct FretboardView: View {
                 p.addLine(to: CGPoint(x: geo.size.width, y: geo.stringY(string)))
             }
             .stroke(Color.gray.opacity(0.6), lineWidth: 1)
+        }
+    }
+
+    private func inlayDots(_ geo: FretboardGeometry) -> some View {
+        let singleDotFrets = [3, 5, 7, 9]
+        let octaveFret = 12
+        let dotColor = Color(white: 0.45)
+        let dotSize: CGFloat = 10
+        let centerY = geo.size.height / 2
+        let stringSpacing = geo.stringY(1)
+        return ZStack {
+            ForEach(singleDotFrets, id: \.self) { fret in
+                Circle()
+                    .fill(dotColor)
+                    .frame(width: dotSize, height: dotSize)
+                    .position(x: geo.point(string: 1, fret: fret).x, y: centerY)
+            }
+            ForEach([centerY - stringSpacing, centerY + stringSpacing], id: \.self) { y in
+                Circle()
+                    .fill(dotColor)
+                    .frame(width: dotSize, height: dotSize)
+                    .position(x: geo.point(string: 1, fret: octaveFret).x, y: y)
+            }
         }
     }
 
