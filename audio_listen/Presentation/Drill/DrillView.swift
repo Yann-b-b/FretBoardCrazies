@@ -9,6 +9,8 @@ struct DrillView: View {
     @State private var checkPop = false
     @State private var beltBurst = false
     @State private var beltPulse = false
+    @State private var wigglePhase = false
+    @State private var rainbowPhase = 0.0
     @AppStorage(GameSettingsKeys.touchMode) private var touchMode = false
     @Environment(\.verticalSizeClass) private var verticalSizeClass
 
@@ -105,20 +107,35 @@ struct DrillView: View {
 
     private var comboBadge: some View {
         let showing = viewModel.comboCount >= 2
+        let visual = ComboEscalation.visual(for: viewModel.comboCount)
         let scale = min(1.0 + Double(viewModel.comboCount) * 0.05, 1.6)
         return HStack(spacing: 6) {
-            Image(flameAsset(for: max(viewModel.comboCount, 2)))
+            Image(visual.flameAsset)
                 .resizable()
                 .scaledToFit()
                 .frame(height: flameHeight)
+                .hueRotation(.degrees(visual.rainbow ? rainbowPhase : 0))
+                .offset(x: wigglePhase ? visual.wiggleAmplitude : -visual.wiggleAmplitude)
+                .animation(.easeInOut(duration: 0.3).repeatForever(autoreverses: true), value: wigglePhase)
             Text("\(viewModel.comboCount) combo")
                 .font(.headline)
-                .foregroundStyle(.orange)
+                .foregroundStyle(visual.rainbow ? AnyShapeStyle(rainbowGradient) : AnyShapeStyle(Color.orange))
+                .hueRotation(.degrees(visual.rainbow ? rainbowPhase : 0))
         }
         .scaleEffect(scale)
         .opacity(showing ? 1 : 0)
         .frame(height: flameHeight)
         .animation(.spring(response: 0.25, dampingFraction: 0.5), value: viewModel.comboCount)
+        .onAppear {
+            wigglePhase = true
+            withAnimation(.linear(duration: 2).repeatForever(autoreverses: false)) {
+                rainbowPhase = 360
+            }
+        }
+    }
+
+    private var rainbowGradient: AngularGradient {
+        AngularGradient(colors: [.red, .orange, .yellow, .green, .blue, .purple, .red], center: .center)
     }
 
     @ViewBuilder
