@@ -1,13 +1,28 @@
-1. A streak of some kind ?
-- fix issue where the fretboard gets smaller when we get a sreak due to hte little flame icon coming up
-- modify the sound being created so it's not just a beep sound. could make a small sound-track for it? not sure. but it sucks right now
-- change the color of the little flame emblem to turn to rainbow or something when you get to 50 and above.
-- add achievements page: for each mode get above 100, get above 50 streak. start with just these two.
-2. generate a mode where we get only one note like E but you have to play it on the string as fast as possible. This, i feel can be on another view. Call it drill_2 or something uninspiring (try to find some better way to define it)
-3. Advance Feature: which frets to play (like frets 0-5 or 6-11)
-4. show the next note before the first is played once you are getting too fast
-5. improvisation of next notes using some machine learning setup or just some basic knowledge of the fretboard and
-6. Add a chord page? how would that look...? starting small could be good.
+## Done ✅
+
+1. Combo escalation (streak feedback) — **shipped**
+   - [x] fix fretboard shrinking when the flame icon appears (constant-height slots)
+   - [x] replace the beep with script-generated tiered cues + tier-up stingers
+   - [x] rainbow flame at 50+
+   - [x] full escalation curve: wiggle grows → calm at 15 → re-energize at 25 → rainbow at 50
+   - [x] welcome screen with floating belt/flame sprites
+   - [x] string-selection dropdown (singles + presets, default Low E + A)
+   - [x] touch mode: ignore taps on the non-asked string
+   - [x] fretboard inlay dots (frets 3/5/7/9, double at 12)
+   - [x] floating bubble nav rail + compact landscape layout (iOS)
+
+## Next up 🔜
+
+2. **Focus mode** — single-note drill on one string, play it as fast as possible.
+   New view + new nav entry (working name "Focus"). Random string with anti-repeat.
+3. **Achievements page** — per mode: reach 100, and hit a 50 streak. Start with just these two.
+
+## Backlog 💭
+
+4. Advanced: choose which frets to drill (e.g. frets 0–5 or 6–11).
+5. Show the next note before the first is played once you're getting too fast.
+6. Improvisation of next notes — ML setup or basic fretboard heuristics.
+7. Chord page — how would it look? Start small.
 
 ---
 
@@ -48,6 +63,9 @@ shared view bodies.
 
 ### Find-position: enforce the asked string (both modes)
 
+**Partly addressed:** touch mode now ignores taps on the non-asked string
+(`DrillViewModel.submitTouch` guard). Guitar/mic mode is still note-only (below).
+
 Find-position validation is currently **note-only** — it never checks the string.
 "Find C on string 5" is satisfied by answering C on *any* string (the mic can't tell
 which string you used anyway). Consider making find-position actually require the
@@ -60,6 +78,12 @@ its position on the *asked* string, which is consistent with the note-only judgi
 we enforce the string, the dot would instead want the literal tapped position.
 
 ### iOS landscape layout pass
+
+**Largely done for Drill:** compact-aware heights/fonts + floating bubble nav rail
+via `safeAreaInset` mean the Drill screen now fits landscape without the tab bar
+overlapping the controls. Remaining: give the other tabs (esp. Tuner's Start/Stop)
+the same compact pass, and isolate the `#if os(macOS)` window-minimums per the note
+above.
 
 The screens were designed for a roomy Mac window; on a landscape iPhone (~393pt tall)
 some content overflows. Concretely: on the **Drill** screen the content (header +
