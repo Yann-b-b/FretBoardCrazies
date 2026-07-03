@@ -48,7 +48,7 @@ struct FloatingBeltsView: View {
                 id: index,
                 assetName: belt.assetName,
                 xFraction: xFraction,
-                yFraction: isTop ? 0.12 : 0.88,
+                yFraction: isTop ? 0.20 : 0.88,
                 phase: Double(index) * 0.25
             )
         }
