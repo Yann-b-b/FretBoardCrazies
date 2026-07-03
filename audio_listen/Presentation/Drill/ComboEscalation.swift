@@ -49,7 +49,6 @@ enum ComboEscalation {
     }
 
     private static func ramp(_ combo: Int, start: Int, end: Int) -> CGFloat {
-        guard end > start else { return maxWiggle }
         let fraction = CGFloat(combo - start) / CGFloat(end - start)
         return maxWiggle * min(max(fraction, 0), 1)
     }

@@ -3,6 +3,9 @@
 Generates FretBoardCrazies art assets via the OpenAI Images API (`gpt-image-1`).
 Standard-library Python only — no `uv`/`pip` install needed.
 
+`generate_combo_sounds.py` additionally requires numpy (`pip install numpy` —
+already present in the system Python on most setups).
+
 ## Setup
 
 ```bash

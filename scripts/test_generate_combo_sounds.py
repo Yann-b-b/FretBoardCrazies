@@ -11,3 +11,5 @@ def test_generates_all_cues_nonempty(tmp_path):
         with wave.open(str(path)) as reader:
             assert reader.getnframes() > 0
             assert reader.getframerate() == 44100
+            assert reader.getnchannels() == 1
+            assert reader.getsampwidth() == 2
