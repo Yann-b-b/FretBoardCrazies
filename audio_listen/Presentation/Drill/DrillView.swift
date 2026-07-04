@@ -3,6 +3,7 @@ import SwiftUI
 struct DrillView: View {
     @StateObject private var viewModel: DrillViewModel
     private let allowedStringsStore: GameAllowedStringsStore
+    private let instrument: Instrument
 
     @State private var allowedStrings: Set<Int> = StringSetPresets.defaultStrings
     @State private var comboSound = ComboSoundPlayer()
@@ -33,9 +34,10 @@ struct DrillView: View {
         )
     }
 
-    init(viewModel: DrillViewModel, allowedStringsStore: GameAllowedStringsStore) {
+    init(viewModel: DrillViewModel, allowedStringsStore: GameAllowedStringsStore, instrument: Instrument = Instruments.guitar) {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.allowedStringsStore = allowedStringsStore
+        self.instrument = instrument
     }
 
     var body: some View {
@@ -185,7 +187,7 @@ struct DrillView: View {
                 }
             }
             .pickerStyle(.menu)
-            FretboardView(heatmap: [:], minHeight: fretboardHeight)
+            FretboardView(heatmap: [:], minHeight: fretboardHeight, instrument: instrument)
             Button("Start") { viewModel.start() }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.space, modifiers: [])
@@ -205,7 +207,8 @@ struct DrillView: View {
                     revealLabel: reveal ? prompt.targetNote.name.displayName : nil,
                     onTap: (touchMode && !reveal) ? { viewModel.submitTouch($0) } : nil,
                     wrongPosition: reveal ? nil : viewModel.lastWrongPosition,
-                    minHeight: fretboardHeight
+                    minHeight: fretboardHeight,
+                    instrument: instrument
                 )
             case .nameNote:
                 Text(reveal ? prompt.targetNote.name.displayName : "Name this note")
@@ -213,14 +216,15 @@ struct DrillView: View {
                 FretboardView(
                     highlightedPosition: position(for: prompt),
                     revealLabel: reveal ? prompt.targetNote.name.displayName : nil,
-                    minHeight: fretboardHeight
+                    minHeight: fretboardHeight,
+                    instrument: instrument
                 )
             }
         }
     }
 
     private func position(for prompt: DrillPrompt) -> FretPosition? {
-        GuitarFretboard.positions(for: prompt.targetNote)
+        instrument.positions(for: prompt.targetNote, maxFretInclusive: instrument.fretCount)
             .first { $0.string == prompt.string }
     }
 

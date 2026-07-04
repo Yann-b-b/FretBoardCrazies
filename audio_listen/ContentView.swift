@@ -24,7 +24,8 @@ struct ContentView: View {
         TabView {
             DrillView(
                 viewModel: container.makeDrillViewModel(),
-                allowedStringsStore: container.allowedStringsStore
+                allowedStringsStore: container.allowedStringsStore,
+                instrument: container.instrument
             )
             .id(touchMode)
             .tabItem { Label("Drill", systemImage: "guitars.fill") }
@@ -51,7 +52,8 @@ struct ContentView: View {
         case 0:
             DrillView(
                 viewModel: container.makeDrillViewModel(),
-                allowedStringsStore: container.allowedStringsStore
+                allowedStringsStore: container.allowedStringsStore,
+                instrument: container.instrument
             )
             .id(touchMode)
         case 1:

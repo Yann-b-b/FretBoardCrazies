@@ -8,8 +8,9 @@ struct FretboardView: View {
     var onTap: ((FretPosition) -> Void)? = nil
     var wrongPosition: FretPosition? = nil
     var minHeight: CGFloat = 220
+    var instrument: Instrument = Instruments.guitar
 
-    private let stringCount = 6
+    private var stringCount: Int { instrument.stringCount }
     private let fretCount = 12
 
     var body: some View {
@@ -102,7 +103,7 @@ struct FretboardView: View {
     }
 
     private func fret(for key: DrillItemKey) -> Int? {
-        for fret in 0...fretCount where GuitarFretboard.note(at: key.string, fret: fret)?.name == key.noteName {
+        for fret in 0...fretCount where instrument.note(at: key.string, fret: fret)?.name == key.noteName {
             return fret
         }
         return nil
