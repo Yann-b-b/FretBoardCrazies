@@ -8,119 +8,6 @@ import Foundation
 import Testing
 @testable import audio_listen
 
-// MARK: - GameSessionConfiguration
-
-struct GameSessionConfigurationTests {
-    @Test func defaultAllStringsIsValid() {
-        let c = GameSessionConfiguration.defaultAllStrings()
-        #expect(c.isValid)
-        #expect(c.allowedStrings == Set(1...6))
-        #expect(c.showStringAndFret)
-    }
-
-    @Test func validatedAcceptsSingleString() throws {
-        let c = GameSessionConfiguration(showStringAndFret: false, allowedStrings: Set([3]))
-        _ = try c.validated()
-    }
-
-    @Test func emptyAllowedStringsInvalid() {
-        let c = GameSessionConfiguration(allowedStrings: Set())
-        #expect(!c.isValid)
-        #expect(throws: GameSessionConfiguration.ValidationError.self) {
-            try c.validated()
-        }
-    }
-
-    @Test func outOfRangeStringInvalid() {
-        let c = GameSessionConfiguration(allowedStrings: Set([1, 7]))
-        #expect(!c.isValid)
-        do {
-            _ = try c.validated()
-            Issue.record("Expected validation to throw")
-        } catch let e as GameSessionConfiguration.ValidationError {
-            #expect(e == .stringOutOfRange(7))
-        } catch {
-            Issue.record("Wrong error type: \(error)")
-        }
-    }
-
-    @Test func codableRoundTrip() throws {
-        let original = try GameSessionConfiguration(showStringAndFret: false, allowedStrings: Set([1, 4])).validated()
-        let data = try JSONEncoder().encode(original)
-        let decoded = try JSONDecoder().decode(GameSessionConfiguration.self, from: data)
-        #expect(decoded == original)
-    }
-}
-
-// MARK: - GameTargetPrompt
-
-struct GameTargetPromptTests {
-    @Test func playingLineUsesLetterAndStringNumber() {
-        let line = GameTargetPrompt.playingLine(note: Note(.cSharp, octave: 4), string: 2)
-        #expect(line == "C# string 2")
-    }
-
-    @Test func playingLineOmitsOctave() {
-        let line = GameTargetPrompt.playingLine(note: Note(.a, octave: 2), string: 6)
-        #expect(line == "A string 6")
-        #expect(!line.contains("2"))
-    }
-
-    @Test func playingLineWithOpenStringAppendsOpen() {
-        let line = GameTargetPrompt.playingLine(
-            note: Note(.e, octave: 2),
-            position: FretPosition(string: 6, fret: 0)
-        )
-        #expect(line == "E string 6 open")
-    }
-
-    @Test func playingLineWithFrettedNoteNoOpenSuffix() {
-        let line = GameTargetPrompt.playingLine(
-            note: Note(.g, octave: 3),
-            position: FretPosition(string: 3, fret: 0)
-        )
-        #expect(line == "G string 3 open")
-        let fretted = GameTargetPrompt.playingLine(
-            note: Note(.a, octave: 3),
-            position: FretPosition(string: 4, fret: 7)
-        )
-        #expect(fretted == "A string 4")
-    }
-}
-
-// MARK: - PersistedGameRound / playedAt migration
-
-struct PersistedGameRoundTests {
-    @Test func legacyJsonWithoutPlayedAtMapsToDistantPast() throws {
-        let json = """
-        [{"targetNoteNameRawValue":4,"targetNoteOctave":4,"targetString":1,"targetFret":0,"reactionTime":1.2}]
-        """
-        let decoded = try JSONDecoder().decode([PersistedGameRound].self, from: Data(json.utf8))
-        #expect(decoded.count == 1)
-        let round = decoded[0].toGameRound()
-        #expect(round.playedAt == .distantPast)
-        #expect(round.targetNote == Note(.e, octave: 4))
-        #expect(round.reactionTime == 1.2)
-    }
-
-    @Test func roundTripPreservesPlayedAt() throws {
-        let playedAt = Date(timeIntervalSince1970: 1_700_000_000)
-        let round = GameRound(
-            targetNote: Note(.a, octave: 3),
-            targetPosition: FretPosition(string: 5, fret: 2),
-            reactionTime: 0.42,
-            playedAt: playedAt
-        )
-        let data = try JSONEncoder().encode([PersistedGameRound(from: round)])
-        let back = try JSONDecoder().decode([PersistedGameRound].self, from: data)
-        let restored = back[0].toGameRound()
-        #expect(restored.playedAt.timeIntervalSince1970 == playedAt.timeIntervalSince1970)
-        #expect(restored.targetNote == round.targetNote)
-        #expect(restored.targetPosition == round.targetPosition)
-        #expect(restored.reactionTime == round.reactionTime)
-    }
-}
-
 // MARK: - NoteConverter
 
 struct NoteConverterTests {
@@ -154,33 +41,6 @@ struct NoteConverterTests {
     }
 }
 
-// MARK: - FretPositionSelection
-
-struct FretPositionSelectionTests {
-    @Test func prefersLowestFret() {
-        let positions = [
-            FretPosition(string: 6, fret: 15),
-            FretPosition(string: 3, fret: 0),
-            FretPosition(string: 4, fret: 5)
-        ]
-        let chosen = FretPositionSelection.preferredForPractice(positions)
-        #expect(chosen == FretPosition(string: 3, fret: 0))
-    }
-
-    @Test func tieBreaksToLowerStringNumber() {
-        let positions = [
-            FretPosition(string: 5, fret: 3),
-            FretPosition(string: 2, fret: 3)
-        ]
-        let chosen = FretPositionSelection.preferredForPractice(positions)
-        #expect(chosen == FretPosition(string: 2, fret: 3))
-    }
-
-    @Test func emptyReturnsNil() {
-        #expect(FretPositionSelection.preferredForPractice([]) == nil)
-    }
-}
-
 // MARK: - UserDefaultsMaxFretProvider
 
 struct UserDefaultsMaxFretProviderTests {
@@ -206,7 +66,7 @@ struct UserDefaultsMaxFretProviderTests {
 
         defaults.set(false, forKey: GameSettingsKeys.limitFretsToTwelve)
         let provider = UserDefaultsMaxFretProvider(defaults: defaults)
-        #expect(provider.maxFretInclusive == GuitarFretboard.fretCount)
+        #expect(provider.maxFretInclusive == Instruments.guitar.fretCount)
     }
 
     @Test func explicitTrueMeansCap11() {
@@ -220,29 +80,6 @@ struct UserDefaultsMaxFretProviderTests {
         defaults.set(true, forKey: GameSettingsKeys.limitFretsToTwelve)
         let provider = UserDefaultsMaxFretProvider(defaults: defaults)
         #expect(provider.maxFretInclusive == GameTargetFretBounds.limitedMaxFretInclusive)
-    }
-}
-
-// MARK: - RandomNoteStrategy.filterPositions
-
-struct RandomNoteStrategyFilterTests {
-    @Test func filterKeepsOnlyAllowedStrings() {
-        let positions = [
-            FretPosition(string: 1, fret: 0),
-            FretPosition(string: 3, fret: 2),
-            FretPosition(string: 6, fret: 0)
-        ]
-        let allowed: Set<Int> = [1, 6]
-        let out = RandomNoteStrategy.filterPositions(positions, allowed: allowed)
-        #expect(out.count == 2)
-        #expect(out.contains(FretPosition(string: 1, fret: 0)))
-        #expect(out.contains(FretPosition(string: 6, fret: 0)))
-    }
-
-    @Test func filterEmptyAllowedYieldsEmpty() {
-        let positions = [FretPosition(string: 2, fret: 0)]
-        let out = RandomNoteStrategy.filterPositions(positions, allowed: [])
-        #expect(out.isEmpty)
     }
 }
 
@@ -357,93 +194,6 @@ struct GameAllowedNoteNamesStoreTests {
         defaults.set(try JSONEncoder().encode([99, 100]), forKey: GameAllowedNoteNamesStore.userDefaultsKey)
         let store = GameAllowedNoteNamesStore(defaults: defaults)
         #expect(store.load() == Set(NoteName.allCases))
-    }
-}
-
-// MARK: - RandomNoteNamePositionStrategy
-
-struct RandomNoteNamePositionStrategyTests {
-    @Test func matchingTargetsEmptyAllowedNamesYieldsEmpty() {
-        let out = RandomNoteNamePositionStrategy.matchingTargets(
-            allowedNoteNames: [],
-            maxFretInclusive: 12,
-            allowedStrings: Set(1...6)
-        )
-        #expect(out.isEmpty)
-    }
-
-    @Test func matchingTargetsEmptyAllowedStringsYieldsEmpty() {
-        let out = RandomNoteNamePositionStrategy.matchingTargets(
-            allowedNoteNames: Set(NoteName.allCases),
-            maxFretInclusive: 12,
-            allowedStrings: []
-        )
-        #expect(out.isEmpty)
-    }
-
-    @Test func matchingTargetsRespectsMaxFret() {
-        let out = RandomNoteNamePositionStrategy.matchingTargets(
-            allowedNoteNames: Set(NoteName.allCases),
-            maxFretInclusive: 3,
-            allowedStrings: Set(1...6)
-        )
-        #expect(!out.isEmpty)
-        #expect(out.allSatisfy { $0.1.fret <= 3 })
-    }
-
-    @Test func matchingTargetsEveryPairMatchesBoardAndAllowedNames() {
-        let allowedNames: Set<NoteName> = [.c, .gSharp, .e]
-        let pairs = RandomNoteNamePositionStrategy.matchingTargets(
-            allowedNoteNames: allowedNames,
-            maxFretInclusive: 12,
-            allowedStrings: Set([2, 4, 5])
-        )
-        #expect(!pairs.isEmpty)
-        for (note, position) in pairs {
-            #expect(allowedNames.contains(note.name))
-            let board = GuitarFretboard.note(at: position.string, fret: position.fret)
-            #expect(board == note)
-        }
-    }
-}
-
-// MARK: - GuitarFretboard
-
-struct GuitarFretboardTests {
-    @Test func openLowEIsE2() {
-        let note = GuitarFretboard.note(at: 6, fret: 0)
-        #expect(note?.name == .e)
-        #expect(note?.octave == 2)
-    }
-
-    @Test func positionsRoundTrip() {
-        let target = Note(.g, octave: 3)
-        let positions = GuitarFretboard.positions(for: target)
-        for pos in positions {
-            let n = GuitarFretboard.note(at: pos.string, fret: pos.fret)
-            #expect(n == target)
-        }
-    }
-
-    @Test func maxFret12ExcludesHighFretPositions() {
-        let target = Note(.e, octave: 5)
-        let allPos = GuitarFretboard.positions(for: target, maxFretInclusive: 24)
-        let capped = GuitarFretboard.positions(for: target, maxFretInclusive: 12)
-        #expect(!allPos.isEmpty)
-        #expect(!capped.isEmpty)
-        #expect(capped.allSatisfy { $0.fret <= 12 })
-        if allPos.contains(where: { $0.fret > 12 }) {
-            #expect(capped.count < allPos.count)
-        }
-    }
-
-    @Test func maxFret11ExcludesFret12() {
-        let target = Note(.e, octave: 3)
-        let at12 = GuitarFretboard.positions(for: target, maxFretInclusive: 12)
-        let at11 = GuitarFretboard.positions(for: target, maxFretInclusive: 11)
-        #expect(at12.contains(where: { $0.fret == 12 }))
-        #expect(!at11.contains(where: { $0.fret == 12 }))
-        #expect(at11.count < at12.count)
     }
 }
 

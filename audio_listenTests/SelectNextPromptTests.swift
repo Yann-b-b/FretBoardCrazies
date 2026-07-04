@@ -37,7 +37,7 @@ struct SelectNextPromptTests {
         #expect(prompt != nil)
         #expect(prompt?.string == 6)
         #expect(prompt?.targetNote.name == .e)
-        let board = GuitarFretboard.note(at: prompt!.string, fret: 0)
+        let board = Instruments.guitar.note(at: prompt!.string, fret: 0)
         #expect(board?.name == .e)
     }
 
