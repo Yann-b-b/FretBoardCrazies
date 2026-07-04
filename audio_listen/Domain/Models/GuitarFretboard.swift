@@ -2,50 +2,24 @@
 //  GuitarFretboard.swift
 //  audio_listen
 //
-//  Standard tuning fretboard model: note at (string, fret) and all positions for a note.
+//  Deprecated shim over `Instruments.guitar` (the single source of truth).
+//  Retained only so the not-yet-removed Random*Strategy files and their tests
+//  compile; delete this together with them in the dead-code cleanup task.
 //
 
 import Foundation
 
-/// Standard guitar tuning (E2, A2, D3, G3, B3, E4). String 1 = high E, String 6 = low E.
 struct GuitarFretboard {
-    static let fretCount = 24
-    
-    /// Base notes for each string (string 1 = index 0, string 6 = index 5)
-    private static let standardTuning: [Note] = [
-        Note(.e, octave: 4),  // String 1 - high E
-        Note(.b, octave: 3),
-        Note(.g, octave: 3),
-        Note(.d, octave: 3),
-        Note(.a, octave: 2),
-        Note(.e, octave: 2)   // String 6 - low E
-    ]
-    
-    /// Note at (string, fret). String 1-6, fret 0 = open.
-    static func note(at string: Int, fret: Int) -> Note? {
-        guard string >= 1, string <= 6, fret >= 0, fret <= fretCount else { return nil }
-        let baseNote = standardTuning[string - 1]
-        let midiOffset = baseNote.midiNumber + fret
-        return Note.from(midiNumber: midiOffset)
-    }
-    
-    /// All (string, fret) positions that produce the given note, with frets capped at `maxFretInclusive` (e.g. 12 for first-position practice).
-    static func positions(for note: Note, maxFretInclusive: Int = fretCount) -> [FretPosition] {
-        let targetMidi = note.midiNumber
-        var result: [FretPosition] = []
-        let cap = min(maxFretInclusive, fretCount)
+    static var fretCount: Int { Instruments.guitar.fretCount }
 
-        for string in 1...6 {
-            let baseMidi = standardTuning[string - 1].midiNumber
-            let fret = targetMidi - baseMidi
-            if fret >= 0 && fret <= cap {
-                result.append(FretPosition(string: string, fret: fret))
-            }
-        }
-        return result
-    } 
-    
-    /// Playable note range for the game (E2 to E5)
+    static func note(at string: Int, fret: Int) -> Note? {
+        Instruments.guitar.note(at: string, fret: fret)
+    }
+
+    static func positions(for note: Note, maxFretInclusive: Int = Instruments.guitar.fretCount) -> [FretPosition] {
+        Instruments.guitar.positions(for: note, maxFretInclusive: maxFretInclusive)
+    }
+
     static var playableNotes: [Note] {
         let minMidi = Note(.e, octave: 2).midiNumber
         let maxMidi = Note(.e, octave: 5).midiNumber
