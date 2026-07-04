@@ -26,6 +26,7 @@ final class DrillViewModel: ObservableObject {
     private let maxFretInclusive: () -> Int
     private let countdownEnabled: Bool
     private let randomUnit: () -> Double
+    private let instrument: Instrument
 
     private var inputSubscription: AnyCancellable?
     private var countdownToken: AnyCancellable?
@@ -48,7 +49,8 @@ final class DrillViewModel: ObservableObject {
         allowedNoteNames: @escaping () -> Set<NoteName>,
         maxFretInclusive: @escaping () -> Int,
         countdownEnabled: Bool,
-        randomUnit: @escaping () -> Double
+        randomUnit: @escaping () -> Double,
+        instrument: Instrument = Instruments.guitar
     ) {
         self.input = input
         self.touchSubmit = touchSubmit
@@ -65,6 +67,7 @@ final class DrillViewModel: ObservableObject {
         self.maxFretInclusive = maxFretInclusive
         self.countdownEnabled = countdownEnabled
         self.randomUnit = randomUnit
+        self.instrument = instrument
         self.todayCount = dailyHistoryStore.todayReps(now: clock.now())
         self.beltRank = BeltRank.from(stats: progressRepository.loadAll(), maxBox: DrillTuning.maxBox, universeSize: DrillTuning.totalItemCount)
 
@@ -183,7 +186,7 @@ final class DrillViewModel: ObservableObject {
         detectedNote = note.displayName
         guard case .playing(let startTime, let prompt) = state else { return }
         guard validateNote.execute(detected: note, target: prompt.targetNote) else {
-            lastWrongPosition = GuitarFretboard.positions(for: note, maxFretInclusive: 12).first { $0.string == prompt.string }
+            lastWrongPosition = instrument.positions(for: note, maxFretInclusive: 12).first { $0.string == prompt.string }
             return
         }
         lastWrongPosition = nil

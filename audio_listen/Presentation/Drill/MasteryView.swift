@@ -71,7 +71,7 @@ struct MasteryView: View {
     private func reload() {
         let stats = progressRepository.loadAll()
         let universe = SelectNextPromptUseCase().candidates(
-            allowedStrings: Set(1...6),
+            allowedStrings: Set(1...Instruments.guitar.stringCount),
             allowedNoteNames: Set(NoteName.allCases),
             maxFretInclusive: 11
         )

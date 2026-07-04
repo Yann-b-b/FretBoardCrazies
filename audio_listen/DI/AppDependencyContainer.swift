@@ -75,7 +75,8 @@ final class AppDependencyContainer {
             allowedNoteNames: { names.allowedNoteNames },
             maxFretInclusive: { maxFret.maxFretInclusive },
             countdownEnabled: UserDefaults.standard.bool(forKey: GameSettingsKeys.countdownEnabled),
-            randomUnit: { Double.random(in: 0..<1) }
+            randomUnit: { Double.random(in: 0..<1) },
+            instrument: instrument
         )
     }
 
