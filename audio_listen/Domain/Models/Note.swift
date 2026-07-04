@@ -69,3 +69,16 @@ enum NoteName: Int, CaseIterable, Hashable, Codable {
         }
     }
 }
+
+// MARK: - Note MIDI conversion
+
+extension Note {
+    /// Create a Note from MIDI note number.
+    static func from(midiNumber: Int) -> Note? {
+        guard midiNumber >= 0, midiNumber <= 127 else { return nil }
+        let semitones = ((midiNumber % 12) + 12) % 12
+        guard let name = NoteName(rawValue: semitones) else { return nil }
+        let octave = (midiNumber / 12) - 1
+        return Note(name, octave: octave)
+    }
+}
