@@ -10,7 +10,7 @@ enum StringSetPresets {
         StringSetPreset(id: "EAD", label: "E · A · D", strings: [6, 5, 4]),
         StringSetPreset(id: "EADG", label: "E · A · D · G", strings: [6, 5, 4, 3]),
         StringSetPreset(id: "EADGB", label: "E · A · D · G · B", strings: [6, 5, 4, 3, 2]),
-        StringSetPreset(id: "ALL", label: "All 6", strings: Set(1...6))
+        StringSetPreset(id: "ALL", label: "All 6", strings: Set(1...Instruments.guitar.stringCount))
     ]
 
     static let singles: [StringSetPreset] = [

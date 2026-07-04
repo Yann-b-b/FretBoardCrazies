@@ -26,7 +26,7 @@ struct GameAllowedStringsStore {
         guard let arr = try? JSONDecoder().decode([Int].self, from: data) else {
             return StringSetPresets.defaultStrings
         }
-        let inRange = arr.filter { (1...6).contains($0) }
+        let inRange = arr.filter { (1...Instruments.guitar.stringCount).contains($0) }
         let set = Set(inRange)
         if set.isEmpty {
             if arr.isEmpty {
@@ -38,7 +38,7 @@ struct GameAllowedStringsStore {
     }
 
     func save(_ strings: Set<Int>) {
-        let sorted = strings.filter { (1...6).contains($0) }.sorted()
+        let sorted = strings.filter { (1...Instruments.guitar.stringCount).contains($0) }.sorted()
         guard let data = try? JSONEncoder().encode(sorted) else { return }
         defaults.set(data, forKey: Self.userDefaultsKey)
     }
