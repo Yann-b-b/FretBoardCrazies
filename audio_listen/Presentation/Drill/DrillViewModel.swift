@@ -73,6 +73,8 @@ final class DrillViewModel: ObservableObject {
         }
     }
 
+    //called by the view -- begins the internals of actually listening for an input from the user and running
+    // to flow with the next states.
     func start() {
         countdownToken = nil
         autoAdvanceToken = nil
