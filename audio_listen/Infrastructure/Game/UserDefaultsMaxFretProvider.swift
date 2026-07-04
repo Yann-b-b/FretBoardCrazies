@@ -9,9 +9,11 @@ import Foundation
 
 struct UserDefaultsMaxFretProvider: MaxFretProviding {
     private let defaults: UserDefaults
+    private let instrument: Instrument
 
-    init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = .standard, instrument: Instrument = Instruments.guitar) {
         self.defaults = defaults
+        self.instrument = instrument
     }
 
     var maxFretInclusive: Int {
@@ -21,6 +23,6 @@ struct UserDefaultsMaxFretProvider: MaxFretProviding {
         } else {
             limitToTwelve = defaults.bool(forKey: GameSettingsKeys.limitFretsToTwelve)
         }
-        return limitToTwelve ? GameTargetFretBounds.limitedMaxFretInclusive : GuitarFretboard.fretCount
+        return limitToTwelve ? GameTargetFretBounds.limitedMaxFretInclusive : instrument.fretCount
     }
 }

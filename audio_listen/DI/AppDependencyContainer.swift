@@ -15,6 +15,7 @@ final class AppDependencyContainer {
     let allowedNoteNamesStore: GameAllowedNoteNamesStore
     let drillProgressRepository: DrillProgressRepositoryProtocol
     let dailyHistoryStore = DailyHistoryStore()
+    let instrument: Instrument = Instruments.guitar
 
     private let allowedStringsProvider: AllowedStringsProviding
     private let allowedNoteNamesProvider: AllowedNoteNamesProviding
@@ -25,7 +26,7 @@ final class AppDependencyContainer {
         allowedNoteNamesStore = GameAllowedNoteNamesStore()
         allowedStringsProvider = UserDefaultsAllowedStringsProvider(store: allowedStringsStore)
         allowedNoteNamesProvider = UserDefaultsAllowedNoteNamesProvider(store: allowedNoteNamesStore)
-        maxFretProvider = UserDefaultsMaxFretProvider()
+        maxFretProvider = UserDefaultsMaxFretProvider(instrument: instrument)
         drillProgressRepository = UserDefaultsDrillProgressRepository()
     }
 
@@ -47,7 +48,7 @@ final class AppDependencyContainer {
         let touchSubmit: ((FretPosition) -> Void)?
         let nameNoteProbability: Double
         if touchMode {
-            let touch = TouchInputSource()
+            let touch = TouchInputSource(instrument: instrument)
             input = touch
             touchSubmit = { [weak touch] position in touch?.submit(position) }
             nameNoteProbability = 0
@@ -62,7 +63,7 @@ final class AppDependencyContainer {
         return DrillViewModel(
             input: input,
             touchSubmit: touchSubmit,
-            selectNextPrompt: SelectNextPromptUseCase(nameNoteProbability: nameNoteProbability),
+            selectNextPrompt: SelectNextPromptUseCase(nameNoteProbability: nameNoteProbability, instrument: instrument),
             updateStats: UpdateItemStatsUseCase(),
             validateNote: ValidateNoteUseCase(),
             stateMachine: DrillStateMachine(),

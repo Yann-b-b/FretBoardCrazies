@@ -3,10 +3,12 @@ import Foundation
 struct SelectNextPromptUseCase {
     let maxBox: Int
     let nameNoteProbability: Double
+    let instrument: Instrument
 
-    init(maxBox: Int = DrillTuning.maxBox, nameNoteProbability: Double = 0.25) {
+    init(maxBox: Int = DrillTuning.maxBox, nameNoteProbability: Double = 0.25, instrument: Instrument = Instruments.guitar) {
         self.maxBox = maxBox
         self.nameNoteProbability = nameNoteProbability
+        self.instrument = instrument
     }
 
     func candidates(
@@ -17,7 +19,7 @@ struct SelectNextPromptUseCase {
         var result: [DrillItemKey] = []
         for string in allowedStrings.sorted() {
             for fret in 0...maxFretInclusive {
-                guard let note = GuitarFretboard.note(at: string, fret: fret) else { continue }
+                guard let note = instrument.note(at: string, fret: fret) else { continue }
                 guard allowedNoteNames.contains(note.name) else { continue }
                 let key = DrillItemKey(noteName: note.name, string: string)
                 if !result.contains(key) {
@@ -65,7 +67,7 @@ struct SelectNextPromptUseCase {
 
     private func noteFor(key: DrillItemKey, maxFretInclusive: Int) -> Note? {
         for fret in 0...maxFretInclusive {
-            if let note = GuitarFretboard.note(at: key.string, fret: fret), note.name == key.noteName {
+            if let note = instrument.note(at: key.string, fret: fret), note.name == key.noteName {
                 return note
             }
         }
