@@ -5,7 +5,7 @@ struct DrillView: View {
     private let allowedStringsStore: GameAllowedStringsStore
     private let instrument: Instrument
 
-    @State private var allowedStrings: Set<Int> = StringSetPresets.defaultStrings
+    @State private var allowedStrings: Set<Int> = []
     @State private var comboSound = ComboSoundPlayer()
     @State private var checkPop = false
     @State private var beltBurst = false
@@ -25,11 +25,11 @@ struct DrillView: View {
 
     private var stringChoiceSelection: Binding<String> {
         Binding(
-            get: { StringSetPresets.choices.first { $0.strings == allowedStrings }?.id ?? StringSetPresets.defaultChoice.id },
+            get: { instrument.stringChoices.first { $0.strings == allowedStrings }?.id ?? instrument.defaultStringChoice.id },
             set: { id in
-                guard let choice = StringSetPresets.choices.first(where: { $0.id == id }) else { return }
+                guard let choice = instrument.stringChoices.first(where: { $0.id == id }) else { return }
                 allowedStrings = choice.strings
-                allowedStringsStore.save(choice.strings)
+                allowedStringsStore.save(choice.strings, for: instrument)
             }
         )
     }
@@ -38,6 +38,7 @@ struct DrillView: View {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.allowedStringsStore = allowedStringsStore
         self.instrument = instrument
+        _allowedStrings = State(initialValue: allowedStringsStore.load(for: instrument))
     }
 
     var body: some View {
@@ -60,7 +61,7 @@ struct DrillView: View {
                 .scaledToFill()
                 .ignoresSafeArea()
         )
-        .onAppear { allowedStrings = allowedStringsStore.load() }
+        .onAppear { allowedStrings = allowedStringsStore.load(for: instrument) }
         .onChange(of: viewModel.comboCount) { oldValue, newValue in
             if newValue > oldValue {
                 comboSound.play(combo: newValue)
@@ -179,11 +180,11 @@ struct DrillView: View {
         VStack(spacing: 16) {
             Text("Pick strings, then press Space to start").foregroundStyle(.secondary)
             Picker("Strings", selection: stringChoiceSelection) {
-                Section("Presets") {
-                    ForEach(StringSetPresets.all) { Text($0.label).tag($0.id) }
-                }
                 Section("Single string") {
-                    ForEach(StringSetPresets.singles) { Text($0.label).tag($0.id) }
+                    ForEach(instrument.singleStringChoices) { Text($0.label).tag($0.id) }
+                }
+                Section("Cumulative") {
+                    ForEach(instrument.cumulativeStringChoices) { Text($0.label).tag($0.id) }
                 }
             }
             .pickerStyle(.menu)

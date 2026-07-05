@@ -24,7 +24,7 @@ final class AppDependencyContainer {
     private init() {
         allowedStringsStore = GameAllowedStringsStore()
         allowedNoteNamesStore = GameAllowedNoteNamesStore()
-        allowedStringsProvider = UserDefaultsAllowedStringsProvider(store: allowedStringsStore)
+        allowedStringsProvider = UserDefaultsAllowedStringsProvider(store: allowedStringsStore, instrument: instrument)
         allowedNoteNamesProvider = UserDefaultsAllowedNoteNamesProvider(store: allowedNoteNamesStore)
         maxFretProvider = UserDefaultsMaxFretProvider(instrument: instrument)
         drillProgressRepository = UserDefaultsDrillProgressRepository()
