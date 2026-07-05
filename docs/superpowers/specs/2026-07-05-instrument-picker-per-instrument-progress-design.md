@@ -226,9 +226,26 @@ per-instrument).
 - Existing suites stay green. Guitar behavior is identical to today except that its progress
   now lives under `audio_listen_drill_progress.guitar` (fresh, per the no-migration decision).
 
+## Future: achievements (next spec — designed-for, not built now)
+
+Confirmed direction so the next sprint starts from it:
+
+- **Data-driven catalog.** `Achievements.all: [Achievement]` where each `Achievement` is a
+  declarative rule `{ id, title, detail, isUnlocked: (stats, history) -> Bool }` — same
+  catalog/Type-Object pattern as `Instruments.all`. The board is a `ForEach(Achievements.all)`,
+  so **adding a rule auto-populates the board** with zero UI changes.
+- **Pure evaluation, per instrument.** Evaluate `Achievements.all` over
+  `loadAll(for:)` / `history(for:)` where `DrillViewModel` already re-derives after each answer;
+  diff against a per-instrument unlocked set persisted to `audio_listen_achievements.<id>`.
+- **Schema evolution rule.** Today's logs (`ItemStats`, `DailyRecord`) already support
+  mastery-, streak-, and speed-based achievements. Richer ones (lifetime totals, fastest single
+  answer) need new logged attributes — which **must be added as optional/defaulted Codable
+  fields** so old stored JSON still decodes (the no-migration decision means a non-optional new
+  field would silently wipe history).
+
 ## Out of scope
 
-- The achievements feature itself (only its storage seam is reserved).
+- The achievements feature itself (only its storage seam is reserved; see Future above).
 - Per-instrument `limitFretsToTwelve` / countdown / touch-mode settings (these stay global —
   they are instrument-agnostic preferences).
 - Bass-specific fretboard art or inlay differences; the shared fretboard renders any instrument.
