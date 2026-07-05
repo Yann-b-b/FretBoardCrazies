@@ -204,7 +204,8 @@ final class DrillViewModel: ObservableObject {
         all[prompt.itemKey] = updateStats.applyCorrect(to: current, reactionTime: reactionTime, now: clock.now())
         progressRepository.save(all)
         let mastered = all.values.filter { $0.box >= DrillTuning.maxBox }.count
-        todayCount = dailyHistoryStore.recordCorrect(now: clock.now(), reactionTime: reactionTime, masteredCount: mastered)
+        dailyHistoryStore.recordCorrect(now: clock.now(), reactionTime: reactionTime, masteredCount: mastered)
+        todayCount = dailyHistoryStore.todayReps(now: clock.now())
         beltRank = BeltRank.from(stats: all, maxBox: DrillTuning.maxBox, universeSize: DrillTuning.totalItemCount)
     }
 

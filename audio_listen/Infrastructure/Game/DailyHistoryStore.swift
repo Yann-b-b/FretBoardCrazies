@@ -31,8 +31,7 @@ struct DailyHistoryStore {
         load().first { calendar.isDate($0.dayStart, inSameDayAs: now) }?.reps ?? 0
     }
 
-    @discardableResult
-    func recordCorrect(now: Date, reactionTime: TimeInterval, masteredCount: Int) -> Int {
+    func recordCorrect(now: Date, reactionTime: TimeInterval, masteredCount: Int) {
         var records = load()
         if let index = records.firstIndex(where: { calendar.isDate($0.dayStart, inSameDayAs: now) }) {
             records[index].reps += 1
@@ -40,7 +39,7 @@ struct DailyHistoryStore {
             records[index].reactionCount += 1
             records[index].masteredSnapshot = masteredCount
             save(records)
-            return records[index].reps
+            return
         }
         let record = DailyRecord(
             dayStart: calendar.startOfDay(for: now),
@@ -51,7 +50,6 @@ struct DailyHistoryStore {
         )
         records.append(record)
         save(records)
-        return 1
     }
 
     private func load() -> [DailyRecord] {
