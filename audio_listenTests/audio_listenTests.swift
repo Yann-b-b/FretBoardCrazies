@@ -83,63 +83,6 @@ struct UserDefaultsMaxFretProviderTests {
     }
 }
 
-// MARK: - GameAllowedStringsStore
-
-struct GameAllowedStringsStoreTests {
-    @Test func roundTripPersistsSubset() throws {
-        let suite = "test.\(UUID().uuidString)"
-        guard let defaults = UserDefaults(suiteName: suite) else {
-            Issue.record("Could not create UserDefaults suite")
-            return
-        }
-        defer { defaults.removePersistentDomain(forName: suite) }
-
-        let store = GameAllowedStringsStore(defaults: defaults)
-        let original: Set<Int> = [1, 4, 6]
-        store.save(original)
-        let loaded = store.load()
-        #expect(loaded == original)
-    }
-
-    @Test func missingKeyDefaultsToEAndA() {
-        let suite = "test.\(UUID().uuidString)"
-        guard let defaults = UserDefaults(suiteName: suite) else {
-            Issue.record("Could not create UserDefaults suite")
-            return
-        }
-        defer { defaults.removePersistentDomain(forName: suite) }
-
-        let store = GameAllowedStringsStore(defaults: defaults)
-        #expect(store.load() == StringSetPresets.defaultStrings)
-    }
-
-    @Test func emptyArrayRoundTripIsEmpty() throws {
-        let suite = "test.\(UUID().uuidString)"
-        guard let defaults = UserDefaults(suiteName: suite) else {
-            Issue.record("Could not create UserDefaults suite")
-            return
-        }
-        defer { defaults.removePersistentDomain(forName: suite) }
-
-        defaults.set(try JSONEncoder().encode([Int]()), forKey: GameAllowedStringsStore.userDefaultsKey)
-        let store = GameAllowedStringsStore(defaults: defaults)
-        #expect(store.load().isEmpty)
-    }
-
-    @Test func onlyOutOfRangeValuesFallsBackToDefault() throws {
-        let suite = "test.\(UUID().uuidString)"
-        guard let defaults = UserDefaults(suiteName: suite) else {
-            Issue.record("Could not create UserDefaults suite")
-            return
-        }
-        defer { defaults.removePersistentDomain(forName: suite) }
-
-        defaults.set(try JSONEncoder().encode([0, 7, 99]), forKey: GameAllowedStringsStore.userDefaultsKey)
-        let store = GameAllowedStringsStore(defaults: defaults)
-        #expect(store.load() == StringSetPresets.defaultStrings)
-    }
-}
-
 // MARK: - GameAllowedStringsStore (per instrument)
 
 struct PerInstrumentAllowedStringsStoreTests {
