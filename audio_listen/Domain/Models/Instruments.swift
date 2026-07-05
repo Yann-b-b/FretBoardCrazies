@@ -9,5 +9,14 @@ enum Instruments {
         fretCount: 24
     )
 
-    static let all: [Instrument] = [guitar]
+    static let bass = Instrument(
+        id: "bass",
+        name: "Bass",
+        strings: [
+            Note(.g, octave: 2), Note(.d, octave: 2), Note(.a, octave: 1), Note(.e, octave: 1)
+        ].map { GuitarString(openNote: $0, startFret: 0) },
+        fretCount: 21
+    )
+
+    static let all: [Instrument] = [guitar, bass]
 }
