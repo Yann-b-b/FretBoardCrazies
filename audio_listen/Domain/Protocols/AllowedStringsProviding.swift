@@ -2,7 +2,7 @@
 //  AllowedStringsProviding.swift
 //  audio_listen
 //
-//  Supplies which guitar strings (1...6) may be targeted for the note game.
+//  Supplies which of the current instrument's string numbers may be targeted for the note game.
 //
 
 import Foundation
