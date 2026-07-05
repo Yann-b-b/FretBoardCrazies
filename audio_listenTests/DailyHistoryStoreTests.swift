@@ -59,4 +59,21 @@ struct DailyHistoryStoreTests {
         let store = DailyHistoryStore(defaults: defaults, calendar: Calendar(identifier: .gregorian))
         #expect(store.history().isEmpty)
     }
+
+    @Test func perInstrumentHistoryIsIndependent() {
+        let (store, defaults, suite) = makeStore()
+        defer { defaults.removePersistentDomain(forName: suite) }
+        store.recordCorrect(for: Instruments.guitar, now: day1, reactionTime: 2.0, masteredCount: 1)
+        store.recordCorrect(for: Instruments.bass, now: day1, reactionTime: 1.0, masteredCount: 0)
+        store.recordCorrect(for: Instruments.bass, now: day1, reactionTime: 1.0, masteredCount: 0)
+        #expect(store.todayReps(for: Instruments.guitar, now: day1) == 1)
+        #expect(store.todayReps(for: Instruments.bass, now: day1) == 2)
+    }
+
+    @Test func perInstrumentMissingHistoryIsEmpty() {
+        let (store, defaults, suite) = makeStore()
+        defer { defaults.removePersistentDomain(forName: suite) }
+        #expect(store.history(for: Instruments.bass).isEmpty)
+        #expect(store.todayReps(for: Instruments.bass, now: day1) == 0)
+    }
 }
