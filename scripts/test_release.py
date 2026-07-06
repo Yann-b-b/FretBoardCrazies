@@ -233,3 +233,23 @@ def test_run_release_rejects_existing_tag(tmp_path):
     _git(tmp_path, "tag", "v1.1.0")
     with pytest.raises(SystemExit):
         run_release(tmp_path, "1.1.0", edit=_canned_edit)
+
+
+def test_tag_message_uses_curated_highlights(tmp_path):
+    _init_repo(tmp_path)
+
+    def edit(draft):
+        return "## v1.1.0 — 2026-07-05\n### Highlights\n- Curated line one\n- Curated line two\n"
+
+    run_release(tmp_path, "1.1.0", edit=edit)
+    message = subprocess.run(
+        ["git", "tag", "-l", "v1.1.0", "--format=%(contents)"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    assert message == "Curated line one\nCurated line two"
+    notes = (
+        tmp_path / "fastlane" / "metadata" / "en-US" / "release_notes.txt"
+    ).read_text()
+    assert notes == "Curated line one\nCurated line two\n"

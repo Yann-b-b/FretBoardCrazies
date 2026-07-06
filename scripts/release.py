@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import subprocess
 import tempfile
 from datetime import date
@@ -161,7 +162,7 @@ def _editor_edit(draft):
     try:
         handle.write(draft)
         handle.close()
-        subprocess.run([editor, handle.name])
+        subprocess.run([*shlex.split(editor), handle.name])
         return Path(handle.name).read_text()
     finally:
         os.unlink(handle.name)
@@ -187,6 +188,8 @@ def _verify_both_platforms(root, ios_sim):
             capture_output=True,
             text=True,
         )
+        if listing.returncode != 0:
+            raise SystemExit("could not list iOS simulators")
         ios_sim = pick_ios_simulator(listing.stdout)
     ios = subprocess.run(
         base + ["-destination", f"platform=iOS Simulator,name={ios_sim}"],
@@ -275,7 +278,10 @@ def run_release(
         print(f"tag: {tag}")
         return
 
-    entry = finalize_entry(edit(_EDIT_HEADER + entry))
+    try:
+        entry = finalize_entry(edit(_EDIT_HEADER + entry))
+    except ValueError as exc:
+        raise SystemExit(str(exc))
 
     main_sha = git("rev-parse", "main")
     git("checkout", "main")
@@ -304,10 +310,11 @@ def run_release(
         notes_path.write_text(highlights_plaintext(entry))
         git("add", "-A")
         git("commit", "-m", f"chore(release): {tag}")
-        git("tag", "-a", tag, "-m", "\n".join(highlights))
+        git("tag", "-a", tag, "-m", highlights_plaintext(entry).strip())
     except Exception:
         git("reset", "--hard", main_sha, check=False)
         git("tag", "-d", tag, check=False)
+        git("clean", "-fd", "--", "CHANGELOG.md", "fastlane", check=False)
         raise
 
     push_cmd = "git push origin main --tags"
