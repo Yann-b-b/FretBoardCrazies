@@ -1,8 +1,6 @@
 import Foundation
 
 struct UserDefaultsDrillProgressRepository: DrillProgressRepositoryProtocol {
-    static let userDefaultsKey = "audio_listen_drill_progress"
-
     static func userDefaultsKey(for instrument: Instrument) -> String {
         "audio_listen_drill_progress.\(instrument.id)"
     }
@@ -16,14 +14,6 @@ struct UserDefaultsDrillProgressRepository: DrillProgressRepositoryProtocol {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-    }
-
-    func loadAll() -> [DrillItemKey: ItemStats] {
-        decode(defaults.data(forKey: Self.userDefaultsKey))
-    }
-
-    func save(_ stats: [DrillItemKey: ItemStats]) {
-        encode(stats, forKey: Self.userDefaultsKey)
     }
 
     func loadAll(for instrument: Instrument) -> [DrillItemKey: ItemStats] {

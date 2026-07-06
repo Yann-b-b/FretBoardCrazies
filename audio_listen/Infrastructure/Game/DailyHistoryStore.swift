@@ -13,8 +13,6 @@ struct DailyRecord: Codable, Equatable {
 }
 
 struct DailyHistoryStore {
-    static let userDefaultsKey = "audio_listen_daily_history"
-
     static func userDefaultsKey(for instrument: Instrument) -> String {
         "audio_listen_daily_history.\(instrument.id)"
     }
@@ -25,18 +23,6 @@ struct DailyHistoryStore {
     init(defaults: UserDefaults = .standard, calendar: Calendar = .current) {
         self.defaults = defaults
         self.calendar = calendar
-    }
-
-    func history() -> [DailyRecord] {
-        load(Self.userDefaultsKey).sorted { $0.dayStart < $1.dayStart }
-    }
-
-    func todayReps(now: Date) -> Int {
-        load(Self.userDefaultsKey).first { calendar.isDate($0.dayStart, inSameDayAs: now) }?.reps ?? 0
-    }
-
-    func recordCorrect(now: Date, reactionTime: TimeInterval, masteredCount: Int) {
-        record(forKey: Self.userDefaultsKey, now: now, reactionTime: reactionTime, masteredCount: masteredCount)
     }
 
     func history(for instrument: Instrument) -> [DailyRecord] {
