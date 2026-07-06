@@ -15,18 +15,16 @@ final class AppDependencyContainer {
     let allowedNoteNamesStore: GameAllowedNoteNamesStore
     let drillProgressRepository: DrillProgressRepositoryProtocol
     let dailyHistoryStore = DailyHistoryStore()
-    let instrument: Instrument = Instruments.guitar
 
-    private let allowedStringsProvider: AllowedStringsProviding
+    private let selectedInstrumentStore = SelectedInstrumentStore()
     private let allowedNoteNamesProvider: AllowedNoteNamesProviding
-    private let maxFretProvider: MaxFretProviding
+
+    var currentInstrument: Instrument { selectedInstrumentStore.selectedInstrument }
 
     private init() {
         allowedStringsStore = GameAllowedStringsStore()
         allowedNoteNamesStore = GameAllowedNoteNamesStore()
-        allowedStringsProvider = UserDefaultsAllowedStringsProvider(store: allowedStringsStore, instrument: instrument)
         allowedNoteNamesProvider = UserDefaultsAllowedNoteNamesProvider(store: allowedNoteNamesStore)
-        maxFretProvider = UserDefaultsMaxFretProvider(instrument: instrument)
         drillProgressRepository = UserDefaultsDrillProgressRepository()
     }
 
@@ -39,9 +37,10 @@ final class AppDependencyContainer {
 
     @MainActor
     func makeDrillViewModel() -> DrillViewModel {
-        let strings = allowedStringsProvider
+        let instrument = currentInstrument
+        let strings = UserDefaultsAllowedStringsProvider(store: allowedStringsStore, instrument: instrument)
         let names = allowedNoteNamesProvider
-        let maxFret = maxFretProvider
+        let maxFret = UserDefaultsMaxFretProvider(instrument: instrument)
         let touchMode = UserDefaults.standard.bool(forKey: GameSettingsKeys.touchMode)
 
         let input: NoteInputSource
