@@ -1,0 +1,23 @@
+[project]
+name = "chordsweep"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "librosa>=0.10",
+    "scikit-learn>=1.4",
+    "mirdata>=0.3.8",
+    "audiomentations>=0.35",
+    "matplotlib>=3.8",
+    "soundfile>=0.12",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
