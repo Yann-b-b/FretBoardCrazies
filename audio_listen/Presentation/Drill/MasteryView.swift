@@ -24,7 +24,7 @@ struct MasteryView: View {
             VStack(spacing: 20) {
                 Text("Progress").font(.title2).bold()
                 beltCard
-                FretboardView(heatmap: heatmap)
+                FretboardView(heatmap: heatmap, instrument: instrument)
                 HStack(spacing: 24) {
                     legend(color: .gray, label: "Unseen \(totals.unseen)")
                     legend(color: .orange, label: "Learning \(totals.learning)")
@@ -73,7 +73,7 @@ struct MasteryView: View {
 
     private func reload() {
         let stats = progressRepository.loadAll(for: instrument)
-        let universe = SelectNextPromptUseCase().candidates(
+        let universe = SelectNextPromptUseCase(instrument: instrument).candidates(
             allowedStrings: Set(1...instrument.stringCount),
             allowedNoteNames: Set(NoteName.allCases),
             maxFretInclusive: 11
