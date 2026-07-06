@@ -10,6 +10,7 @@ from release import (
     highlights_from_merges,
     highlights_plaintext,
     latest_version_tag,
+    pick_ios_simulator,
     render_changelog_entry,
 )
 
@@ -116,3 +117,27 @@ def test_bump_pbxproj_rejects_non_uniform_marketing():
     )
     with pytest.raises(ValueError):
         bump_pbxproj(bad, "1.1.0", 2)
+
+
+SIMCTL_JSON = """
+{
+  "devices": {
+    "com.apple.CoreSimulator.SimRuntime.iOS-17-0": [
+      {"name": "iPhone 16", "isAvailable": true},
+      {"name": "iPhone 17", "isAvailable": true},
+      {"name": "iPhone 15 (unavailable)", "isAvailable": false},
+      {"name": "iPad Pro", "isAvailable": true}
+    ]
+  }
+}
+"""
+
+
+def test_pick_ios_simulator_prefers_newest_iphone():
+    assert pick_ios_simulator(SIMCTL_JSON) == "iPhone 17"
+
+
+def test_pick_ios_simulator_raises_when_none():
+    empty = '{"devices": {"rt": [{"name": "iPad Pro", "isAvailable": true}]}}'
+    with pytest.raises(ValueError):
+        pick_ios_simulator(empty)

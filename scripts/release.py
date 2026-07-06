@@ -1,7 +1,28 @@
+import json
 import re
 
 MARKETING_RE = re.compile(r"(MARKETING_VERSION = )([^;]+)(;)")
 BUILD_RE = re.compile(r"(CURRENT_PROJECT_VERSION = )([^;]+)(;)")
+
+
+def pick_ios_simulator(simctl_json):
+    data = json.loads(simctl_json)
+    iphones = []
+    for devices in data.get("devices", {}).values():
+        for device in devices:
+            if device.get("isAvailable") and device.get("name", "").startswith(
+                "iPhone"
+            ):
+                iphones.append(device["name"])
+    if not iphones:
+        raise ValueError("no available iPhone simulator found")
+
+    def sort_key(name):
+        numbers = re.findall(r"\d+", name)
+        return (int(numbers[0]) if numbers else -1, name)
+
+    iphones.sort(key=sort_key)
+    return iphones[-1]
 
 
 def current_build_number(pbxproj):
