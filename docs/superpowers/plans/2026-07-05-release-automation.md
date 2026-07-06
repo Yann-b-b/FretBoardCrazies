@@ -503,6 +503,13 @@ def test_run_release_dry_run_mutates_nothing(tmp_path, capsys):
     assert "1.1.0" in capsys.readouterr().out
 
 
+def test_run_release_dry_run_allows_dirty_tree(tmp_path, capsys):
+    _init_repo(tmp_path)
+    (tmp_path / "uncommitted.txt").write_text("wip")
+    run_release(tmp_path, "1.1.0", dry_run=True, edit=_canned_edit)
+    assert "1.1.0" in capsys.readouterr().out
+
+
 def test_run_release_rejects_existing_tag(tmp_path):
     _init_repo(tmp_path)
     _git(tmp_path, "tag", "v1.1.0")
@@ -581,7 +588,7 @@ def run_release(root, version, *, dry_run=False, verify=False, push=False, ios_s
             raise RuntimeError(f"git {' '.join(args)} failed:\n{result.stderr.strip()}")
         return result.stdout.strip()
 
-    if git("status", "--porcelain"):
+    if not dry_run and git("status", "--porcelain"):
         raise SystemExit("working tree is not clean; commit or stash first")
     branches = set(git("branch", "--format=%(refname:short)").split())
     for name in ("dev", "main"):
