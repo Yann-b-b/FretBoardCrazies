@@ -74,6 +74,7 @@ class MirdataAdapter:
         self._quality_map = quality_map or {}
 
     def clips(self):
+        dropped = 0
         for track in self._dataset.load_tracks().values():
             chords = getattr(track, "chords", None)
             audio_path = getattr(track, "audio_mic_path", None) or getattr(
@@ -87,6 +88,7 @@ class MirdataAdapter:
             ):
                 label = self._to_label(chord_id)
                 if label is None:
+                    dropped += 1
                     continue
                 segment = audio[int(start * self._sr) : int(end * self._sr)]
                 if segment.size == 0:
@@ -97,6 +99,8 @@ class MirdataAdapter:
                     label=label,
                     source=f"mirdata:{self._dataset.name}",
                 )
+        if dropped:
+            print(f"MirdataAdapter dropped {dropped} unmapped-quality segments")
 
     def _to_label(self, chord_id):
         if chord_id in self._quality_map:

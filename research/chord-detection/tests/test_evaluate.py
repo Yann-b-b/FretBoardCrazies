@@ -48,6 +48,17 @@ def test_evaluate_rejects_overlapping_clip():
         pass
 
 
+def test_evaluate_handles_out_of_vocab_test_label():
+    train_labels = [ChordLabel("C", "maj"), ChordLabel("C", "min")]
+    train = [_clip(label, "train") for label in train_labels]
+    test = [_clip(ChordLabel("G", "dom7"), "test")]
+    clf = TemplateMatch(train_labels)
+    metrics = evaluate(_identity_feature, clf, train, test)
+    assert "G:dom7" in metrics.class_ids
+    assert metrics.accuracy == 0.0
+    assert len(metrics.far_frr) == 21
+
+
 def test_featurize_shapes():
     labels = [ChordLabel("C", "maj"), ChordLabel("C", "min")]
     clips = [_clip(label, "x") for label in labels]

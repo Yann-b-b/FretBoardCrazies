@@ -21,7 +21,12 @@ class TemplateMatch:
         return None
 
     def scores(self, X):
-        return np.asarray(X) @ self._templates.T
+        X = np.asarray(X)
+        if X.shape[1] != self._templates.shape[1]:
+            raise ValueError(
+                f"TemplateMatch expects {self._templates.shape[1]}-dim features, got {X.shape[1]}"
+            )
+        return X @ self._templates.T
 
     def predict(self, X):
         indices = np.argmax(self.scores(X), axis=1)

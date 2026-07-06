@@ -51,9 +51,12 @@ def evaluate(feature_fn, classifier, train, test, thresholds=None):
     X_test, y_test = featurize(test, feature_fn)
     predictions = classifier.predict(X_test)
 
-    class_ids = [label.id for label in classifier.classes]
+    classifier_ids = [label.id for label in classifier.classes]
     true_ids = [label.id for label in y_test]
     pred_ids = [label.id for label in predictions]
+
+    extra_ids = sorted(set(true_ids) - set(classifier_ids))
+    class_ids = classifier_ids + extra_ids
 
     accuracy = float(np.mean([t == p for t, p in zip(true_ids, pred_ids)]))
     matrix = confusion_matrix(true_ids, pred_ids, labels=class_ids)
@@ -63,11 +66,15 @@ def evaluate(feature_fn, classifier, train, test, thresholds=None):
     precision_map = {cid: float(p) for cid, p in zip(class_ids, precision)}
     recall_map = {cid: float(r) for cid, r in zip(class_ids, recall)}
 
+    raw_scores = classifier.scores(X_test)
+    scores = np.zeros((raw_scores.shape[0], len(class_ids)))
+    scores[:, : len(classifier_ids)] = raw_scores
+
     column_for = {cid: i for i, cid in enumerate(class_ids)}
     true_indices = [column_for[cid] for cid in true_ids]
     if thresholds is None:
         thresholds = list(np.linspace(0.0, 1.0, 21))
-    curve = far_frr_curve(classifier.scores(X_test), true_indices, thresholds)
+    curve = far_frr_curve(scores, true_indices, thresholds)
 
     return Metrics(
         accuracy=accuracy,
