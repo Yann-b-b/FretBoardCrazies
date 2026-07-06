@@ -45,7 +45,6 @@ struct ContentView: View {
             SettingsView()
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
         }
-        .frame(minWidth: 720, minHeight: 560)
         #endif
     }
 

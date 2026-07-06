@@ -51,9 +51,6 @@ struct DrillView: View {
             content
         }
         .padding(compact ? 12 : 24)
-        #if os(macOS)
-        .frame(minWidth: 640, minHeight: 480)
-        #endif
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: compact ? .top : .center)
         .background(
             Image("bg-drill")
