@@ -145,7 +145,7 @@ struct DrillViewModelTests {
         }
         #expect(vm.todayCount == 1)
         let key = DrillItemKey(noteName: .e, string: 6)
-        #expect(repo.loadAll()[key]?.correct == 1)
+        #expect(repo.loadAll(for: Instruments.guitar)[key]?.correct == 1)
     }
 
     @Test @MainActor func countdownTicksThenPlays() {
@@ -166,8 +166,8 @@ struct DrillViewModelTests {
         vm.start()
         vm.skip()
         let key = DrillItemKey(noteName: .e, string: 6)
-        #expect(repo.loadAll()[key]?.attempts == 1)
-        #expect(repo.loadAll()[key]?.correct == 0)
+        #expect(repo.loadAll(for: Instruments.guitar)[key]?.attempts == 1)
+        #expect(repo.loadAll(for: Instruments.guitar)[key]?.correct == 0)
     }
 
     @Test @MainActor func skipDuringCountdownCancelsCountdown() {
@@ -190,10 +190,10 @@ struct DrillViewModelTests {
         source.subject.send(Note(.e, octave: 2))
         try? await Task.sleep(for: .milliseconds(50))
         let key = DrillItemKey(noteName: .e, string: 6)
-        let beforeAttempts = repo.loadAll()[key]?.attempts ?? 0
+        let beforeAttempts = repo.loadAll(for: Instruments.guitar)[key]?.attempts ?? 0
         #expect(beforeAttempts == 1)
         vm.skip()
-        let afterAttempts = repo.loadAll()[key]?.attempts ?? 0
+        let afterAttempts = repo.loadAll(for: Instruments.guitar)[key]?.attempts ?? 0
         #expect(afterAttempts == beforeAttempts)
     }
 
@@ -239,7 +239,7 @@ struct DrillViewModelTests {
         source.subject.send(Note(.e, octave: 2))
         try? await Task.sleep(for: .milliseconds(50))
         #expect(vm.todayCount == 1)
-        #expect(history.todayReps(now: clock.now()) == 1)
+        #expect(history.todayReps(for: Instruments.guitar, now: clock.now()) == 1)
     }
 
     @Test @MainActor func comboIncrementsOnFastCorrect() async {

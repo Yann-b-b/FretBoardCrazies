@@ -32,7 +32,8 @@ struct ContentView: View {
 
             MasteryView(
                 progressRepository: container.drillProgressRepository,
-                dailyHistoryStore: container.dailyHistoryStore
+                dailyHistoryStore: container.dailyHistoryStore,
+                instrument: container.instrument
             )
             .tabItem { Label("Progress", systemImage: "chart.bar.fill") }
 
@@ -59,7 +60,8 @@ struct ContentView: View {
         case 1:
             MasteryView(
                 progressRepository: container.drillProgressRepository,
-                dailyHistoryStore: container.dailyHistoryStore
+                dailyHistoryStore: container.dailyHistoryStore,
+                instrument: container.instrument
             )
         case 2:
             TunerView(viewModel: container.makeTunerViewModel())
