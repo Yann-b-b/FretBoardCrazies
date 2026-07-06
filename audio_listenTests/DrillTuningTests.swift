@@ -6,6 +6,10 @@ struct DrillTuningTests {
     @Test func valuesAreStable() {
         #expect(DrillTuning.maxBox == 4)
         #expect(DrillTuning.fastReactionSeconds == 3.0)
-        #expect(DrillTuning.totalItemCount == 72)
+    }
+
+    @Test func universeSizeScalesWithStringCount() {
+        #expect(DrillTuning.universeSize(for: Instruments.guitar) == 72)
+        #expect(DrillTuning.universeSize(for: Instruments.bass) == 48)
     }
 }

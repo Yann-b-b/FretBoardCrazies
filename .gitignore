@@ -10,3 +10,4 @@ DerivedData/
 art/_candidates/
 art/index.html
 __pycache__/
+**/xcuserdata/**/xcdebugger/

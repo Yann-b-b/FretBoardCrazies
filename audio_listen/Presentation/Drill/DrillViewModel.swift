@@ -68,8 +68,8 @@ final class DrillViewModel: ObservableObject {
         self.countdownEnabled = countdownEnabled
         self.randomUnit = randomUnit
         self.instrument = instrument
-        self.todayCount = dailyHistoryStore.todayReps(now: clock.now())
-        self.beltRank = BeltRank.from(stats: progressRepository.loadAll(), maxBox: DrillTuning.maxBox, universeSize: DrillTuning.totalItemCount)
+        self.todayCount = dailyHistoryStore.todayReps(for: instrument, now: clock.now())
+        self.beltRank = BeltRank.from(stats: progressRepository.loadAll(for: instrument), maxBox: DrillTuning.maxBox, universeSize: DrillTuning.universeSize(for: instrument))
 
         stateMachine.onStateChange = { [weak self] newState in
             self?.state = newState
@@ -124,7 +124,7 @@ final class DrillViewModel: ObservableObject {
             allowedStrings: allowedStrings(),
             allowedNoteNames: allowedNoteNames(),
             maxFretInclusive: maxFretInclusive(),
-            stats: progressRepository.loadAll(),
+            stats: progressRepository.loadAll(for: instrument),
             now: clock.now(),
             randomUnit: randomUnit
         )
@@ -199,20 +199,20 @@ final class DrillViewModel: ObservableObject {
     }
 
     private func recordCorrect(for prompt: DrillPrompt, reactionTime: TimeInterval) {
-        var all = progressRepository.loadAll()
+        var all = progressRepository.loadAll(for: instrument)
         let current = all[prompt.itemKey] ?? ItemStats.unseen(at: clock.now())
         all[prompt.itemKey] = updateStats.applyCorrect(to: current, reactionTime: reactionTime, now: clock.now())
-        progressRepository.save(all)
+        progressRepository.save(all, for: instrument)
         let mastered = all.values.filter { $0.box >= DrillTuning.maxBox }.count
-        dailyHistoryStore.recordCorrect(now: clock.now(), reactionTime: reactionTime, masteredCount: mastered)
-        todayCount = dailyHistoryStore.todayReps(now: clock.now())
-        beltRank = BeltRank.from(stats: all, maxBox: DrillTuning.maxBox, universeSize: DrillTuning.totalItemCount)
+        dailyHistoryStore.recordCorrect(for: instrument, now: clock.now(), reactionTime: reactionTime, masteredCount: mastered)
+        todayCount = dailyHistoryStore.todayReps(for: instrument, now: clock.now())
+        beltRank = BeltRank.from(stats: all, maxBox: DrillTuning.maxBox, universeSize: DrillTuning.universeSize(for: instrument))
     }
 
     private func recordMiss(for prompt: DrillPrompt) {
-        var all = progressRepository.loadAll()
+        var all = progressRepository.loadAll(for: instrument)
         let current = all[prompt.itemKey] ?? ItemStats.unseen(at: clock.now())
         all[prompt.itemKey] = updateStats.applyMiss(to: current, now: clock.now())
-        progressRepository.save(all)
+        progressRepository.save(all, for: instrument)
     }
 }

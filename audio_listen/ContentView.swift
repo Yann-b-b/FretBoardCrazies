@@ -10,6 +10,7 @@ import SwiftUI
 struct ContentView: View {
     private let container = AppDependencyContainer.shared
     @AppStorage(GameSettingsKeys.touchMode) private var touchMode = false
+    @AppStorage(SelectedInstrumentStore.userDefaultsKey) private var selectedInstrumentId = "guitar"
     @State private var selection = 0
 
     var body: some View {
@@ -25,15 +26,17 @@ struct ContentView: View {
             DrillView(
                 viewModel: container.makeDrillViewModel(),
                 allowedStringsStore: container.allowedStringsStore,
-                instrument: container.instrument
+                instrument: container.currentInstrument
             )
-            .id(touchMode)
+            .id("\(touchMode)-\(selectedInstrumentId)")
             .tabItem { Label("Drill", systemImage: "guitars.fill") }
 
             MasteryView(
                 progressRepository: container.drillProgressRepository,
-                dailyHistoryStore: container.dailyHistoryStore
+                dailyHistoryStore: container.dailyHistoryStore,
+                instrument: container.currentInstrument
             )
+            .id(selectedInstrumentId)
             .tabItem { Label("Progress", systemImage: "chart.bar.fill") }
 
             TunerView(viewModel: container.makeTunerViewModel())
@@ -53,14 +56,16 @@ struct ContentView: View {
             DrillView(
                 viewModel: container.makeDrillViewModel(),
                 allowedStringsStore: container.allowedStringsStore,
-                instrument: container.instrument
+                instrument: container.currentInstrument
             )
-            .id(touchMode)
+            .id("\(touchMode)-\(selectedInstrumentId)")
         case 1:
             MasteryView(
                 progressRepository: container.drillProgressRepository,
-                dailyHistoryStore: container.dailyHistoryStore
+                dailyHistoryStore: container.dailyHistoryStore,
+                instrument: container.currentInstrument
             )
+            .id(selectedInstrumentId)
         case 2:
             TunerView(viewModel: container.makeTunerViewModel())
         default:
