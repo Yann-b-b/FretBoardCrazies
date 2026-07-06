@@ -1,5 +1,42 @@
 import re
 
+MARKETING_RE = re.compile(r"(MARKETING_VERSION = )([^;]+)(;)")
+BUILD_RE = re.compile(r"(CURRENT_PROJECT_VERSION = )([^;]+)(;)")
+
+
+def current_build_number(pbxproj):
+    values = [match.group(2).strip() for match in BUILD_RE.finditer(pbxproj)]
+    if not values:
+        raise ValueError("no CURRENT_PROJECT_VERSION found")
+    unique = set(values)
+    if len(unique) != 1:
+        raise ValueError(f"CURRENT_PROJECT_VERSION not uniform: {sorted(unique)}")
+    if not values[0].isdigit():
+        raise ValueError(f"CURRENT_PROJECT_VERSION is not an integer: {values[0]}")
+    return int(values[0])
+
+
+def bump_pbxproj(pbxproj, marketing, build):
+    marketing_values = {
+        match.group(2).strip() for match in MARKETING_RE.finditer(pbxproj)
+    }
+    if not marketing_values:
+        raise ValueError("no MARKETING_VERSION found")
+    if len(marketing_values) != 1:
+        raise ValueError(f"MARKETING_VERSION not uniform: {sorted(marketing_values)}")
+    current_build_number(pbxproj)
+    result = MARKETING_RE.sub(lambda m: f"{m.group(1)}{marketing}{m.group(3)}", pbxproj)
+    result = BUILD_RE.sub(lambda m: f"{m.group(1)}{build}{m.group(3)}", result)
+    after_marketing = {
+        match.group(2).strip() for match in MARKETING_RE.finditer(result)
+    }
+    after_build = {match.group(2).strip() for match in BUILD_RE.finditer(result)}
+    if after_marketing != {marketing}:
+        raise ValueError("MARKETING_VERSION not uniform after bump")
+    if after_build != {str(build)}:
+        raise ValueError("CURRENT_PROJECT_VERSION not uniform after bump")
+    return result
+
 
 def latest_version_tag(tags):
     parsed = []

@@ -3,6 +3,8 @@ from datetime import date
 import pytest
 
 from release import (
+    bump_pbxproj,
+    current_build_number,
     deslug,
     finalize_entry,
     highlights_from_merges,
@@ -76,3 +78,41 @@ def test_finalize_entry_rejects_empty():
         finalize_entry("# only instructions, no entry\n")
     with pytest.raises(ValueError):
         finalize_entry("## v1.1.0 — 2026-07-05\n### Highlights\n")
+
+
+PBX_SAMPLE = """
+\t\t\t\tCURRENT_PROJECT_VERSION = 1;
+\t\t\t\tMARKETING_VERSION = 1.0;
+\t\t\t\tCURRENT_PROJECT_VERSION = 1;
+\t\t\t\tMARKETING_VERSION = 1.0;
+"""
+
+
+def test_current_build_number():
+    assert current_build_number(PBX_SAMPLE) == 1
+
+
+def test_current_build_number_rejects_non_uniform():
+    bad = PBX_SAMPLE.replace(
+        "CURRENT_PROJECT_VERSION = 1;\n\t\t\t\tMARKETING_VERSION = 1.0;\n\t\t\t\tCURRENT_PROJECT_VERSION = 1;",
+        "CURRENT_PROJECT_VERSION = 1;\n\t\t\t\tMARKETING_VERSION = 1.0;\n\t\t\t\tCURRENT_PROJECT_VERSION = 2;",
+    )
+    with pytest.raises(ValueError):
+        current_build_number(bad)
+
+
+def test_bump_pbxproj_updates_all_occurrences():
+    result = bump_pbxproj(PBX_SAMPLE, "1.1.0", 2)
+    assert result.count("MARKETING_VERSION = 1.1.0;") == 2
+    assert result.count("CURRENT_PROJECT_VERSION = 2;") == 2
+    assert "MARKETING_VERSION = 1.0;" not in result
+    assert "CURRENT_PROJECT_VERSION = 1;" not in result
+
+
+def test_bump_pbxproj_rejects_non_uniform_marketing():
+    bad = PBX_SAMPLE.replace(
+        "MARKETING_VERSION = 1.0;\n\t\t\t\tCURRENT_PROJECT_VERSION = 1;\n\t\t\t\tMARKETING_VERSION = 1.0;",
+        "MARKETING_VERSION = 1.0;\n\t\t\t\tCURRENT_PROJECT_VERSION = 1;\n\t\t\t\tMARKETING_VERSION = 2.0;",
+    )
+    with pytest.raises(ValueError):
+        bump_pbxproj(bad, "1.1.0", 2)
