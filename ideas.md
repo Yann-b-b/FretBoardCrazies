@@ -17,6 +17,18 @@
    New view + new nav entry (working name "Focus"). Random string with anti-repeat.
 3. **Achievements page** — per mode: reach 100, and hit a 50 streak. Start with just these two.
 
+## 🎸 v2.0 — Chord Trainer (big)
+
+The next major direction. Reframes the app: it's fundamentally a **fretboard
+note-location trainer**, and chords are the vehicle — every chord rep reduces to "find the
+root on the given string, then play the shape you already know." Tracks **two independent
+mastery axes** (shape `chordId:rootString`, note `note:rootString`), two modes (**A** =
+shape mastery / nodes, **B** = transitions / edges), and practice axes for root string
+(E6/A5/D4), chord family, tier, and melodic-pattern contour. Full vision:
+`docs/v2-chord-trainer-vision.md`. Big enough to be **v2.0** — needs decomposition into
+sub-projects + repo-readiness groundwork before building. The current single-note drill is
+already the "note mastery" engine, so much of the foundation is reusable.
+
 ## Backlog 💭
 
 4. Advanced: choose which frets to drill (e.g. frets 0–5 or 6–11).
