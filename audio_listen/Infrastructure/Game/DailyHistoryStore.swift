@@ -13,7 +13,9 @@ struct DailyRecord: Codable, Equatable {
 }
 
 struct DailyHistoryStore {
-    static let userDefaultsKey = "audio_listen_daily_history"
+    static func userDefaultsKey(for instrument: Instrument) -> String {
+        "audio_listen_daily_history.\(instrument.id)"
+    }
 
     private let defaults: UserDefaults
     private let calendar: Calendar
@@ -23,22 +25,26 @@ struct DailyHistoryStore {
         self.calendar = calendar
     }
 
-    func history() -> [DailyRecord] {
-        load().sorted { $0.dayStart < $1.dayStart }
+    func history(for instrument: Instrument) -> [DailyRecord] {
+        load(Self.userDefaultsKey(for: instrument)).sorted { $0.dayStart < $1.dayStart }
     }
 
-    func todayReps(now: Date) -> Int {
-        load().first { calendar.isDate($0.dayStart, inSameDayAs: now) }?.reps ?? 0
+    func todayReps(for instrument: Instrument, now: Date) -> Int {
+        load(Self.userDefaultsKey(for: instrument)).first { calendar.isDate($0.dayStart, inSameDayAs: now) }?.reps ?? 0
     }
 
-    func recordCorrect(now: Date, reactionTime: TimeInterval, masteredCount: Int) {
-        var records = load()
+    func recordCorrect(for instrument: Instrument, now: Date, reactionTime: TimeInterval, masteredCount: Int) {
+        record(forKey: Self.userDefaultsKey(for: instrument), now: now, reactionTime: reactionTime, masteredCount: masteredCount)
+    }
+
+    private func record(forKey key: String, now: Date, reactionTime: TimeInterval, masteredCount: Int) {
+        var records = load(key)
         if let index = records.firstIndex(where: { calendar.isDate($0.dayStart, inSameDayAs: now) }) {
             records[index].reps += 1
             records[index].reactionSum += reactionTime
             records[index].reactionCount += 1
             records[index].masteredSnapshot = masteredCount
-            save(records)
+            save(records, forKey: key)
             return
         }
         let record = DailyRecord(
@@ -49,19 +55,19 @@ struct DailyHistoryStore {
             masteredSnapshot: masteredCount
         )
         records.append(record)
-        save(records)
+        save(records, forKey: key)
     }
 
-    private func load() -> [DailyRecord] {
-        guard let data = defaults.data(forKey: Self.userDefaultsKey),
+    private func load(_ key: String) -> [DailyRecord] {
+        guard let data = defaults.data(forKey: key),
               let records = try? JSONDecoder().decode([DailyRecord].self, from: data) else {
             return []
         }
         return records
     }
 
-    private func save(_ records: [DailyRecord]) {
+    private func save(_ records: [DailyRecord], forKey key: String) {
         guard let data = try? JSONEncoder().encode(records) else { return }
-        defaults.set(data, forKey: Self.userDefaultsKey)
+        defaults.set(data, forKey: key)
     }
 }

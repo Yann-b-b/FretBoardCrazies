@@ -11,9 +11,13 @@ struct SettingsView: View {
     @AppStorage(GameSettingsKeys.countdownEnabled) private var countdownEnabled = false
     @AppStorage(GameSettingsKeys.limitFretsToTwelve) private var limitFretsToTwelve = true
     @AppStorage(GameSettingsKeys.touchMode) private var touchMode = false
+    @AppStorage(SelectedInstrumentStore.userDefaultsKey) private var selectedInstrumentId = "guitar"
 
     var body: some View {
         Form {
+            Section("Instrument") {
+                InstrumentPicker(selectedId: $selectedInstrumentId)
+            }
             Section("Game") {
                 Toggle("Countdown (3-2-1)", isOn: $countdownEnabled)
                 Toggle("Limit targets to frets 0–11", isOn: $limitFretsToTwelve)

@@ -4,16 +4,19 @@ struct MasteryView: View {
     private let progressRepository: DrillProgressRepositoryProtocol
     private let dailyHistoryStore: DailyHistoryStore
     private let masteredBox: Int
+    private let instrument: Instrument
 
     @State private var heatmap: [DrillItemKey: MasteryLevel] = [:]
     @State private var totals: (unseen: Int, learning: Int, mastered: Int) = (0, 0, 0)
-    @State private var beltRank: BeltRank = BeltRank.from(stats: [:], maxBox: DrillTuning.maxBox, universeSize: DrillTuning.totalItemCount)
+    @State private var beltRank: BeltRank
     @State private var history: [DailyRecord] = []
 
-    init(progressRepository: DrillProgressRepositoryProtocol, dailyHistoryStore: DailyHistoryStore, masteredBox: Int = DrillTuning.maxBox) {
+    init(progressRepository: DrillProgressRepositoryProtocol, dailyHistoryStore: DailyHistoryStore, instrument: Instrument, masteredBox: Int = DrillTuning.maxBox) {
         self.progressRepository = progressRepository
         self.dailyHistoryStore = dailyHistoryStore
+        self.instrument = instrument
         self.masteredBox = masteredBox
+        _beltRank = State(initialValue: BeltRank.from(stats: [:], maxBox: masteredBox, universeSize: DrillTuning.universeSize(for: instrument)))
     }
 
     var body: some View {
@@ -21,7 +24,7 @@ struct MasteryView: View {
             VStack(spacing: 20) {
                 Text("Progress").font(.title2).bold()
                 beltCard
-                FretboardView(heatmap: heatmap)
+                FretboardView(heatmap: heatmap, instrument: instrument)
                 HStack(spacing: 24) {
                     legend(color: .gray, label: "Unseen \(totals.unseen)")
                     legend(color: .orange, label: "Learning \(totals.learning)")
@@ -69,9 +72,9 @@ struct MasteryView: View {
     }
 
     private func reload() {
-        let stats = progressRepository.loadAll()
-        let universe = SelectNextPromptUseCase().candidates(
-            allowedStrings: Set(1...Instruments.guitar.stringCount),
+        let stats = progressRepository.loadAll(for: instrument)
+        let universe = SelectNextPromptUseCase(instrument: instrument).candidates(
+            allowedStrings: Set(1...instrument.stringCount),
             allowedNoteNames: Set(NoteName.allCases),
             maxFretInclusive: 11
         )
@@ -89,7 +92,7 @@ struct MasteryView: View {
         }
         heatmap = map
         totals = (u, l, m)
-        beltRank = BeltRank.from(stats: stats, maxBox: masteredBox, universeSize: DrillTuning.totalItemCount)
-        history = dailyHistoryStore.history()
+        beltRank = BeltRank.from(stats: stats, maxBox: masteredBox, universeSize: DrillTuning.universeSize(for: instrument))
+        history = dailyHistoryStore.history(for: instrument)
     }
 }
