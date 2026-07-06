@@ -54,28 +54,29 @@ editor, no merge, no writes.
 SHA (`git reset --hard <sha>`) and delete the tag if it was created, so a failed release leaves
 no partial state.
 
-**`--verify` is a two-platform gate.** The app ships on both iOS and macOS, and the codebase
-has `#if os(iOS)` / `#if os(macOS)` branches, so a macOS-only run would compile only the macOS
-branch and could green-light a release where the iOS app fails to build. `--verify` therefore
-runs BOTH commands (both must succeed):
+**`--verify` runs the test suite on BOTH platforms.** The app ships on iOS and macOS, so the
+gate runs the full `audio_listenTests` suite against a macOS destination AND an iOS Simulator
+destination (both must pass). Running on iOS as well as macOS covers platform-conditional
+(`#if os(iOS)` / `#if os(macOS)`) compilation and any platform-specific test behavior — not just
+the shared logic:
 
 ```bash
-# 1. Shared-logic unit tests — the audio_listenTests bundle is platform-agnostic;
-#    macOS runs the identical tests fastest (no simulator boot).
+# macOS — fast, no simulator boot
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
   -project audio_listen.xcodeproj -scheme audio_listen \
   -destination 'platform=macOS' -only-testing:audio_listenTests
 
-# 2. iOS compile check — compiles the #if os(iOS) branches without booting a
-#    simulator or requiring code-signing (build, not test; generic destination).
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild build \
+# iOS Simulator — boots a simulator (device chosen per note below)
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
   -project audio_listen.xcodeproj -scheme audio_listen \
-  -destination 'generic/platform=iOS Simulator'
+  -destination "platform=iOS Simulator,name=$IOS_SIM" -only-testing:audio_listenTests
 ```
 
-The unit tests are not re-run on iOS: they are identical cross-platform, so running them once
-(on macOS) validates the shared logic for both targets; the iOS `build` covers the only thing
-macOS misses — platform-conditional compilation.
+**iOS simulator selection:** the tool picks a concrete available iPhone simulator by querying
+`xcrun simctl list devices available` (newest iPhone by default), overridable with
+`--ios-sim NAME`. Booting a simulator makes `--verify` slower than a macOS-only run — acceptable
+for a deliberate, occasional release gate. `--verify` is opt-in; without it the release proceeds
+on the assumption that `dev` was already tested per-feature.
 
 ## Feature extraction + changelog format
 
@@ -122,10 +123,9 @@ pre-wires automated store upload with zero rework: whenever fastlane is set up (
 credentialed task requiring an Apple Developer account + App Store Connect API key), it pushes
 this file to the version's "What's New" field. **Building the actual upload is out of scope.**
 
-If iOS and macOS ship as **two separate App Store listings**, each has its own "What's New" and
-its own fastlane metadata location — but the generated text is identical, so extending this to
-write a second file (or a configurable list of destinations) is trivial when the upload is built.
-For now a single `en-US` file is written; multi-destination is deferred with the upload itself.
+iOS and macOS ship as **one App Store listing** (a single app record, shared version), so a
+single `fastlane/metadata/en-US/release_notes.txt` is the correct and only destination — the
+version bump and these notes cover both platforms at once.
 
 ## Files touched
 
@@ -153,6 +153,7 @@ changelog, and notes.
 - `current_build_number(pbxproj: str) -> int` (asserts uniform)
 - `bump_pbxproj(pbxproj: str, marketing: str, build: int) -> str` (asserts uniform in/out)
 - `finalize_entry(edited_text: str) -> str` (keep from first `## ` line)
+- `pick_ios_simulator(simctl_json: str) -> str` (newest available iPhone name; raises if none)
 
 The orchestration (`main()`) calls `git`/`$EDITOR` via `subprocess`, wires the pure functions,
 and enforces the guards/rollback. Dates come from `datetime.date.today()`.
@@ -169,6 +170,8 @@ and enforces the guards/rollback. Dates come from `datetime.date.today()`.
 - `current_build_number` / `bump_pbxproj`: all occurrences updated, uniform-in/uniform-out
   assertions, raises on non-uniform input.
 - `finalize_entry`: instruction lines above the first `## ` are dropped; empty → raises.
+- `pick_ios_simulator`: picks the newest available iPhone from `simctl list -j` output; raises a
+  clear error when no iPhone simulator is available.
 
 Git orchestration is exercised against a **temporary throwaway git repo fixture** (init, make
 commits + feature merges + a `v*` tag, run the flow, assert the new `CHANGELOG.md` entry, the
