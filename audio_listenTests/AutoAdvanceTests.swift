@@ -31,4 +31,20 @@ struct AutoAdvanceTests {
         #expect(AutoAdvance(pace: 100).pace == 6.0)
         #expect(AutoAdvance(pace: 0).pace == 1.0)
     }
+
+    @Test func acceptsExactBoundaries() {
+        let a = AutoAdvance()
+        a.pace = AutoAdvance.minPace
+        #expect(a.pace == 1.0)
+        a.pace = AutoAdvance.maxPace
+        #expect(a.pace == 6.0)
+    }
+
+    @Test func isPlayingToggles() {
+        let a = AutoAdvance()
+        a.isPlaying = true
+        #expect(a.isPlaying == true)
+        a.isPlaying = false
+        #expect(a.isPlaying == false)
+    }
 }

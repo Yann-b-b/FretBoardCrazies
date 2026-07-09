@@ -79,7 +79,7 @@ struct ChordFretboardView: View {
                 Text("✕")
                     .font(.system(size: 12, weight: .semibold, design: .monospaced))
                     .foregroundStyle(Color.gray)
-                    .position(x: 11, y: geo.stringY(string))
+                    .position(x: geo.point(string: string, fret: 0).x, y: geo.stringY(string))
                     .transition(.opacity)
             }
         }

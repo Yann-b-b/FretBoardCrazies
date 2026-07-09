@@ -42,7 +42,6 @@ struct ChordProgressionView: View {
             transport
         }
         .padding(.vertical)
-        .onChange(of: session.index) { _ in persist() }
         .task(id: TimerKey(playing: auto.isPlaying, pace: auto.pace, index: session.index)) {
             guard auto.isPlaying else { return }
             try? await Task.sleep(nanoseconds: UInt64(auto.pace * 1_000_000_000))
@@ -79,8 +78,7 @@ struct ChordProgressionView: View {
             }
             HStack(spacing: 10) {
                 Text("pace").font(.caption).foregroundStyle(.secondary)
-                Slider(value: Binding(get: { auto.pace }, set: { auto.pace = $0 }),
-                       in: AutoAdvance.minPace...AutoAdvance.maxPace)
+                Slider(value: $auto.pace, in: AutoAdvance.minPace...AutoAdvance.maxPace)
                 Text(String(format: "%.1fs", auto.pace)).font(.caption.monospaced()).foregroundStyle(.secondary)
             }
         }
