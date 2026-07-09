@@ -15,6 +15,7 @@ final class AppDependencyContainer {
     let allowedNoteNamesStore: GameAllowedNoteNamesStore
     let drillProgressRepository: DrillProgressRepositoryProtocol
     let dailyHistoryStore = DailyHistoryStore()
+    let progressionSelectionStore = ProgressionSelectionStore()
 
     private let selectedInstrumentStore = SelectedInstrumentStore()
     private let allowedNoteNamesProvider: AllowedNoteNamesProviding
@@ -82,5 +83,15 @@ final class AppDependencyContainer {
     @MainActor
     func makeRootViewModel() -> RootViewModel {
         RootViewModel()
+    }
+
+    @MainActor
+    func makeProgressionSession() -> ProgressionSession {
+        ProgressionSession(
+            progression: progressionSelectionStore.progression,
+            tonic: progressionSelectionStore.tonic,
+            rootString: progressionSelectionStore.rootString,
+            displayMode: progressionSelectionStore.displayMode
+        )
     }
 }
