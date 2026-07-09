@@ -8,8 +8,6 @@ struct PlacedNote: Hashable {
 struct PlacedChord: Hashable {
     let rootFret: Int
     let notes: [PlacedNote]
-    let positions: [FretPosition]
-    let rootPosition: FretPosition
 }
 
 enum ChordPlacement {
@@ -30,8 +28,6 @@ enum ChordPlacement {
                 isRoot: position.string == rootStringNumber && position.fretOffset == 0
             )
         }
-        let positions = voicing.positions.map { FretPosition(string: $0.string, fret: fret + $0.fretOffset) }
-        let root = FretPosition(string: rootStringNumber, fret: fret)
-        return PlacedChord(rootFret: fret, notes: notes, positions: positions, rootPosition: root)
+        return PlacedChord(rootFret: fret, notes: notes)
     }
 }

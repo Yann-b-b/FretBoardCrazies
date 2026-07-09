@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ChordProgressionView: View {
     @StateObject private var session: ProgressionSession
+    @StateObject private var auto = AutoAdvance()
     private let instrument: Instrument
     private let store: ProgressionSelectionStore
 
@@ -22,52 +23,75 @@ struct ChordProgressionView: View {
     }
 
     var body: some View {
-        VStack(spacing: 20) {
-            controls
-
-            Text(name(session.currentStep))
-                .font(.system(size: 40, weight: .bold, design: .serif))
-                .contentTransition(.numericText())
-
-            ChordNeckView(placedChord: placed(session.currentStep), showFingering: session.revealed)
-                .padding(.horizontal)
-
-            HStack(spacing: 6) {
-                Text("next:").foregroundStyle(.secondary)
-                Text(name(session.nextStep)).fontWeight(.semibold)
+        let current = placed(session.currentStep)
+        VStack(spacing: 16) {
+            selectors
+            VStack(spacing: 4) {
+                Text(name(session.currentStep))
+                    .font(.system(size: 40, weight: .bold, design: .serif))
+                    .contentTransition(.numericText())
+                HStack(spacing: 8) {
+                    Text("\(current.rootFret)fr").foregroundStyle(Color.orange)
+                    Text("·").foregroundStyle(.secondary)
+                    Text("next: \(name(session.nextStep))").foregroundStyle(.secondary)
+                }
+                .font(.subheadline.monospaced())
             }
-            .font(.subheadline)
+            ChordFretboardView(placedChord: current, showFingering: session.revealed)
+                .padding(.horizontal)
+            transport
+        }
+        .padding(.vertical)
+        .onChange(of: session.index) { _ in persist() }
+        .task(id: TimerKey(playing: auto.isPlaying, pace: auto.pace, index: session.index)) {
+            guard auto.isPlaying else { return }
+            try? await Task.sleep(nanoseconds: UInt64(auto.pace * 1_000_000_000))
+            if !Task.isCancelled { session.advance() }
+        }
+    }
 
-            Spacer()
-
+    private var transport: some View {
+        VStack(spacing: 12) {
             HStack(spacing: 12) {
-                Button(action: { session.previous() }) {
-                    Image(systemName: "chevron.left")
-                        .font(.headline)
-                        .padding(.vertical, 14)
-                        .padding(.horizontal, 20)
+                Button {
+                    auto.isPlaying = false
+                    session.previous()
+                } label: {
+                    Image(systemName: "chevron.left").font(.headline)
+                        .padding(.vertical, 12).padding(.horizontal, 18)
                 }
                 .buttonStyle(.bordered)
 
-                Button(action: { session.primaryAction() }) {
-                    Text(primaryLabel)
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
+                Button { auto.isPlaying.toggle() } label: {
+                    Image(systemName: auto.isPlaying ? "pause.fill" : "play.fill")
+                        .font(.headline).frame(maxWidth: .infinity).padding(.vertical, 12)
                 }
                 .buttonStyle(.borderedProminent)
+
+                Button {
+                    auto.isPlaying = false
+                    session.primaryAction()
+                } label: {
+                    Text(primaryLabel).font(.headline)
+                        .padding(.vertical, 12).padding(.horizontal, 18)
+                }
+                .buttonStyle(.bordered)
             }
-            .padding(.horizontal)
+            HStack(spacing: 10) {
+                Text("pace").font(.caption).foregroundStyle(.secondary)
+                Slider(value: Binding(get: { auto.pace }, set: { auto.pace = $0 }),
+                       in: AutoAdvance.minPace...AutoAdvance.maxPace)
+                Text(String(format: "%.1fs", auto.pace)).font(.caption.monospaced()).foregroundStyle(.secondary)
+            }
         }
-        .padding(.top)
-        .onChange(of: session.index) { _ in persist() }
+        .padding(.horizontal)
     }
 
     private var primaryLabel: String {
         session.displayMode == .nameOnly && !session.revealed ? "Reveal" : "Next ›"
     }
 
-    private var controls: some View {
+    private var selectors: some View {
         HStack {
             Menu {
                 ForEach(Progressions.all, id: \.id) { progression in
@@ -96,6 +120,12 @@ struct ChordProgressionView: View {
         store.save(progressionId: session.progression.id, tonic: session.tonic,
                    rootString: session.rootString, displayMode: session.displayMode)
     }
+}
+
+private struct TimerKey: Hashable {
+    let playing: Bool
+    let pace: TimeInterval
+    let index: Int
 }
 
 #Preview {
