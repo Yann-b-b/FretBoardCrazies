@@ -18,8 +18,9 @@ root-finding rep.
 - **No audio.** This mode has no microphone, no detection, no verification.
   Distinguishing a 13 from a 9♯11 by ear is a single-tension difference that
   chroma detection handles badly; the mode is a guided visual trainer instead.
-- **No progression generator in v1.** v1 ships a curated library; a
-  theory-driven generator is a later addition (the data model must not preclude it).
+- **No progression generator in v1.** v1 ships a curated library; the
+  cell-recombination generator (designed in "Progression generator" below) is a
+  later addition, and the data model must not preclude it.
 - **No spaced-repetition / automatic mastery in v1.** Advancing between root
   strings is a manual choice.
 - The existing single-note drill is untouched; this is a sibling mode.
@@ -125,13 +126,47 @@ the movable voicing there.
 
 ## View & interaction
 
-- Reuse `FretboardView` (horizontal neck, high-E on top, dark board).
-- The current chord renders as its movable voicing on the neck — finger-numbered
-  dots, the **root highlighted** (the drill's orange), muted strings marked.
-- Above/around the neck: the chord **name**, and a peek at the **next** chord.
-- Controls: **next / prev** step (tap). Metronome / auto-advance is a later add.
-- Selectors: **key** and **root string** (`E6` / `A5` / `D4`).
-- A **progression list** to choose what to practice.
+- **Layout — current chord + peek at next.** One large neck shows the current
+  grip; a smaller preview shows the **next** chord so the hand can prepare
+  (preparing for the change is most of the skill). At the loop boundary, "next"
+  wraps to the cell's first chord.
+- Reuse `FretboardView` (horizontal neck, high-E on top, dark board). The current
+  chord renders as its movable voicing — finger-numbered dots, the **root
+  highlighted** (the drill's orange), muted strings marked. The chord **name**
+  sits with each neck.
+- **Display modes (a toggle):**
+  - *Name + fingering* — the learning mode; the grip is shown.
+  - *Name only (recall)* — both necks hide their dots; only the chord names show,
+    so the user recalls and plays the grip from memory. In this mode the
+    fingering **reveals on tap** (active-recall self-check) before advancing.
+- The progression **loops** — it repeats until the user chooses to move on, so a
+  short cell can be drilled until it's under the fingers.
+- Controls: **tap to advance** (and, in recall mode, to reveal); **prev**.
+  Metronome / auto-advance is a later add.
+- Selectors: **key**, **root string** (only strings the loaded tier supports),
+  and **display mode**.
+- A **progression list** to choose what to practice (curated in v1).
+
+## Progression generator (design; ships after v1 — curated library first)
+
+The generator **recombines idiomatic harmonic cells** rather than building
+chord-by-chord, so every result is proven-musical:
+
+- **Cell library** — short roman-numeral fragments, each tagged with the
+  qualities it uses: ii–V–I, turnarounds (I–VI–ii–V), minor ii–V–i, tritone
+  subs, secondary dominants, and the like.
+- **Vocabulary gate** — only cells whose every quality is in the user's
+  **unlocked set** are eligible; the generator never presents a grip the user
+  hasn't learned. Unlocking more qualities (via tiers or per-string progress)
+  widens the pool.
+- **Output = a short looping cell** (2–4 chords) that repeats until the user
+  moves on.
+- **Root spread ramps with comfort** — placement chooses the key and octaves so
+  a new cell's roots stay **clustered in a fret region** on the pinned string,
+  then widens toward full-neck spread as comfort grows. This is the difficulty
+  dial (the vision's `randomness`, applied to root spacing).
+- Cross-cell chaining / modulation is a later refinement; the first generator
+  ships single cells.
 
 ## Architecture (fits existing app patterns)
 
@@ -162,13 +197,22 @@ the movable voicing there.
   correct root notes in every key.
 - **Placement:** root → fret on each root string is correct, and every v1
   progression places fully on the neck in every key on `E6`.
+- **Loop / advance / reveal state:** advancing wraps at the loop boundary, the
+  next-chord peek always points at the following step (wrapping to the first),
+  and recall mode hides the grip until a reveal then re-hides on advance.
 - **View:** SwiftUI previews for each v1 quality's voicing and a sample
-  progression step.
+  progression step in both display modes.
 
 ## Open questions / future
 
+- **Transition animation** — how a grip appears and disappears as the chord
+  changes (instant swap vs. crossfade vs. dots gliding to their new positions
+  vs. the neck sliding to the next position). To be chosen from an animated
+  prototype before implementation; the finger-glide option is pedagogically
+  interesting because it shows the hand movement of the change.
 - Voice-leading / mixed-string "same-position" mode (the vision's advanced
   transitions) — future; v1 pins all steps to one root string.
-- Progression generator from key membership + travel score — future.
-- Shape-mastery tracking and spaced repetition — future.
+- Cross-cell chaining / modulation in the generator — future.
+- Shape-mastery tracking and spaced repetition (auto-advancing the root-spread
+  ramp and unlocking tiers from measured comfort) — future.
 - Metronome / tempo / auto-advance — near-term follow-up.
