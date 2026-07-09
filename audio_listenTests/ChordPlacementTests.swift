@@ -14,16 +14,18 @@ struct ChordPlacementTests {
         #expect(fret == 12)
     }
 
-    @Test func placeAddsRootFretToEveryOffsetAndKeepsStrings() {
+    @Test func placeThreadsRootFretFingersAndRootFlag() {
         let m7 = Voicings.voicing(qualityId: "m7", rootString: .e6)!
         let placed = ChordPlacement.place(voicing: m7, rootPitchClass: 7, instrument: Instruments.guitar) // G = 7 → fret 3
         #expect(placed.rootFret == 3)
-        #expect(placed.rootPosition == FretPosition(string: 6, fret: 3))
-        #expect(Set(placed.positions) == Set([
-            FretPosition(string: 6, fret: 3),
-            FretPosition(string: 4, fret: 3),
-            FretPosition(string: 3, fret: 3),
-            FretPosition(string: 2, fret: 3),
-        ]))
+        // one note per voicing position, string+fret preserved
+        #expect(Set(placed.notes.map { $0.string }) == Set([6, 4, 3, 2]))
+        #expect(placed.notes.allSatisfy { $0.fret == 3 })
+        // exactly the low-E (string 6) note is the root
+        let roots = placed.notes.filter { $0.isRoot }
+        #expect(roots.count == 1)
+        #expect(roots.first?.string == 6)
+        // fingers come from the voicing (m7 is an all-index barre → all finger 1)
+        #expect(placed.notes.allSatisfy { $0.finger == 1 })
     }
 }
