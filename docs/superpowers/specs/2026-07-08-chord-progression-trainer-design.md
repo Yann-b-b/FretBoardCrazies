@@ -130,6 +130,13 @@ the movable voicing there.
   grip; a smaller preview shows the **next** chord so the hand can prepare
   (preparing for the change is most of the skill). At the loop boundary, "next"
   wraps to the cell's first chord.
+- **Transition — neck slide (camera follows the hand).** On a chord change the
+  grip stays **centered**; the neck scrolls underneath it to the new position
+  and settles (~0.55s ease). Because the shape never leaves center, the eye
+  isn't chasing it around the fretboard. The sliding neck **carries its fret
+  markers / a position number** so the actual playing position stays readable —
+  essential, since finding the right fret is the point. (Chosen from an animated
+  prototype over instant / crossfade / finger-glide.)
 - Reuse `FretboardView` (horizontal neck, high-E on top, dark board). The current
   chord renders as its movable voicing — finger-numbered dots, the **root
   highlighted** (the drill's orange), muted strings marked. The chord **name**
@@ -176,6 +183,10 @@ chord-by-chord, so every result is proven-musical:
 - **Mode wiring**: the app becomes multi-mode; this is a new mode surface
   alongside the note drill. Reuse `DrillView`/`FretboardView` composition and the
   view-model pattern; no changes to the existing note-drill logic.
+- **Neck rendering**: the neck-slide transition needs a **camera-follow** neck —
+  the shape pinned to center while the neck (fret lines, inlays, fret numbers)
+  translates to the active position and animates on change. This is an extension
+  of `FretboardView`'s geometry, not a change to the existing note-drill neck.
 - **Persistence**: v1 persists only the user's current selection (key, root
   string, last progression) via the existing store-as-seam pattern. No mastery
   store yet.
@@ -205,11 +216,6 @@ chord-by-chord, so every result is proven-musical:
 
 ## Open questions / future
 
-- **Transition animation** — how a grip appears and disappears as the chord
-  changes (instant swap vs. crossfade vs. dots gliding to their new positions
-  vs. the neck sliding to the next position). To be chosen from an animated
-  prototype before implementation; the finger-glide option is pedagogically
-  interesting because it shows the hand movement of the change.
 - Voice-leading / mixed-string "same-position" mode (the vision's advanced
   transitions) — future; v1 pins all steps to one root string.
 - Cross-cell chaining / modulation in the generator — future.
