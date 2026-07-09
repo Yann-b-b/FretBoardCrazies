@@ -40,13 +40,23 @@ struct ChordProgressionView: View {
 
             Spacer()
 
-            Button(action: { session.primaryAction() }) {
-                Text(primaryLabel)
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
+            HStack(spacing: 12) {
+                Button(action: { session.previous() }) {
+                    Image(systemName: "chevron.left")
+                        .font(.headline)
+                        .padding(.vertical, 14)
+                        .padding(.horizontal, 20)
+                }
+                .buttonStyle(.bordered)
+
+                Button(action: { session.primaryAction() }) {
+                    Text(primaryLabel)
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                }
+                .buttonStyle(.borderedProminent)
             }
-            .buttonStyle(.borderedProminent)
             .padding(.horizontal)
         }
         .padding(.top)

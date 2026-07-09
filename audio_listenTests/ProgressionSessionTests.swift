@@ -1,4 +1,3 @@
-// audio_listenTests/ProgressionSessionTests.swift
 import Testing
 @testable import audio_listen
 
@@ -52,5 +51,20 @@ struct ProgressionSessionTests {
         let s = session(.nameAndFingering)
         s.previous()
         #expect(s.index == 2)
+    }
+
+    @Test func switchingBackToFingeringModeRevealsGrip() {
+        let s = session(.nameOnly)
+        #expect(s.revealed == false)
+        s.displayMode = .nameAndFingering
+        #expect(s.revealed == true)
+    }
+
+    @Test func reassigningProgressionResetsToStart() {
+        let s = session(.nameAndFingering)
+        s.advance()
+        #expect(s.index == 1)
+        s.progression = Progressions.byId("turnaround")!
+        #expect(s.index == 0)
     }
 }

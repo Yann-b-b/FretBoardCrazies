@@ -36,7 +36,6 @@ struct ContentView: View {
                 instrument: Instruments.guitar,
                 store: container.progressionSelectionStore
             )
-            .id(selectedInstrumentId)
             .tabItem { Label("Chords", systemImage: "pianokeys") }
 
             MasteryView(

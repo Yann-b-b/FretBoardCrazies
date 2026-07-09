@@ -29,4 +29,6 @@ enum Progressions {
     static func byId(_ id: String) -> Progression? {
         all.first { $0.id == id }
     }
+
+    static var defaultProgression: Progression { all[0] }
 }

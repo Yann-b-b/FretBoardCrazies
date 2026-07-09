@@ -16,7 +16,7 @@ struct ProgressionSelectionStore {
 
     var progression: Progression {
         let id = defaults.string(forKey: Key.progression)
-        return Progressions.all.first { $0.id == id } ?? Progressions.byId("major-ii-v-i")!
+        return Progressions.all.first { $0.id == id } ?? Progressions.defaultProgression
     }
 
     var tonic: NoteName {
