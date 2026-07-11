@@ -31,6 +31,13 @@ struct ContentView: View {
             .id("\(touchMode)-\(selectedInstrumentId)")
             .tabItem { Label("Drill", systemImage: "guitars.fill") }
 
+            ChordProgressionView(
+                session: container.makeProgressionSession(),
+                instrument: Instruments.guitar,
+                store: container.progressionSelectionStore
+            )
+            .tabItem { Label("Chords", systemImage: "pianokeys") }
+
             MasteryView(
                 progressRepository: container.drillProgressRepository,
                 dailyHistoryStore: container.dailyHistoryStore,
@@ -59,13 +66,19 @@ struct ContentView: View {
             )
             .id("\(touchMode)-\(selectedInstrumentId)")
         case 1:
+            ChordProgressionView(
+                session: container.makeProgressionSession(),
+                instrument: Instruments.guitar,
+                store: container.progressionSelectionStore
+            )
+        case 2:
             MasteryView(
                 progressRepository: container.drillProgressRepository,
                 dailyHistoryStore: container.dailyHistoryStore,
                 instrument: container.currentInstrument
             )
             .id(selectedInstrumentId)
-        case 2:
+        case 3:
             TunerView(viewModel: container.makeTunerViewModel())
         default:
             SettingsView()
@@ -79,6 +92,7 @@ private struct NavRail: View {
 
     private let items: [(label: String, icon: String)] = [
         ("Drill", "guitars.fill"),
+        ("Chords", "pianokeys"),
         ("Progress", "chart.bar.fill"),
         ("Tuner", "tuningfork"),
         ("Settings", "gearshape.fill")
