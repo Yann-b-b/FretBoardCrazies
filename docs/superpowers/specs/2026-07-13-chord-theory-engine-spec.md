@@ -153,7 +153,7 @@ Derived from the theory's own difficulty ordering (color survey §5.2: *plain 7t
 |---|---|---|---|
 | **T1 — Diatonic core** | `maj7 m7 7 m7b5 6 m6 6/9` | `resolve-dominant ii-to-V diatonic-motion tonic-color` | play changes: ii–V–I, I→IV→V, dominant resolutions, stable tonic colors |
 | **T2 — Dominant color & secondary motion** | `9 13 maj9` | `dominant-upgrade secondary-dominant` | upgrade dominants; tonicize diatonic targets (backdoor & secondary ii–V emerge here) |
-| **T3 — Alteration, subs & minor color** | `7b9 7#9 7#5 7alt m(maj7)` | `tritone-sub mode-mixture-iiø dominant-alter minor-line-cliche` | alter the dominant; tritone sub; minor-borrowing & the minor-line cliché |
+| **T3 — Alteration, subs & minor color** | `7b9 7#9 7#5 7alt m(maj7)` | `tritone-sub mode-mixture-iiø mode-mixture-iv dominant-alter minor-line-cliche` | alter the dominant; tritone sub; borrowed iv (backdoor entry); minor-borrowing & the minor-line cliché |
 | **T4 — Extended & passing** | `maj7#11 m9 m11 m13 m6/9 dim7 7sus4 9sus4` | `dim-passing dim-resolve sus-delay extended-color` | whole-step passing dim7, extended colors, sus delay |
 
 **Unlock metric (dev-tunable constants, seeded here):** during a timed run the engine tracks **time-to-play** (chord-becomes-current → correct root heard) per chord; when the **rolling average over `sustainWindow` clears `targetTimePerChord`**, the next tier unlocks. Seed: `targetTimePerChord = 1.5s`, `sustainWindow = 10 min` rolling. Rolling-average (not streak) for forgiveness. These are constants, not user settings. `[V]`
