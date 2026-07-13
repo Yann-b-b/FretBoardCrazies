@@ -7,7 +7,7 @@
 - Interval annotations conform to the E6 standard-tuning map used by `ChordFormulaConformanceTests` (s6:o, s5:5+o, s4:10+o, s3:3+o, s2:7+o, s1:o mod 12).
 - **Fingers** are not in this sheet; the catalog auto-assigns sensible fingerings (correctable later).
 
-**Engine-quality coverage (23 qualities in `EngineQualities.all`):** covered here — maj7, 6, 6/9, m7, m6, m7b5, m(maj7), m9, m11, m13, m6/9, 7, 7#5, 7sus4, 9, 7b9, 7#9, 9sus4, 13, dim7. **Missing grips:** `maj9`, `maj7#11`, `7alt`. **Extra shapes here without an engine quality (bonus, set aside for v1):** m7/6, m(add9), m6/9(add11), m7(add11), 9(♯11), 13sus4, 13(♯11), Aug.
+**Engine-quality coverage (23 qualities in `EngineQualities.all`):** ALL 23 covered (maj9, maj7#11, 7alt added below). **Bonus shapes here without an engine quality (parked for later):** m7/6, m(add9), m6/9(add11), m7(add11), 9(♯11), 13sus4, 13(♯11), Aug.
 
 ---
 
@@ -23,6 +23,8 @@ To play a shape anywhere: slide the whole pattern so "0" lands on the root note 
 | Maj7 (v2) | 6th | 0 2 1 1 x x | R 5 7 3 x x | Fmaj7: 1 3 2 2 x x |
 | 6 | 6th | 0 x −1 1 0 x | R x 6 3 5 x | F♯6: 2 x 1 3 2 x |
 | M6/9 | 6th | 0 x −1 −1 −3 x | R x 6 9 3 x | G6/9: 3 x 2 2 0 x |
+| Maj9 | 6th | 0 x 1 1 0 2 | R x 7 3 5 9 | Gmaj9: 3 x 4 4 3 5 |
+| Maj7(♯11) | 6th | 0 x 1 1 −1 −1 | R x 7 3 ♯11 7 | Gmaj7♯11: 3 x 4 4 2 2 (thumb over the low root) |
 
 ## Minor-type
 
@@ -57,6 +59,7 @@ To play a shape anywhere: slide the whole pattern so "0" lands on the root note 
 | 13 | 6th | 0 x 0 1 2 x | R x b7 3 13 x | F13: 1 x 1 2 3 x |
 | 13sus4 | 6th | 0 x 0 2 2 x | R x b7 4 13 x | F13sus4: 1 x 1 3 3 x |
 | 13(♯11) | 6th | 0 1 0 1 2 x | R ♯11 b7 3 13 x | F13♯11: 1 2 1 2 3 x |
+| 7alt (♯5♯9) | 6th | 0 −1 0 0 1 x | R 3 b7 ♯9 ♯5 x | G7alt: 3 2 3 3 4 x |
 
 ## Symmetric / altered triads
 
