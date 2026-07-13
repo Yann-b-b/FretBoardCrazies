@@ -72,13 +72,13 @@ Each quality: `formula` = semitone intervals from the root (may exceed 12 for ex
 | `maj7#11` | Lydian maj7 | 0,4,7,11,18 | Lydian | — (none) | tonic-sub (terminal) / IV | NEW |
 | `9` | dominant 9 | 0,4,7,10,14 | Mixolydian | 11 | dominant | NEW |
 | `13` | dominant 13 | 0,4,7,10,14,21 | Lydian-dom (♯11) | 11 (nat) | dominant | NEW |
-| `7b9` | dom 7♭9 | 0,4,7,10,13 | HW-diminished | — | dominant (V of minor) | NEW |
+| `7b9` | dom 7♭9 | 0,4,7,10,13 | HW-diminished (from dom root) | — | dominant (V of minor) | NEW |
 | `7#9` | dom 7♯9 | 0,4,7,10,15 | altered | — | dominant | NEW |
 | `7#5` | dom 7♯5 | 0,4,8,10 | whole-tone/alt | — | dominant | NEW |
 | `7alt` | altered dom | 0,4,10,13,15,18,20 | altered (7th mel-min) | — | dominant (resolving) | NEW |
 | `7sus4` | dom 7 sus4 | 0,5,7,10 | Mixolydian | — | dominant (delayed) | NEW |
 | `9sus4` | dom 9 sus4 | 0,5,7,10,14 | Mixolydian | — | dominant (delayed) | NEW |
-| `dim7` | diminished 7 | 0,3,6,9 | HW-diminished | — | passing / rootless ♭9 dom | NEW |
+| `dim7` | diminished 7 | 0,3,6,9 | WH-diminished (from dim7 root) | — | passing / rootless ♭9 dom | NEW |
 | `m9` | minor 9 | 0,3,7,10,14 | Dorian | — | ii/iv (m7-family color) | NEW |
 | `m11` | minor 11 | 0,3,7,10,14,17 | Dorian | — | ii/iv (m7-family color) | NEW |
 | `m13` | minor 13 | 0,3,7,10,14,21 | Dorian | — | ii/iv (m7-family color) | NEW |
@@ -87,38 +87,60 @@ Each quality: `formula` = semitone intervals from the root (may exceed 12 for ex
 
 **R1 (folded):** minor Dorian qualities (`m7 m9 m11 m13 m6 m6/9`) have **no internal avoid-note** — do NOT port the major avoid-11 rule onto them (a source claimed the m13's 11 clashes with the ♭3; pitch arithmetic shows it's a consonant major 9th). `m9/m11/m13` are **color flags on the `m7`-family**: they inherit the underlying chord's function (ii/iv) and never reclassify it — only `m6 / m(maj7) / m6/9` are tonic-minor colors. `maj9`/`maj7#11` are **position-dependent** (tonic-color at `I`, pre-dominant at `IV`); `maj7#11` is also a valid **terminal** tonic-substitute. `6/9` is a distinct tonic branch (peer-reviewed, *MTO* 29.2) with a structurally-required 5th; `m6/9` stays pedagogical (T4). *(color survey §1 + R1: 17 CONFIRMED / 4 standard / 1 source-error corrected by arithmetic.)*
 
-## 5. Rule set (each rule = an algorithm)
+## 5. Rule set (generators)
 
-Each rule: `id`, an `applies(current, key) -> Bool`, a `candidates(current, key) -> [ChordSymbol]`, a `keyShift` effect (§8), and the tier that unlocks it (§7). All degree math is mod 12. `V7ofDegree(d) = (degree: (d+7) mod 12, "7")` — the dominant a fifth above `d`. `tritoneOf(d) = (d+6) mod 12`.
+The engine is a **candidate generator + ranker**, not a template player. Given the current chord `C = (degree d, quality q)` and key `K`, every generator whose `applies` matches contributes candidate next-chords tagged with a `ruleId`; §6 ranks them and caps to 3–5. **Generators fire on ANY current chord — diatonic or not.** This is the fix for the two defects the simulation caught: a non-tonic dominant must still resolve, and a multi-chord idiom must continue from its (non-diatonic) middle chord instead of being emitted as a monolithic template that strands the player.
 
-| ruleId | applies when current is… | candidates | keyShift | tier |
-|---|---|---|---|---|
-| `diatonic-step` | any diatonic chord | the diatonic chords one scale-step above and below current's degree (from §3 table for the key) | none | T1 |
-| `ii-to-V` | the `ii` (deg 2, `m7`\|`m7b5`) | `V7` = (deg 7, `7`) [minor: `7b9`] | none | T1 |
-| `V-to-I` | the `V` (deg 7, dominant) | tonic: major → (0,`maj7`\|`6/9`\|`maj9`); minor → (0,`m6`\|`m(maj7)`) | none | T1 |
-| `tonic-color` | the `I`/`i` (deg 0) | major → (0,`6/9`),(0,`maj9`),(0,`maj7#11`); minor → (0,`m6`),(0,`m(maj7)`),(0,`m6/9`) | none | T1 |
-| `dominant-upgrade` | any dominant (`7`) | same degree as `9`, then `13` | none | T2 |
-| `secondary-dominant` | any diatonic chord T | for each diatonic target x (ii, iii, IV, V, vi), `V7ofDegree(x.degree)` = (x.degree+7, `7`\|`7b9`) | **tonicize(x)** | T2 |
-| `tritone-sub` | any dominant resolving to target t | `(tritoneOf(dominant.degree), "7")` — resolves to t by ♭II7, chromatic bass | inherits dominant's | T2 |
-| `mode-mixture-iiø` | the `ii` (deg 2, `m7`) | (2, `m7b5`) — borrow ♭6 | none | T3 |
-| `mode-mixture-V7b9` | the `V` (deg 7, `7`) | (7, `7b9`) | none | T3 |
-| `altered-dominant` | the `V` (deg 7, dominant) | (7,`7#9`),(7,`7b9`),(7,`7alt`) + US triad note (explanation) | none | T3 |
-| `dim-passing` | a diatonic chord followed by a step-up diatonic chord | passing `(current.degree+1 mod 12, "dim7")` between current and the diatonic chord a step above (rootless ♭9 dom pulling up) | none | T4 |
-| `backdoor-ii-V` `[R2]` | the `I`/`IV` in major | `(5,"m7")` then `(10,"7")` → resolves to I (♭VII7 backdoor) | none | T4 |
-| `minor-line-cliche` `[R2]` | the `i` (minor, deg 0) | ordered `(0,"m(maj7)") → (0,"m7") → (0,"m6")` chromatic top-voice descent | none | T3 |
-| `extended-color` `[R1]` | tonic or `ii`/`iv` | tier-appropriate colors: `maj9`,`maj7#11` (major tonic/IV); `m9`,`m11`,`m13` (ii/iv); `m6/9`,`m(maj7)` (minor tonic) | none | T4 |
-| `turnaround` `[R2]` | the `I`/`i` at a phrase end | `I–vi–ii–V` and subs `I–VI7–ii–V`, `iii–VI7–ii–V`, tritone-sub turnaround `I–♭III7–♭VI7–♭II7`, Ladybird `Imaj7–♭IIImaj7–♭VImaj7–♭IImaj7` | in-key (≤ tonicization) | T4 |
+Helpers (all degree math mod 12, tonic-relative):
+- `diaQual(deg, K)` — the diatonic quality (§3 table for `K`) at a degree, or `nil` if chromatic.
+- `isDominant(q)` = `q ∈ {7,9,13,7b9,7#9,7#5,7alt,7sus4,9sus4}`.
+- `isMinorSeventh(q)` = `q ∈ {m7,m9,m11,m13,m7b5}` (a "ii-capable" chord).
+- `isTonicHere(C)` = `d == 0` (a tonic-color quality at deg 0 still counts as the tonic — resolves the m6-vs-m7 recognition ambiguity).
+- `targets(K)` — tonicizable diatonic degrees (stable triads; excludes the tonic and the dim/half-dim): major `{2,4,5,7,9}` (ii,iii,IV,V,vi); minor `{3,5,7,8,10}` (♭III,iv,V,♭VI,♭VII).
 
-**Rationale provenance (research folded 2026-07-13):** the relationship-graph edges (`secondary-dominant`, `tritone-sub`, `mode-mixture-*`, `dim7≈rootless♭9`, `tonic-color`, minor ii–V–i) are CONFIRMED (color survey §5.1, voice-leading survey). **R2 confirmed** (closing the round-3 gap, by 2–3 sources + pitch arithmetic): `minor-line-cliche` — the **forced ordered chain** `i→i(maj7)→i7→i6` then routing to the **3rd of the next V7**, static tonic, **no key change** (`i6 ≡ rootless V9 of the relative major`); `backdoor-ii-V` (`ivm7→♭VII7→I`, both borrowed from parallel minor, **no modulation**); `dim-passing` (each `♯x°7` is a **rootless secondary V7♭9** of the next diatonic chord, connector only); the **secondary ii–V** 5-row table (over ii/iii/IV/V/vi — **tonicization, NOT modulation**); and the turnaround subs (all **in-key**). `extended-color` movement per **R1** (see §4 note).
+| ruleId | applies when current is… | candidates (each tagged with its ruleId) | tier |
+|---|---|---|---|
+| `resolve-dominant` | `isDominant(q)` | **down-a-5th** `((d+5)%12, diaQual‖maj7)`; **down-a-½** `((d+11)%12, diaQual‖maj7)`; **backdoor** if `d==10` also `(0, tonic-quality)`. §6 prefers whichever lands on a home-diatonic chord / the tonic. | T1 |
+| `ii-to-V` | `isMinorSeventh(q)` | `((d+5)%12, "7")` — any minor chord treated as a ii offering its dominant (home ii→V, secondary ii→V, and the backdoor middle `Fm7→B♭7` all fall out of this) | T1 |
+| `diatonic-motion` | `diaQual(d,K)!=nil` or `isTonicHere` | diatonic chords at **down-a-5th** `(d+5)`, **up-a-5th** `(d+7)`, and **step up/down** — filtered to `diatonic(K)`. Generates I→IV, I→V, IV→I, ii→V, V→I, and steps. | T1 |
+| `tonic-color` | `isTonicHere(C)` | major `(0,6/9),(0,maj9),(0,maj7#11)`; minor `(0,m6),(0,m(maj7)),(0,m6/9)` | T1 |
+| `dominant-upgrade` | `q == 7` | `(d,9),(d,13)` | T2 |
+| `secondary-dominant` | `diaQual(d,K)!=nil` or `isTonicHere` | for each `x ∈ targets(K)`: `((x+7)%12, "7")` = V7/x — **tonicizes x (§8)** | T2 |
+| `tritone-sub` | `isDominant(q)` | `((d+6)%12, "7")` — substitute dominant a tritone away; its own resolution then comes from `resolve-dominant` | T3 |
+| `mode-mixture-iiø` | `d==2, q==m7` (major) | `(2, m7b5)` — borrow ♭6 | T3 |
+| `dominant-alter` | `isDominant(q)` on the V (`d==7`) or any secondary dom | `(d,7b9),(d,7#9),(d,7#5),(d,7alt)` (+ the upper-structure triad in the explanation) | T3 |
+| `minor-line-cliche` | `isTonicHere` (minor) | ordered chain `(0,m(maj7))→(0,m7)→(0,m6)`, routing to the 3rd of the next V | T3 |
+| `dim-passing` | `diaQual(d,K)!=nil` **and** a diatonic chord sits a **whole step (2 semitones)** above `d` | `((d+1)%12, "dim7")` — the `♯x°7` (rootless secondary V7♭9 of the upper chord). The whole-step guard prevents the tonic/IV-root misfire the audit caught on half-step pairs. | T4 |
+| `dim-resolve` | `q == dim7` | `((d+1)%12, diaQual‖m7)` — the passing dim resolves up a half-step, so chains continue | T4 |
+| `sus-delay` | `isDominant(q)` on `d==7` | `(d,7sus4),(d,9sus4)` — delayed dominant; then resolves via `resolve-dominant` | T4 |
+| `extended-color` | `isMinorSeventh` (ii/iv) or `isTonicHere`/IV (major) | ii/iv → `(d,m9),(d,m11),(d,m13)`; major tonic/IV → `(d,maj9),(d,maj7#11)` | T4 |
+
+**Idioms emerge; they are not templates.** The backdoor (`iv m7 → ♭VII7 → I`), secondary ii–V (`ii/x → V7/x → x`), turnarounds (`I–vi–ii–V` and subs), and dim passing chains are **not** monolithic rules — a monolithic rule emits its whole chain and, in a single-step engine, strands the middle chords (the C2 defect). They **emerge** from the generalized generators firing chord-by-chord: from a borrowed `Fm7`, `ii-to-V` offers `B♭7`; from `B♭7` (deg 10), `resolve-dominant`'s backdoor branch offers `Cmaj7`. §6 recognizes a completed shape for the breadcrumb/explanation label.
+
+**Every §4 quality is now emitted by some rule** (closing the audit's dangling-quality finding): `7#5` via `dominant-alter`; `7sus4`/`9sus4` via `sus-delay`; `dim7` via `dim-passing`; `m9/m11/m13` via `extended-color`; the rest via the diatonic/color/resolution rules.
+
+**Provenance:** relationship-graph edges CONFIRMED (color survey §5.1, voice-leading survey). R2 confirmed every move here is **in-key** (§8: tonicization, not modulation). `extended-color` per R1 (§4 note). The generalized-resolution + emergent-idiom model is the redesign that resolves the simulation's C1/C2.
 
 ## 6. Ranking
 
-`rank(candidate) =` sort by, in order:
-1. **Functional strength** (highest first): a resolving dominant→tonic (`V-to-I`, `tritone-sub` into tonic) > `ii-to-V` motion > `secondary-dominant` (tonicizing) > diatonic step > color swaps (`tonic-color`, `dominant-upgrade`, `extended-color`) > passing (`dim-passing`).
-2. **Tonic-stability** (for resting/target chords): major tonic `6/9` ≈ `maj7#11` > `maj9` > `maj7`; minor tonic `m6` ≈ `m(maj7)` > `m6/9` > `m9` > `m triad`; `m7` is NOT a tonic. *(deployment survey §A/B — CONFIRMED.)*
-3. **Tier** — only surface candidates whose quality AND ruleId are unlocked in the current tier (§7). Show the top **3–5**.
+Collect every generator's candidates; **dedup** by `(degree, quality)` keeping the highest-priority `ruleId`; score by **functional band** (below); tiebreak within a band; apply the **tier filter**; then **cap to the top 3–5**.
 
-`[V]` The exact numeric scoring + tie-breaks are validated by the progression-simulation pass.
+**Bands (highest → lowest):**
+1. **Resolution onto the tonic / home-diatonic** — a `resolve-dominant` / `dim-resolve` / leading-tone move landing on a home-diatonic chord, **tonic first** (V→I, secondary-dom→its target, tritone→I, backdoor→I, vii°→i). Every dominant now has a strong, correctly-ranked resolution.
+2. **ii→V** — a `ii-to-V` move (home ii first, then secondary ii→V).
+3. **Descending-fifth diatonic motion** — `diatonic-motion` by down-a-fifth (I→IV, vi→ii, ii→V).
+4. **Secondary dominant** — `secondary-dominant`, **capped to the 2 most idiomatic targets** (V/V, V/ii before V/vi, V/iii, V/IV). Sits *below* home diatonic motion, so it never crowds out the ii and colors — fixing the "5 equal secondary dominants / 20+ candidate" overload.
+5. **Other diatonic motion** — up-a-fifth and steps (I→V, plagal IV→I, I→ii).
+6. **Color / upgrade** — `tonic-color`, `dominant-upgrade`, `dominant-alter`, `extended-color`, `minor-line-cliche` start; ordered by **tonic-stability**: major `6/9 ≈ maj7#11 > maj9 > maj7`; minor `m6 ≈ m(maj7) > m6/9 > m9 > triad`; `m7` is never a tonic. *(deployment survey §A/B.)*
+7. **Substitution / passing / idiom-entry** — `tritone-sub`, `dim-passing`, `sus-delay`, borrowed-iv / turnaround entry.
+
+**Tiebreak within a band:** (a) prefer the tonic, then home-diatonic targets; (b) smaller root motion (voice-leading proximity); (c) for a dominant's competing resolutions, down-a-fifth over down-a-half-step **unless** the half-step lands on the tonic (so `D♭7→C` wins for a tritone sub, and the leading-tone pull home is rewarded).
+
+**Tier filter (AND-gate):** surface a candidate only if BOTH its `ruleId` and its `quality` are unlocked in the current tier (§7). At T1 this means `tonic-color` effectively yields just `6/9`/`m6` (its `maj9`/`maj7#11`/`m(maj7)` candidates are quality-gated to later tiers) — expected, not a bug.
+
+**Cap:** top **3–5** after banding + tiebreak.
+
+`[V]` Exact numeric weights + tiebreak thresholds confirmed by the re-run progression simulation.
 
 ## 7. Tier ladder
 
@@ -126,10 +148,10 @@ Derived from the theory's own difficulty ordering (color survey §5.2: *plain 7t
 
 | Tier | Adds qualities | Adds ruleIds | Musical idea |
 |---|---|---|---|
-| **T1 — Diatonic core** | `maj7 m7 7 m7b5 6 m6 6/9` | `diatonic-step ii-to-V V-to-I tonic-color` | play changes: ii–V–I, diatonic motion, stable tonic colors |
-| **T2 — Dominant color & secondary motion** | `9 13 maj9` | `dominant-upgrade secondary-dominant tritone-sub` | upgrade dominants; tonicize; chromatic bass |
-| **T3 — Alteration & minor color** | `7b9 7#9 7#5 7alt m9 m(maj7)` | `mode-mixture-iiø mode-mixture-V7b9 altered-dominant minor-line-cliche` | alter the dominant; minor-borrowing; minor-line cliché |
-| **T4 — Extended & passing** | `maj7#11 m11 m13 m6/9 dim7 7sus4 9sus4` | `dim-passing extended-color backdoor-ii-V turnaround` | passing dim7, extended colors, backdoor & turnaround subs |
+| **T1 — Diatonic core** | `maj7 m7 7 m7b5 6 m6 6/9` | `resolve-dominant ii-to-V diatonic-motion tonic-color` | play changes: ii–V–I, I→IV→V, dominant resolutions, stable tonic colors |
+| **T2 — Dominant color & secondary motion** | `9 13 maj9` | `dominant-upgrade secondary-dominant` | upgrade dominants; tonicize diatonic targets (backdoor & secondary ii–V emerge here) |
+| **T3 — Alteration, subs & minor color** | `7b9 7#9 7#5 7alt m(maj7)` | `tritone-sub mode-mixture-iiø dominant-alter minor-line-cliche` | alter the dominant; tritone sub; minor-borrowing & the minor-line cliché |
+| **T4 — Extended & passing** | `maj7#11 m9 m11 m13 m6/9 dim7 7sus4 9sus4` | `dim-passing dim-resolve sus-delay extended-color` | whole-step passing dim7, extended colors, sus delay |
 
 **Unlock metric (dev-tunable constants, seeded here):** during a timed run the engine tracks **time-to-play** (chord-becomes-current → correct root heard) per chord; when the **rolling average over `sustainWindow` clears `targetTimePerChord`**, the next tier unlocks. Seed: `targetTimePerChord = 1.5s`, `sustainWindow = 10 min` rolling. Rolling-average (not streak) for forgiveness. These are constants, not user settings. `[V]`
 
@@ -158,7 +180,7 @@ Theory reads in flats where function demands (`♭II7` = D♭7 in C, not C#7); t
 | ruleId | short | long |
 |---|---|---|
 | `V-to-I` | "resolves home" | "the 7th of V falls a half-step to the 3rd of I while a common tone holds." |
-| `ii-to-V` | "sets up the V" | "ii→V is the core jazz motion; the 7th of ii becomes the 3rd of V." |
+| `ii-to-V` | "sets up the V" | "ii→V is the core jazz motion; the 7th of ii falls a half-step to the 3rd of V." |
 | `tonic-color` | "colors the tonic" | "6/9 and maj7♯11 rest without the maj7 leading-tone bite (the 11 is the avoid note)." |
 | `secondary-dominant` | "V7 of the next chord" | "a dominant borrowed to tonicize the next target — e.g. A7 pulls to Dm (ii)." |
 | `tritone-sub` | "♭II7 — tritone sub" | "D♭7 subs for G7: same 3rd & 7th, and the bass moves chromatically D♭→C." |
