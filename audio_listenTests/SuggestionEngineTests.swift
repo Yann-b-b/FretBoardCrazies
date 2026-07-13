@@ -44,11 +44,12 @@ struct SuggestionEngineTests {
         #expect(contains(result, degree: 2, quality: "m7"))
     }
 
-    @Test func backdoorEntryFromTonicOffersTheBorrowedIv() {
-        let context = SuggestionContext(key: cMajor, tierLevel: 4, pendingTonic: nil)
-        let result = SuggestionEngine.suggest(current: ChordSymbol(degree: 0, qualityId: "maj7"), context: context)
+    @Test func backdoorEntryIsGenerated() {
+        let candidates = SuggestionGenerators.all(current: ChordSymbol(degree: 0, qualityId: "maj7"), key: cMajor)
 
-        #expect(contains(result, degree: 5, quality: "m7"))
+        #expect(candidates.contains { $0.chord == ChordSymbol(degree: 5, qualityId: "m7") && $0.ruleId == .modeMixtureIv })
+        // Continuation once entered (Fm7 -> Bb7 -> Cmaj7) is covered by
+        // idiomContinuesFm7ToBFlat7 and idiomContinuesBFlat7BackdoorsToTonic above.
     }
 
     @Test func minorCadenceResolvesToTonicColorNotBareM7() {
