@@ -1,7 +1,7 @@
 # Chord Theory Engine — Implementation-Ready Spec
 
 **Date:** 2026-07-13
-**Status:** Research folded (R1 + R2 complete, 2026-07-13); pending Phase V validation. `[V]` marks claims the validation phase confirms.
+**Status:** VALIDATED (2026-07-13) — R1/R2 research folded; theory-correctness audit + two progression-simulation rounds passed (0 Critical outstanding; all Important findings folded). Ready to encode.
 **Purpose:** The single source of truth that fuels the chord-suggestion engine's **progression generation** and **tier ladder**. Distilled from the three jazz surveys (`docs/research/2026-07-09-*`, `2026-07-10-*`) + the two 2026-07-13 rounds, de-conflicted against what those surveys **refuted** and flagged **unverified**, and pinned to algorithms an engineer can implement + TDD without making theory decisions.
 **Builds on:** the engine design `2026-07-10-chord-suggestion-engine-design.md` (this spec is that design's theory, made concrete) and the existing chord domain (`ChordQualities`, `Voicings`, `ChordNaming`, `ProgressionSession`).
 
@@ -96,20 +96,23 @@ Helpers (all degree math mod 12, tonic-relative):
 - `isDominant(q)` = `q ∈ {7,9,13,7b9,7#9,7#5,7alt,7sus4,9sus4}`.
 - `isMinorSeventh(q)` = `q ∈ {m7,m9,m11,m13,m7b5}` (a "ii-capable" chord).
 - `isTonicHere(C)` = `d == 0` (a tonic-color quality at deg 0 still counts as the tonic — resolves the m6-vs-m7 recognition ambiguity).
+- `isDiatonic(C,K)` = `diaQual(d,K) == q` — the current chord IS the key's diatonic chord at its degree (degree AND quality), not merely sitting on a diatonic degree.
+- `resolutionQualityAt(deg,K)` = the quality a dominant resolves ONTO at `deg`: if `deg==0` the tonic **color** (major `maj7`, minor `m6`), else `diaQual(deg,K)` (fallback `maj7`). Gives the tonic its stable color instead of a bare `m7`.
 - `targets(K)` — tonicizable diatonic degrees (stable triads; excludes the tonic and the dim/half-dim): major `{2,4,5,7,9}` (ii,iii,IV,V,vi); minor `{3,5,7,8,10}` (♭III,iv,V,♭VI,♭VII).
 
 | ruleId | applies when current is… | candidates (each tagged with its ruleId) | tier |
 |---|---|---|---|
-| `resolve-dominant` | `isDominant(q)` | **down-a-5th** `((d+5)%12, diaQual‖maj7)`; **down-a-½** `((d+11)%12, diaQual‖maj7)`; **backdoor** if `d==10` also `(0, tonic-quality)`. §6 prefers whichever lands on a home-diatonic chord / the tonic. | T1 |
-| `ii-to-V` | `isMinorSeventh(q)` | `((d+5)%12, "7")` — any minor chord treated as a ii offering its dominant (home ii→V, secondary ii→V, and the backdoor middle `Fm7→B♭7` all fall out of this) | T1 |
-| `diatonic-motion` | `diaQual(d,K)!=nil` or `isTonicHere` | diatonic chords at **down-a-5th** `(d+5)`, **up-a-5th** `(d+7)`, and **step up/down** — filtered to `diatonic(K)`. Generates I→IV, I→V, IV→I, ii→V, V→I, and steps. | T1 |
+| `resolve-dominant` | `isDominant(q)` | **down-a-5th** `((d+5)%12, resolutionQualityAt)`; **down-a-½** `((d+11)%12, resolutionQualityAt)` *(only if that degree is diatonic or the tonic — skips non-functional maj7 landings like D♭maj7-from-D7)*; **backdoor** if `d==10` also `(0, tonic-color)`. §6 prefers whichever lands on the tonic / a home-diatonic chord. `resolutionQualityAt` gives the tonic its **color** at deg 0 (minor V→i lands on `m6`, not bare `m7`). | T1 |
+| `ii-to-V` | `isMinorSeventh(q)` **and not** `isTonicHere(C)` | `((d+5)%12, Vq)` where `Vq = 7b9` if `q==m7b5` (half-dim ii ⇒ minor dominant) else `7` — any **non-tonic** minor chord treated as a ii offering its dominant (home ii→V, secondary ii→V, the backdoor middle `Fm7→B♭7`). The `!isTonicHere` guard stops a tonic voiced as `m7` from being misread as a ii (which had derailed the minor-line cliché). | T1 |
+| `diatonic-motion` | `isDiatonic(C,K)` or `isTonicHere` | diatonic chords at **down-a-5th** `(d+5)`, **up-a-5th** `(d+7)`, **step up/down** (nearest diatonic degree by semitone each way — in minor the step-down offers **both** ♭VII and vii°) — filtered to `diatonic(K)`. Generates I→IV, I→V, IV→I, ii→V, V→I, steps. Gating on `isDiatonic` (quality matches, not just degree) stops chromatic chords on diatonic degrees (D7@2, A7@9) from firing it. | T1 |
 | `tonic-color` | `isTonicHere(C)` | major `(0,6/9),(0,maj9),(0,maj7#11)`; minor `(0,m6),(0,m(maj7)),(0,m6/9)` | T1 |
 | `dominant-upgrade` | `q == 7` | `(d,9),(d,13)` | T2 |
-| `secondary-dominant` | `diaQual(d,K)!=nil` or `isTonicHere` | for each `x ∈ targets(K)`: `((x+7)%12, "7")` = V7/x — **tonicizes x (§8)** | T2 |
+| `secondary-dominant` | `isDiatonic(C,K)` or `isTonicHere` | for each `x ∈ targets(K)`: `((x+7)%12, "7")` = V7/x — **tonicizes x (§8)**. Gating on `isDiatonic` stops secondary dominants from spawning further secondary dominants. | T2 |
 | `tritone-sub` | `isDominant(q)` | `((d+6)%12, "7")` — substitute dominant a tritone away; its own resolution then comes from `resolve-dominant` | T3 |
 | `mode-mixture-iiø` | `d==2, q==m7` (major) | `(2, m7b5)` — borrow ♭6 | T3 |
+| `mode-mixture-iv` | `isTonicHere` (major) | `(5, m7)` — the borrowed iv (from parallel minor); the **entry** to the backdoor, which then continues via `ii-to-V`→♭VII7 and `resolve-dominant`→I | T3 |
 | `dominant-alter` | `isDominant(q)` on the V (`d==7`) or any secondary dom | `(d,7b9),(d,7#9),(d,7#5),(d,7alt)` (+ the upper-structure triad in the explanation) | T3 |
-| `minor-line-cliche` | `isTonicHere` (minor) | ordered chain `(0,m(maj7))→(0,m7)→(0,m6)`, routing to the 3rd of the next V | T3 |
+| `minor-line-cliche` | `isTonicHere` (minor), `q ∈ {m6,m(maj7),m7}` | the **next** chord in the fixed descent `m6→m(maj7)→m7→m6` (root→7→♭7→6), keyed on the current tonic-minor quality (a stepwise advance, not a whole chain); from the final `m6` it routes to the 3rd of the next V. Ranks above `ii-to-V` here because `ii-to-V` is excluded on the tonic. | T3 |
 | `dim-passing` | `diaQual(d,K)!=nil` **and** a diatonic chord sits a **whole step (2 semitones)** above `d` | `((d+1)%12, "dim7")` — the `♯x°7` (rootless secondary V7♭9 of the upper chord). The whole-step guard prevents the tonic/IV-root misfire the audit caught on half-step pairs. | T4 |
 | `dim-resolve` | `q == dim7` | `((d+1)%12, diaQual‖m7)` — the passing dim resolves up a half-step, so chains continue | T4 |
 | `sus-delay` | `isDominant(q)` on `d==7` | `(d,7sus4),(d,9sus4)` — delayed dominant; then resolves via `resolve-dominant` | T4 |
@@ -129,7 +132,7 @@ Collect every generator's candidates; **dedup** by `(degree, quality)` keeping t
 1. **Resolution onto the tonic / home-diatonic** — a `resolve-dominant` / `dim-resolve` / leading-tone move landing on a home-diatonic chord, **tonic first** (V→I, secondary-dom→its target, tritone→I, backdoor→I, vii°→i). Every dominant now has a strong, correctly-ranked resolution.
 2. **ii→V** — a `ii-to-V` move (home ii first, then secondary ii→V).
 3. **Descending-fifth diatonic motion** — `diatonic-motion` by down-a-fifth (I→IV, vi→ii, ii→V).
-4. **Secondary dominant** — `secondary-dominant`, **capped to the 2 most idiomatic targets** (V/V, V/ii before V/vi, V/iii, V/IV). Sits *below* home diatonic motion, so it never crowds out the ii and colors — fixing the "5 equal secondary dominants / 20+ candidate" overload.
+4. **Secondary dominant** — `secondary-dominant`, **capped to the 2 targets of highest functional centrality** (mode-neutral): V-of-the-dominant first (V/V), then V of the pre-dominant region (major V/ii, minor V/iv), then the rest (mediant/submediant). Sits *below* home diatonic motion, so it never crowds out the ii and colors — fixing the "5 equal secondary dominants / 20+ candidate" overload.
 5. **Other diatonic motion** — up-a-fifth and steps (I→V, plagal IV→I, I→ii).
 6. **Color / upgrade** — `tonic-color`, `dominant-upgrade`, `dominant-alter`, `extended-color`, `minor-line-cliche` start; ordered by **tonic-stability**: major `6/9 ≈ maj7#11 > maj9 > maj7`; minor `m6 ≈ m(maj7) > m6/9 > m9 > triad`; `m7` is never a tonic. *(deployment survey §A/B.)*
 7. **Substitution / passing / idiom-entry** — `tritone-sub`, `dim-passing`, `sus-delay`, borrowed-iv / turnaround entry.
@@ -138,9 +141,9 @@ Collect every generator's candidates; **dedup** by `(degree, quality)` keeping t
 
 **Tier filter (AND-gate):** surface a candidate only if BOTH its `ruleId` and its `quality` are unlocked in the current tier (§7). At T1 this means `tonic-color` effectively yields just `6/9`/`m6` (its `maj9`/`maj7#11`/`m(maj7)` candidates are quality-gated to later tiers) — expected, not a bug.
 
-**Cap:** top **3–5** after banding + tiebreak.
+**Cap:** top **3–5** after banding + tiebreak. *(Stable tonic colors — 6/9, maj7#11 — surface as **resolution targets and endings** (band 1 when a dominant resolves to the tonic), not from a plain tonic mid-progression; intended, not a gap.)*
 
-`[V]` Exact numeric weights + tiebreak thresholds confirmed by the re-run progression simulation.
+Validated by two progression-simulation rounds (major + minor keys, secondary-dominant chains, tritone & backdoor resolution).
 
 ## 7. Tier ladder
 
@@ -196,5 +199,5 @@ Theory reads in flats where function demands (`♭II7` = D♭7 in C, not C#7); t
 
 - **Refuted claims explicitly NOT used:** the CAGED per-shape root-string mapping (voice-leading survey — refuted 1-2); the "canonical 5 majors + 2 minors" upper-structure count (deployment survey — refuted 1-2); the root/5th/7th upper-structure enumeration (color survey — refuted 0-3). The engine uses only the *confirmed* per-triad US spellings as explanation flavor, never as a ranked list.
 - **Research folded (2026-07-13):** R1 (`docs/research/2026-07-13-extended-color-movement-survey.md`) and R2 (`docs/research/2026-07-13-deployment-patterns-survey.md`) complete. Net: the minor-line cliché, backdoor ii–V, dim7 passing chains, secondary ii–V table, and turnaround subs — previously round-3 **unverified** — are now CONFIRMED (2–3 sources + pitch arithmetic), and all are **in-key (no modulation)**.
-- **Pending validation `[V]`:** ranking numerics, key-shift semantics, tier boundaries — confirmed by the theory-correctness review + progression simulation.
+- **Validation complete (2026-07-13):** a theory-correctness audit (`.superpowers/theory/validation-theory-audit.md`) verified the diatonic backbone, all quality formulas, and all degree math; two progression-simulation rounds (`validation-simulation.md`, `validation-simulation-2.md`) drove the rules by hand. The §5/§6 generator+ranker redesign resolved the dominant-resolution (C1) and idiom-continuation (C2) defects; all Important findings — resolution-quality-at-tonic, `isDiatonic` over-fire gating, backdoor entry (`mode-mixture-iv`), minor-key handling, and the mode-neutral ranking cap — are folded above. 0 Critical outstanding.
 - **Dev-tunable (not theory):** `targetTimePerChord`, `sustainWindow`, exact ranking weights.
