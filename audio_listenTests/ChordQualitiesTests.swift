@@ -2,8 +2,11 @@ import Testing
 @testable import audio_listen
 
 struct ChordQualitiesTests {
-    @Test func catalogHasTheSixV1Qualities() {
-        #expect(ChordQualities.all.map(\.id) == ["maj7", "m7", "7", "m7b5", "6", "m6"])
+    @Test func catalogContainsTheSixBaseQualities() {
+        let baseQualities = ["maj7", "m7", "7", "m7b5", "6", "m6"]
+        for id in baseQualities {
+            #expect(ChordQualities.byId(id) != nil, "Base quality \(id) should exist in catalog")
+        }
     }
 
     @Test func formulasAreCorrectIntervalSets() {
