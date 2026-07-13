@@ -59,6 +59,16 @@ struct SuggestionRankerTests {
         #expect(result.first == downHalfToTonic)
     }
 
+    @Test func resolveDominantLandingOnNonDiatonicChordIsNotBandOne() {
+        let current = ChordSymbol(degree: 1, qualityId: "7")
+        let nonDiatonicResolution = ChordSuggestion(chord: ChordSymbol(degree: 6, qualityId: "maj7"), ruleId: .resolveDominant, keyShiftTonicize: nil)
+        let secondaryDominant = ChordSuggestion(chord: ChordSymbol(degree: 9, qualityId: "7"), ruleId: .secondaryDominant, keyShiftTonicize: 2)
+
+        let result = SuggestionRanker.rank([nonDiatonicResolution, secondaryDominant], current: current, key: cMajor)
+
+        #expect(result.first == secondaryDominant)
+    }
+
     @Test func outputIsCappedAtFive() {
         let current = ChordSymbol(degree: 0, qualityId: "maj7")
         let result = SuggestionRanker.rank(SuggestionGenerators.all(current: current, key: cMajor), current: current, key: cMajor)

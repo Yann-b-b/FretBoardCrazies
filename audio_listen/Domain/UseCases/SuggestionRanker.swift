@@ -13,7 +13,8 @@ enum SuggestionRanker {
     private static func band(_ candidate: ChordSuggestion, current: ChordSymbol, key: Key) -> Int {
         switch candidate.ruleId {
         case .resolveDominant, .dimResolve:
-            return 1
+            let landsHomeDiatonic = DiatonicModel.isTonicHere(candidate.chord) || DiatonicModel.isDiatonic(candidate.chord, key)
+            return landsHomeDiatonic ? 1 : 7
         case .iiToV:
             return 2
         case .diatonicMotion:
