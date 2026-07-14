@@ -9,11 +9,11 @@ struct ChordSuggesterSessionTests {
         #expect(session.lastRuleId == nil)
     }
 
-    @Test func everyLandedChordHasAPlayableVoicing() {
+    @Test func everyRenderedChordHasAPlayableVoicing() {
         let session = ChordSuggesterSession(tonic: .g, tierLevel: 4)
         for _ in 0..<64 {
             session.advance()
-            #expect(Voicings.voicing(qualityId: session.current.qualityId, rootString: .e6) != nil)
+            #expect(Voicings.voicing(qualityId: session.display.qualityId, rootString: .e6) != nil)
         }
     }
 
@@ -37,14 +37,23 @@ struct ChordSuggesterSessionTests {
         #expect(session.lastRuleId == nil)
     }
 
-    @Test func tierFourReachesAColorLockedAtTierOne() {
+    @Test func tierFourWalkPracticesManyExtendedShapes() {
         let session = ChordSuggesterSession(tonic: .c, tierLevel: 4)
-        var seenQualities: Set<String> = []
+        var rendered: Set<String> = []
         for _ in 0..<48 {
             session.advance()
-            seenQualities.insert(session.current.qualityId)
+            rendered.insert(session.display.qualityId)
         }
-        let tierOneQualities = Tiers.unlocked(atLevel: 1).qualityIds
-        #expect(!seenQualities.isSubset(of: tierOneQualities))
+        #expect(rendered.count >= 8)
+        #expect(!rendered.isSubset(of: Tiers.unlocked(atLevel: 1).qualityIds))
+    }
+
+    @Test func tierOneStaysWithinItsUnlockedPalette() {
+        let session = ChordSuggesterSession(tonic: .c, tierLevel: 1)
+        let tierOne = Tiers.unlocked(atLevel: 1).qualityIds
+        for _ in 0..<48 {
+            session.advance()
+            #expect(tierOne.contains(session.display.qualityId))
+        }
     }
 }

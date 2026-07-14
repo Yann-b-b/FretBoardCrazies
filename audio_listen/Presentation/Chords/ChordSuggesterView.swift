@@ -25,7 +25,7 @@ struct ChordSuggesterView: View {
         VStack(spacing: 16) {
             selectors
             header
-            if let current = placed(session.current) {
+            if let current = placed(session.display) {
                 ChordFretboardView(placedChord: current, showFingering: session.revealed)
                     .padding(.horizontal)
             }
@@ -41,7 +41,7 @@ struct ChordSuggesterView: View {
 
     private var header: some View {
         VStack(spacing: 4) {
-            Text(name(session.current))
+            Text(name(session.display))
                 .font(.system(size: 40, weight: .bold, design: .serif))
                 .contentTransition(.numericText())
             if let ruleId = session.lastRuleId {
@@ -53,7 +53,7 @@ struct ChordSuggesterView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
-            if let upcoming = session.upcoming {
+            if let upcoming = session.displayUpcoming {
                 Text("next: \(name(upcoming))")
                     .font(.caption.monospaced())
                     .foregroundStyle(.secondary)
