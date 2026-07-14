@@ -38,6 +38,9 @@ struct ContentView: View {
             )
             .tabItem { Label("Chords", systemImage: "pianokeys") }
 
+            ChordSuggesterView(session: ChordSuggesterSession(), instrument: Instruments.guitar)
+                .tabItem { Label("Suggest", systemImage: "wand.and.stars") }
+
             MasteryView(
                 progressRepository: container.drillProgressRepository,
                 dailyHistoryStore: container.dailyHistoryStore,
@@ -72,13 +75,15 @@ struct ContentView: View {
                 store: container.progressionSelectionStore
             )
         case 2:
+            ChordSuggesterView(session: ChordSuggesterSession(), instrument: Instruments.guitar)
+        case 3:
             MasteryView(
                 progressRepository: container.drillProgressRepository,
                 dailyHistoryStore: container.dailyHistoryStore,
                 instrument: container.currentInstrument
             )
             .id(selectedInstrumentId)
-        case 3:
+        case 4:
             TunerView(viewModel: container.makeTunerViewModel())
         default:
             SettingsView()
@@ -93,6 +98,7 @@ private struct NavRail: View {
     private let items: [(label: String, icon: String)] = [
         ("Drill", "guitars.fill"),
         ("Chords", "pianokeys"),
+        ("Suggest", "wand.and.stars"),
         ("Progress", "chart.bar.fill"),
         ("Tuner", "tuningfork"),
         ("Settings", "gearshape.fill")
