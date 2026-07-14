@@ -19,7 +19,7 @@ enum ChordQualities {
     static let dim7 = ChordQuality(id: "dim7", name: "Diminished 7", symbol: "°7", formula: [0, 3, 6, 9])
     static let m9 = ChordQuality(id: "m9", name: "Minor 9", symbol: "m9", formula: [0, 3, 7, 10, 14])
     static let m11 = ChordQuality(id: "m11", name: "Minor 11", symbol: "m11", formula: [0, 3, 7, 10, 14, 17])
-    static let m13 = ChordQuality(id: "m13", name: "Minor 13", symbol: "m13", formula: [0, 3, 7, 10, 14, 21])
+    static let m13 = ChordQuality(id: "m13", name: "Minor 13", symbol: "m13", formula: [0, 3, 7, 10, 14, 17, 21])
     static let mMaj7 = ChordQuality(id: "m(maj7)", name: "Minor-Major 7", symbol: "m(maj7)", formula: [0, 3, 7, 11])
     static let m6Nine = ChordQuality(id: "m6/9", name: "Minor Six-Nine", symbol: "m6/9", formula: [0, 3, 7, 9, 14])
 

@@ -33,7 +33,7 @@ enum EngineQualities {
     static let dim7 = EngineQuality(id: "dim7", formula: [0, 3, 6, 9], isDominant: false, isMinorSeventh: false, function: .dominant)
     static let m9 = EngineQuality(id: "m9", formula: [0, 3, 7, 10, 14], isDominant: false, isMinorSeventh: true, function: .subdominant)
     static let m11 = EngineQuality(id: "m11", formula: [0, 3, 7, 10, 14, 17], isDominant: false, isMinorSeventh: true, function: .subdominant)
-    static let m13 = EngineQuality(id: "m13", formula: [0, 3, 7, 10, 14, 21], isDominant: false, isMinorSeventh: true, function: .subdominant)
+    static let m13 = EngineQuality(id: "m13", formula: [0, 3, 7, 10, 14, 17, 21], isDominant: false, isMinorSeventh: true, function: .subdominant)
     static let mMaj7 = EngineQuality(id: "m(maj7)", formula: [0, 3, 7, 11], isDominant: false, isMinorSeventh: false, function: .tonic)
     static let m6Nine = EngineQuality(id: "m6/9", formula: [0, 3, 7, 9, 14], isDominant: false, isMinorSeventh: false, function: .tonic)
 

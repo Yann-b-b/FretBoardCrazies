@@ -81,7 +81,7 @@ Each quality: `formula` = semitone intervals from the root (may exceed 12 for ex
 | `dim7` | diminished 7 | 0,3,6,9 | WH-diminished (from dim7 root) | — | passing / rootless ♭9 dom | NEW |
 | `m9` | minor 9 | 0,3,7,10,14 | Dorian | — | ii/iv (m7-family color) | NEW |
 | `m11` | minor 11 | 0,3,7,10,14,17 | Dorian | — | ii/iv (m7-family color) | NEW |
-| `m13` | minor 13 | 0,3,7,10,14,21 | Dorian | — | ii/iv (m7-family color) | NEW |
+| `m13` | minor 13 | 0,3,7,10,14,17,21 | Dorian | — | ii/iv (m7-family color) | NEW |
 | `m(maj7)` | minor-major 7 | 0,3,7,11 | melodic minor | — | **tonic minor** | NEW |
 | `m6/9` | minor 6/9 | 0,3,7,9,14 | Dorian/mel-min | — | **tonic minor** | NEW |
 
