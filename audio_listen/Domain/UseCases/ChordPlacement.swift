@@ -19,7 +19,9 @@ enum ChordPlacement {
 
     static func place(voicing: Voicing, rootPitchClass: Int, instrument: Instrument) -> PlacedChord {
         let rootStringNumber = voicing.rootString.stringNumber
-        let fret = rootFret(rootPitchClass: rootPitchClass, onString: rootStringNumber, instrument: instrument)
+        var fret = rootFret(rootPitchClass: rootPitchClass, onString: rootStringNumber, instrument: instrument)
+        let lowestOffset = voicing.positions.map(\.fretOffset).min() ?? 0
+        while fret + lowestOffset < 0 { fret += 12 }
         let notes = voicing.positions.map { position in
             PlacedNote(
                 string: position.string,

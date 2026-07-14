@@ -22,10 +22,11 @@ struct ChordSuggesterView: View {
     }
 
     var body: some View {
+        let current = placed(session.display)
         VStack(spacing: 16) {
             selectors
-            header
-            if let current = placed(session.display) {
+            header(rootFret: current?.rootFret)
+            if let current {
                 ChordFretboardView(placedChord: current, showFingering: session.revealed)
                     .padding(.horizontal)
             }
@@ -39,11 +40,16 @@ struct ChordSuggesterView: View {
         }
     }
 
-    private var header: some View {
+    private func header(rootFret: Int?) -> some View {
         VStack(spacing: 4) {
             Text(name(session.display))
                 .font(.system(size: 40, weight: .bold, design: .serif))
                 .contentTransition(.numericText())
+            if let rootFret {
+                Text("\(rootFret)fr")
+                    .font(.caption.monospaced())
+                    .foregroundStyle(Color.orange)
+            }
             if let ruleId = session.lastRuleId {
                 Text(Explanations.text(for: ruleId).short)
                     .font(.subheadline)

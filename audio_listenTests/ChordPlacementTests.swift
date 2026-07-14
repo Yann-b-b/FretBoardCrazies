@@ -28,4 +28,24 @@ struct ChordPlacementTests {
         // fingers come from the voicing (m7 is an all-index barre → all finger 1)
         #expect(placed.notes.allSatisfy { $0.finger == 1 })
     }
+
+    // Voicings with negative offsets (6/9 reaches -3) must never draw past the
+    // nut: place raises the root an octave until the whole shape fits.
+    @Test func noVoicingPlacesANegativeFretAtAnyTonic() {
+        for voicing in Voicings.all {
+            for rootPitchClass in 0..<12 {
+                let placed = ChordPlacement.place(voicing: voicing, rootPitchClass: rootPitchClass, instrument: Instruments.guitar)
+                #expect(placed.notes.allSatisfy { $0.fret >= 0 }, "\(voicing.qualityId) at root \(rootPitchClass): \(placed.notes.map(\.fret).sorted())")
+            }
+        }
+    }
+
+    // The octave bump preserves pitch classes: F6/9 (root at fret 1) moves to
+    // fret 13 so its -3 offset lands on fret 10, not -2.
+    @Test func lowRootWithNegativeOffsetBumpsUpAnOctave() {
+        let sixNine = Voicings.voicing(qualityId: "6/9", rootString: .e6)!
+        let placed = ChordPlacement.place(voicing: sixNine, rootPitchClass: 5, instrument: Instruments.guitar) // F
+        #expect(placed.rootFret == 13)
+        #expect(placed.notes.allSatisfy { $0.fret >= 0 })
+    }
 }
