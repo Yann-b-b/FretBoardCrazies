@@ -93,6 +93,8 @@ struct ContentView: View {
 
 #if os(iOS)
 private struct NavRail: View {
+    static let tapTargetSize: CGFloat = 44
+
     @Binding var selection: Int
 
     private let items: [(label: String, icon: String)] = [
@@ -112,7 +114,7 @@ private struct NavRail: View {
                 } label: {
                     Image(systemName: items[index].icon)
                         .font(.footnote)
-                        .frame(width: 32, height: 32)
+                        .frame(width: NavRail.tapTargetSize, height: NavRail.tapTargetSize)
                         .foregroundStyle(selection == index ? Color.accentColor : Color.secondary)
                         .background(selection == index ? Color.accentColor.opacity(0.18) : Color.clear, in: Circle())
                 }
