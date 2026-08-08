@@ -10,6 +10,42 @@ from pathlib import Path
 
 MARKETING_RE = re.compile(r"(MARKETING_VERSION = )([^;]+)(;)")
 BUILD_RE = re.compile(r"(CURRENT_PROJECT_VERSION = )([^;]+)(;)")
+TEAM_RE = re.compile(r"DEVELOPMENT_TEAM = ([^;\s]+);")
+
+
+def version_key(version):
+    return tuple(int(part) for part in re.findall(r"\d+", version))
+
+
+def version_sorts_above(candidate, current):
+    return version_key(candidate) > version_key(current)
+
+
+def development_team(pbxproj):
+    teams = {match.group(1) for match in TEAM_RE.finditer(pbxproj)}
+    if not teams:
+        raise ValueError("no DEVELOPMENT_TEAM found")
+    if len(teams) != 1:
+        raise ValueError(f"DEVELOPMENT_TEAM not uniform: {sorted(teams)}")
+    return teams.pop()
+
+
+def export_options_plist(team):
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+\t<key>method</key>
+\t<string>app-store-connect</string>
+\t<key>teamID</key>
+\t<string>{team}</string>
+\t<key>uploadSymbols</key>
+\t<true/>
+\t<key>destination</key>
+\t<string>export</string>
+</dict>
+</plist>
+"""
 
 
 def pick_ios_simulator(simctl_json):
@@ -187,6 +223,7 @@ def _verify_both_platforms(root, ios_sim):
             ["xcrun", "simctl", "list", "devices", "available", "-j"],
             capture_output=True,
             text=True,
+            env=env,
         )
         if listing.returncode != 0:
             raise SystemExit("could not list iOS simulators")
@@ -198,6 +235,57 @@ def _verify_both_platforms(root, ios_sim):
     )
     if ios.returncode != 0:
         raise SystemExit(f"iOS tests failed (simulator: {ios_sim})")
+
+
+def _archive_for_app_store(root, version):
+    env = {**os.environ, "DEVELOPER_DIR": "/Applications/Xcode.app/Contents/Developer"}
+    pbxproj = (root / "audio_listen.xcodeproj" / "project.pbxproj").read_text()
+    team = development_team(pbxproj)
+    out = root / "build" / f"v{version}"
+    out.mkdir(parents=True, exist_ok=True)
+    archive = out / "audio_listen.xcarchive"
+    options = out / "ExportOptions.plist"
+    options.write_text(export_options_plist(team))
+
+    archived = subprocess.run(
+        [
+            "xcodebuild",
+            "archive",
+            "-project",
+            "audio_listen.xcodeproj",
+            "-scheme",
+            "audio_listen",
+            "-configuration",
+            "Release",
+            "-destination",
+            "generic/platform=iOS",
+            "-archivePath",
+            str(archive),
+        ],
+        cwd=root,
+        env=env,
+    )
+    if archived.returncode != 0:
+        raise SystemExit("archive failed")
+
+    exported = subprocess.run(
+        [
+            "xcodebuild",
+            "-exportArchive",
+            "-archivePath",
+            str(archive),
+            "-exportPath",
+            str(out),
+            "-exportOptionsPlist",
+            str(options),
+        ],
+        cwd=root,
+        env=env,
+    )
+    if exported.returncode != 0:
+        raise SystemExit("export failed")
+    print(f"archived and exported to {out}")
+    print("Upload with Xcode Organizer or Transporter.")
 
 
 def _prepend_changelog(path, entry):
@@ -214,7 +302,15 @@ def _prepend_changelog(path, entry):
 
 
 def run_release(
-    root, version, *, dry_run=False, verify=False, push=False, ios_sim=None, edit=None
+    root,
+    version,
+    *,
+    dry_run=False,
+    verify=False,
+    push=False,
+    archive=False,
+    ios_sim=None,
+    edit=None,
 ):
     root = Path(root)
     edit = edit or _editor_edit
@@ -240,6 +336,17 @@ def run_release(
     existing_tags = git("tag", "--list").split()
     if tag in existing_tags:
         raise SystemExit(f"tag {tag} already exists")
+
+    current_marketing_versions = sorted(
+        {m.group(2).strip() for m in MARKETING_RE.finditer(pbxproj_path.read_text())}
+    )
+    if len(current_marketing_versions) != 1:
+        raise SystemExit(f"MARKETING_VERSION not uniform: {current_marketing_versions}")
+    if not version_sorts_above(version, current_marketing_versions[0]):
+        raise SystemExit(
+            f"version {version} does not sort above the current "
+            f"MARKETING_VERSION {current_marketing_versions[0]}"
+        )
 
     if verify:
         _verify_both_platforms(root, ios_sim)
@@ -317,6 +424,9 @@ def run_release(
         git("clean", "-fd", "--", "CHANGELOG.md", "fastlane", check=False)
         raise
 
+    if archive:
+        _archive_for_app_store(root, version)
+
     push_cmd = "git push origin main --tags"
     if push:
         git("push", "origin", "main", "--tags")
@@ -333,6 +443,7 @@ def main(argv=None):
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--verify", action="store_true")
     parser.add_argument("--push", action="store_true")
+    parser.add_argument("--archive", action="store_true")
     parser.add_argument("--ios-sim", default=None)
     args = parser.parse_args(argv)
     run_release(
@@ -341,6 +452,7 @@ def main(argv=None):
         dry_run=args.dry_run,
         verify=args.verify,
         push=args.push,
+        archive=args.archive,
         ios_sim=args.ios_sim,
     )
 
