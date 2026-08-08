@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WelcomeView: View {
-    let onStart: () -> Void
+    let onStart: (InputMode) -> Void
 
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     private var compact: Bool { verticalSizeClass == .compact }
@@ -27,9 +27,10 @@ struct WelcomeView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(height: compact ? 36 : 48)
-                    Button("Get started", action: onStart)
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
+                    VStack(spacing: 10) {
+                        ForEach(InputMode.allCases, id: \.self, content: entryButton)
+                    }
+                    .frame(maxWidth: 320)
                     Image("flame-large")
                         .resizable()
                         .scaledToFit()
@@ -39,8 +40,21 @@ struct WelcomeView: View {
             .padding(compact ? 20 : 40)
         }
     }
+
+    private func entryButton(for mode: InputMode) -> some View {
+        Button {
+            onStart(mode)
+        } label: {
+            Label(mode.title, systemImage: mode.systemImage)
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(mode == .instrument ? Color.accentColor : Color.secondary)
+        .controlSize(.large)
+        .accessibilityLabel(mode.title)
+    }
 }
 
 #Preview {
-    WelcomeView(onStart: {})
+    WelcomeView(onStart: { _ in })
 }

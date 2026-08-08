@@ -9,7 +9,14 @@ enum AppRoute: Equatable {
 final class RootViewModel: ObservableObject {
     @Published private(set) var route: AppRoute = .welcome
 
-    func enterApp() {
+    private let inputModeStore: InputModeStore
+
+    init(inputModeStore: InputModeStore) {
+        self.inputModeStore = inputModeStore
+    }
+
+    func enterApp(using mode: InputMode) {
+        inputModeStore.save(mode)
         route = .main
     }
 }

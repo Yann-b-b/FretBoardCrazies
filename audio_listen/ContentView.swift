@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  audio_listen
 //
-//  Root view with tabs: Drill | Progress | Tuner | Settings
+//  Root view over the destinations in ReleaseScope.shippingTabs.
 //
 
 import SwiftUI
@@ -11,7 +11,7 @@ struct ContentView: View {
     private let container = AppDependencyContainer.shared
     @AppStorage(GameSettingsKeys.touchMode) private var touchMode = false
     @AppStorage(SelectedInstrumentStore.userDefaultsKey) private var selectedInstrumentId = "guitar"
-    @State private var selection = 0
+    @State private var selection = ReleaseScope.shippingTabs[0]
 
     var body: some View {
         #if os(iOS)
@@ -22,70 +22,44 @@ struct ContentView: View {
                     .padding(.leading, 2)
             }
         #else
-        TabView {
-            DrillView(
-                viewModel: container.makeDrillViewModel(),
-                allowedStringsStore: container.allowedStringsStore,
-                instrument: container.currentInstrument
-            )
-            .id("\(touchMode)-\(selectedInstrumentId)")
-            .tabItem { Label("Drill", systemImage: "guitars.fill") }
-
-            ChordProgressionView(
-                session: container.makeProgressionSession(),
-                instrument: Instruments.guitar,
-                store: container.progressionSelectionStore
-            )
-            .tabItem { Label("Chords", systemImage: "pianokeys") }
-
-            ChordSuggesterView(session: ChordSuggesterSession(), instrument: Instruments.guitar)
-                .tabItem { Label("Suggest", systemImage: "wand.and.stars") }
-
-            MasteryView(
-                progressRepository: container.drillProgressRepository,
-                dailyHistoryStore: container.dailyHistoryStore,
-                instrument: container.currentInstrument
-            )
-            .id(selectedInstrumentId)
-            .tabItem { Label("Progress", systemImage: "chart.bar.fill") }
-
-            TunerView(viewModel: container.makeTunerViewModel())
-                .tabItem { Label("Tuner", systemImage: "tuningfork") }
-
-            SettingsView()
-                .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+        TabView(selection: $selection) {
+            ForEach(ReleaseScope.shippingTabs) { tab in
+                screen(for: tab)
+                    .tabItem { Label(tab.title, systemImage: tab.systemImage) }
+                    .tag(tab)
+            }
         }
         #endif
     }
 
     @ViewBuilder
-    private func screen(for index: Int) -> some View {
-        switch index {
-        case 0:
+    private func screen(for tab: AppTab) -> some View {
+        switch tab {
+        case .drill:
             DrillView(
                 viewModel: container.makeDrillViewModel(),
                 allowedStringsStore: container.allowedStringsStore,
                 instrument: container.currentInstrument
             )
             .id("\(touchMode)-\(selectedInstrumentId)")
-        case 1:
+        case .chords:
             ChordProgressionView(
                 session: container.makeProgressionSession(),
                 instrument: Instruments.guitar,
                 store: container.progressionSelectionStore
             )
-        case 2:
+        case .suggest:
             ChordSuggesterView(session: ChordSuggesterSession(), instrument: Instruments.guitar)
-        case 3:
+        case .progress:
             MasteryView(
                 progressRepository: container.drillProgressRepository,
                 dailyHistoryStore: container.dailyHistoryStore,
                 instrument: container.currentInstrument
             )
             .id(selectedInstrumentId)
-        case 4:
+        case .tuner:
             TunerView(viewModel: container.makeTunerViewModel())
-        default:
+        case .settings:
             SettingsView()
         }
     }
@@ -95,31 +69,22 @@ struct ContentView: View {
 private struct NavRail: View {
     static let tapTargetSize: CGFloat = 44
 
-    @Binding var selection: Int
-
-    private let items: [(label: String, icon: String)] = [
-        ("Drill", "guitars.fill"),
-        ("Chords", "pianokeys"),
-        ("Suggest", "wand.and.stars"),
-        ("Progress", "chart.bar.fill"),
-        ("Tuner", "tuningfork"),
-        ("Settings", "gearshape.fill")
-    ]
+    @Binding var selection: AppTab
 
     var body: some View {
         VStack(spacing: 4) {
-            ForEach(items.indices, id: \.self) { index in
+            ForEach(ReleaseScope.shippingTabs) { tab in
                 Button {
-                    selection = index
+                    selection = tab
                 } label: {
-                    Image(systemName: items[index].icon)
+                    Image(systemName: tab.systemImage)
                         .font(.footnote)
                         .frame(width: NavRail.tapTargetSize, height: NavRail.tapTargetSize)
-                        .foregroundStyle(selection == index ? Color.accentColor : Color.secondary)
-                        .background(selection == index ? Color.accentColor.opacity(0.18) : Color.clear, in: Circle())
+                        .foregroundStyle(selection == tab ? Color.accentColor : Color.secondary)
+                        .background(selection == tab ? Color.accentColor.opacity(0.18) : Color.clear, in: Circle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(items[index].label)
+                .accessibilityLabel(tab.title)
             }
         }
         .padding(4)

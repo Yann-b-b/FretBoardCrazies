@@ -18,6 +18,7 @@ final class AppDependencyContainer {
     let progressionSelectionStore = ProgressionSelectionStore()
 
     private let selectedInstrumentStore = SelectedInstrumentStore()
+    private let inputModeStore = InputModeStore()
     private let allowedNoteNamesProvider: AllowedNoteNamesProviding
 
     var currentInstrument: Instrument { selectedInstrumentStore.selectedInstrument }
@@ -86,7 +87,7 @@ final class AppDependencyContainer {
 
     @MainActor
     func makeRootViewModel() -> RootViewModel {
-        RootViewModel()
+        RootViewModel(inputModeStore: inputModeStore)
     }
 
     @MainActor
