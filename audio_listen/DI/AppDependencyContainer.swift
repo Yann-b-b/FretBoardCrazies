@@ -33,7 +33,7 @@ final class AppDependencyContainer {
     func makeTunerViewModel() -> TunerViewModel {
         let adapter = AudioKitPitchAdapter()
         let detector = DebouncedPitchDetector(wrapping: adapter, stabilityDuration: 0.10)
-        return TunerViewModel(pitchDetector: detector)
+        return TunerViewModel(pitchDetector: detector, microphonePermission: SystemMicrophonePermission())
     }
 
     @MainActor
@@ -45,23 +45,27 @@ final class AppDependencyContainer {
         let touchMode = UserDefaults.standard.bool(forKey: GameSettingsKeys.touchMode)
 
         let input: NoteInputSource
+        let microphonePermission: MicrophonePermissionRequesting?
         let touchSubmit: ((FretPosition) -> Void)?
         let nameNoteProbability: Double
         if touchMode {
             let touch = TouchInputSource(instrument: instrument)
             input = touch
+            microphonePermission = nil
             touchSubmit = { [weak touch] position in touch?.submit(position) }
             nameNoteProbability = 0
         } else {
             let adapter = AudioKitPitchAdapter()
             let detector = DebouncedPitchDetector(wrapping: adapter, stabilityDuration: 0.10)
             input = MicNoteSource(detector: detector)
+            microphonePermission = SystemMicrophonePermission()
             touchSubmit = nil
             nameNoteProbability = 0.25
         }
 
         return DrillViewModel(
             input: input,
+            microphonePermission: microphonePermission,
             touchSubmit: touchSubmit,
             selectNextPrompt: SelectNextPromptUseCase(nameNoteProbability: nameNoteProbability, instrument: instrument),
             updateStats: UpdateItemStatsUseCase(),

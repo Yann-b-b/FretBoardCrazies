@@ -10,8 +10,10 @@ final class DrillViewModel: ObservableObject {
     @Published private(set) var beltRank: BeltRank
     @Published var errorMessage: String?
     @Published private(set) var lastWrongPosition: FretPosition?
+    @Published private(set) var isMicrophoneAccessDenied = false
 
     private let input: NoteInputSource
+    private let microphonePermission: MicrophonePermissionRequesting?
     private let touchSubmit: ((FretPosition) -> Void)?
     private let selectNextPrompt: SelectNextPromptUseCase
     private let updateStats: UpdateItemStatsUseCase
@@ -36,6 +38,7 @@ final class DrillViewModel: ObservableObject {
 
     init(
         input: NoteInputSource,
+        microphonePermission: MicrophonePermissionRequesting? = nil,
         touchSubmit: ((FretPosition) -> Void)? = nil,
         selectNextPrompt: SelectNextPromptUseCase,
         updateStats: UpdateItemStatsUseCase,
@@ -53,6 +56,7 @@ final class DrillViewModel: ObservableObject {
         instrument: Instrument = Instruments.guitar
     ) {
         self.input = input
+        self.microphonePermission = microphonePermission
         self.touchSubmit = touchSubmit
         self.selectNextPrompt = selectNextPrompt
         self.updateStats = updateStats
@@ -84,10 +88,26 @@ final class DrillViewModel: ObservableObject {
         comboCount = 0
         lastWrongPosition = nil
         errorMessage = nil
+        isMicrophoneAccessDenied = false
         guard let prompt = nextPrompt() else {
             errorMessage = "Select at least one string and note to practice."
             return
         }
+        guard let microphonePermission else {
+            begin(prompt: prompt)
+            return
+        }
+        Task {
+            guard await microphonePermission.statusRequestingIfNeeded() == .granted else {
+                isMicrophoneAccessDenied = true
+                errorMessage = MicrophonePermissionCopy.denied
+                return
+            }
+            begin(prompt: prompt)
+        }
+    }
+
+    private func begin(prompt: DrillPrompt) {
         if countdownEnabled {
             beginCountdown(prompt: prompt)
         } else {

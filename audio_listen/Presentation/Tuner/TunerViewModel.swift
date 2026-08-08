@@ -15,17 +15,31 @@ final class TunerViewModel: ObservableObject {
     @Published private(set) var amplitude: Float = 0
     @Published private(set) var isListening = false
     @Published var errorMessage: String?
-    
+    @Published private(set) var isMicrophoneAccessDenied = false
+
     private let pitchDetector: PitchDetectorProtocol
+    private let microphonePermission: MicrophonePermissionRequesting
     private var cancellables = Set<AnyCancellable>()
-    
-    init(pitchDetector: PitchDetectorProtocol) {
+
+    init(pitchDetector: PitchDetectorProtocol, microphonePermission: MicrophonePermissionRequesting) {
         self.pitchDetector = pitchDetector
+        self.microphonePermission = microphonePermission
     }
-    
+
     func startListening() {
         guard !isListening else { return }
         errorMessage = nil
+        isMicrophoneAccessDenied = false
+        Task { await beginListening() }
+    }
+
+    private func beginListening() async {
+        guard await microphonePermission.statusRequestingIfNeeded() == .granted else {
+            isMicrophoneAccessDenied = true
+            errorMessage = MicrophonePermissionCopy.denied
+            return
+        }
+        guard !isListening else { return }
         do {
             pitchDetector.currentPitch
                 .receive(on: DispatchQueue.main)
@@ -41,7 +55,7 @@ final class TunerViewModel: ObservableObject {
             errorMessage = "Could not start microphone: \(error.localizedDescription)"
         }
     }
-    
+
     func stopListening() {
         guard isListening else { return }
         pitchDetector.stop()
