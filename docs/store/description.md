@@ -83,14 +83,16 @@ network requests, and the microphone stream is analysed on-device and discarded.
 
 ## URLs
 
-Both are mandatory in App Store Connect and are not yet hosted. Content is written and ready:
+Both are mandatory in App Store Connect. They are served by GitHub Pages from `site/`, deployed by
+`.github/workflows/pages.yml` on pushes to `main`.
 
-| Field | Source |
-|---|---|
-| Privacy Policy URL | `docs/store/privacy-policy.md` |
-| Support URL | `docs/store/support.md` |
+| Field | URL | Source of copy |
+|---|---|---|
+| Privacy Policy URL | `https://yann-b-b.github.io/FretBoardCrazies/privacy/` | `docs/store/privacy-policy.md` → `site/privacy/index.html` |
+| Support URL | `https://yann-b-b.github.io/FretBoardCrazies/support/` | `docs/store/support.md` → `site/support/index.html` |
 
-GitHub Pages off this repository is the zero-cost way to host both.
+The Markdown under `docs/store/` is the canonical copy and `site/` is its published rendering. Edit
+both together, or the live pages drift from the source.
 
 ## Screenshots
 

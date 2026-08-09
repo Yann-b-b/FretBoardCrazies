@@ -1,5 +1,32 @@
 # Decisions
 
+## 2026-08-09 — Host the mandatory store URLs on GitHub Pages from a dedicated site/ folder
+**Choice:** The privacy-policy and support URLs App Store Connect requires are served by GitHub
+Pages from a `site/` folder containing hand-written HTML, deployed by a GitHub Actions workflow that
+runs on pushes to `main`. The canonical copy of that content stays in `docs/store/*.md`; `site/` is
+the published rendering of it, and the two must be updated together.
+
+**Why:** Branch-based Pages can only serve the repository root or `/docs`, and `/docs` holds this
+decision log, the superpowers specs, and the v2 roadmap — pointing Pages at it would publish all
+internal planning as a browsable website. An Actions-based deploy can publish an arbitrary
+directory, so `site/` exposes exactly the two pages Apple needs and nothing else. GitHub Pages is
+free on this already-public repository and requires no domain purchase.
+
+**Considered:** Serving `/docs` was rejected for the exposure above. A raw GitHub file or gist URL
+was rejected because Apple accepts it but it renders as a source-code view, which reads as
+unfinished to a reviewer clicking through from the listing. Buying a domain was rejected as cost and
+DNS work that buys nothing before the app has any users. Notion or Carrd was rejected because it
+puts a submission-blocking dependency outside version control.
+
+**Prompted by:** App Store Connect refuses a submission without both URLs, and a reviewer clicking a
+dead privacy-policy link is a rejection.
+
+**Touches:** `site/` (new), `.github/workflows/pages.yml` (new), `docs/store/description.md` (URL
+table), `docs/store/privacy-policy.md` and `docs/store/support.md` as the source of the page copy.
+
+**Note:** The workflow triggers on `main`, so the site publishes when the release merge lands there
+— it must be live before the app is submitted, not after.
+
 ## 2026-08-08 — Ship the first submission as 1.1.0 with only the four original screens
 **Choice:** The first App Store release contains the guitar drill, progress, tuner, and settings.
 The Chords and Suggest destinations are hidden behind a single `ReleaseScope.shippingTabs` list
