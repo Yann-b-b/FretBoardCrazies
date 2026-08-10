@@ -5,7 +5,7 @@ Character limits are Apple's. Counts below are for the text as written.
 ## Name (30 max)
 
 ```
-FretBoard Crazies
+FretBoardMastery
 ```
 
 ## Subtitle (30 max)
@@ -26,7 +26,7 @@ the app hears you — or tap the fretboard if you're practising away from your g
 ```
 Most guitarists learn shapes. Very few learn the neck.
 
-FretBoard Crazies drills the fretboard one note at a time until finding any note anywhere becomes
+FretBoardMastery drills the fretboard one note at a time until finding any note anywhere becomes
 instant. It asks for a note on a string. You play it. The app listens through the microphone and
 tells you whether you got it — no tapping, no guessing, no looking away from your instrument.
 

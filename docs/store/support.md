@@ -1,4 +1,4 @@
-# FretBoard Crazies — Support
+# FretBoardMastery — Support
 
 ## Contact
 
@@ -13,7 +13,7 @@ problem is in the drill; if it shows nothing, it is the microphone.
 
 Things that stop note detection:
 
-- **Permission denied.** Settings › Privacy & Security › Microphone › FretBoard Crazies.
+- **Permission denied.** Settings › Privacy & Security › Microphone › FretBoardMastery.
 - **Too quiet.** Pitch detection ignores signal below an amplitude threshold. Play closer to the
   device, or louder.
 - **More than one string ringing.** Detection is monophonic. Mute the strings you are not playing.

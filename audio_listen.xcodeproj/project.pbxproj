@@ -413,10 +413,10 @@
 				DEVELOPMENT_TEAM = M8T92F2RKH;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "FretBoard Crazies";
+				INFOPLIST_KEY_CFBundleDisplayName = "FretBoardMastery";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FretBoard Crazies listens through the microphone to hear the notes you play on your instrument. Audio is analysed on your device in real time and is never recorded, stored, or sent anywhere.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FretBoardMastery listens through the microphone to hear the notes you play on your instrument. Audio is analysed on your device in real time and is never recorded, stored, or sent anywhere.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -432,7 +432,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yannbaglinbunod.fretboardcrazies;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yannbaglinbunod.fretboardmastery;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
@@ -455,10 +455,10 @@
 				DEVELOPMENT_TEAM = M8T92F2RKH;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "FretBoard Crazies";
+				INFOPLIST_KEY_CFBundleDisplayName = "FretBoardMastery";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FretBoard Crazies listens through the microphone to hear the notes you play on your instrument. Audio is analysed on your device in real time and is never recorded, stored, or sent anywhere.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FretBoardMastery listens through the microphone to hear the notes you play on your instrument. Audio is analysed on your device in real time and is never recorded, stored, or sent anywhere.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -474,7 +474,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yannbaglinbunod.fretboardcrazies;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yannbaglinbunod.fretboardmastery;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
@@ -495,7 +495,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.yannbaglinbunod.fretboardcrazies.tests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.yannbaglinbunod.fretboardmastery.tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
@@ -517,7 +517,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.yannbaglinbunod.fretboardcrazies.tests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.yannbaglinbunod.fretboardmastery.tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
@@ -538,7 +538,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.yannbaglinbunod.fretboardcrazies.uitests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.yannbaglinbunod.fretboardmastery.uitests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
@@ -559,7 +559,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.yannbaglinbunod.fretboardcrazies.uitests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.yannbaglinbunod.fretboardmastery.uitests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";

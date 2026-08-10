@@ -1,15 +1,15 @@
-# Privacy Policy for FretBoard Crazies
+# Privacy Policy for FretBoardMastery
 
 Last updated: 8 August 2026
 
 ## The short version
 
-FretBoard Crazies does not collect, store, or transmit any personal information. It has no
+FretBoardMastery does not collect, store, or transmit any personal information. It has no
 analytics, no advertising, no accounts, and no network connections of any kind.
 
 ## Microphone
 
-FretBoard Crazies asks for microphone access so it can hear the notes you play on your instrument
+FretBoardMastery asks for microphone access so it can hear the notes you play on your instrument
 and tell you whether you played the right one.
 
 Audio is analysed on your device, in real time, to work out the pitch of what it hears. It is never
@@ -32,7 +32,7 @@ The app collects nothing from anyone, of any age.
 
 ## Third parties
 
-There are none. FretBoard Crazies contains no advertising SDKs, no analytics SDKs, and no crash
+There are none. FretBoardMastery contains no advertising SDKs, no analytics SDKs, and no crash
 reporters. The only third-party code is the AudioKit audio-processing library, which runs entirely
 on your device and sends nothing anywhere.
 

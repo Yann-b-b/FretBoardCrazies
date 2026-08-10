@@ -50,7 +50,7 @@ struct MicrophonePermissionTests {
     }
 
     @Test func deniedCopyNamesTheAppAndPointsToSettings() {
-        #expect(MicrophonePermissionCopy.denied.contains("FretBoard Crazies"))
+        #expect(MicrophonePermissionCopy.denied.contains("FretBoardMastery"))
         #expect(MicrophonePermissionCopy.denied.contains("Settings"))
     }
 }

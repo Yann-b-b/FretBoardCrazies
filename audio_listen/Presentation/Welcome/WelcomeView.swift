@@ -16,7 +16,7 @@ struct WelcomeView: View {
             FloatingBeltsView()
 
             VStack(spacing: compact ? 12 : 20) {
-                Text("FretboardCrazies")
+                Text("FretBoardMastery")
                     .font(.system(size: compact ? 34 : 48, weight: .bold))
                 Text("Learn every note on the fretboard, one drill at a time.")
                     .font(compact ? .subheadline : .title3)

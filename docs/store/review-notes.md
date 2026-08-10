@@ -8,7 +8,7 @@ No demo account is needed — the app has no sign-in.
 
 ## You do not need a guitar to test this app
 
-FretBoard Crazies normally listens through the microphone to hear the notes you play. If you do not
+FretBoardMastery normally listens through the microphone to hear the notes you play. If you do not
 have an instrument to hand, the welcome screen offers a second way in:
 
 1. Launch the app.

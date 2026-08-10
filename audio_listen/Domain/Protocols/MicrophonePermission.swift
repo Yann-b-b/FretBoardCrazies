@@ -19,7 +19,7 @@ extension MicrophonePermissionRequesting {
 
 enum MicrophonePermissionCopy {
     static let denied = """
-        FretBoard Crazies needs microphone access to hear the notes you play. \
+        FretBoardMastery needs microphone access to hear the notes you play. \
         Turn it on in Settings, then start again.
         """
 }

@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-BUNDLE_ID = "com.yannbaglinbunod.fretboardcrazies"
+BUNDLE_ID = "com.yannbaglinbunod.fretboardmastery"
 DEVELOPER_DIR = "/Applications/Xcode.app/Contents/Developer"
 
 REQUIRED_DEVICES = {

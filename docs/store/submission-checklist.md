@@ -4,7 +4,7 @@ Work top to bottom. Steps 1–3 happen outside this repository; 4 onward are com
 
 ## 0. Already done
 
-- [x] Bundle identifier `com.yannbaglinbunod.fretboardcrazies`, display name, device family
+- [x] Bundle identifier `com.yannbaglinbunod.fretboardmastery`, display name, device family
 - [x] Microphone usage string, export-compliance key (`ITSAppUsesNonExemptEncryption = NO`)
 - [x] Privacy manifest declaring no tracking and no collected data
 - [x] App icon, 1024×1024, **no alpha channel** (a silent rejection cause when wrong)
@@ -31,7 +31,7 @@ number and takes longer.
 developer.apple.com → Certificates, Identifiers & Profiles → Identifiers → **+**
 
 - Type: App IDs → App
-- Bundle ID: **Explicit** → `com.yannbaglinbunod.fretboardcrazies`
+- Bundle ID: **Explicit** → `com.yannbaglinbunod.fretboardmastery`
 - Capabilities: none needed. The app uses only the microphone, which is a usage-string permission
   rather than a capability.
 
@@ -44,14 +44,14 @@ This identifier is permanent. It cannot be renamed or reused later.
 | Field | Value |
 |---|---|
 | Platform | iOS |
-| Name | FretBoard Crazies |
+| Name | FretBoardMastery |
 | Primary language | English (U.S.) |
-| Bundle ID | `com.yannbaglinbunod.fretboardcrazies` |
-| SKU | `fretboardcrazies-ios` (internal only, never shown) |
+| Bundle ID | `com.yannbaglinbunod.fretboardmastery` |
+| SKU | `fretboardmastery-ios` (internal only, never shown) |
 | User access | Full Access |
 
 The **name must be unique across the entire App Store**. If it is taken, you find out here, and the
-fallback is a variant like "FretBoard Crazies: Note Trainer".
+fallback is a variant like "FretBoardMastery: Note Trainer".
 
 ## 4. Cut the release
 

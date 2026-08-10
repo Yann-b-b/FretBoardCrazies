@@ -1,5 +1,43 @@
 # Decisions
 
+## 2026-08-10 — Rename the app to FretBoardMastery and realign the bundle identifier before registering it
+**Choice:** The app ships as **FretBoardMastery**, and the permanent bundle identifier becomes
+`com.yannbaglinbunod.fretboardmastery`, replacing `com.yannbaglinbunod.fretboardcrazies`. The
+rename covers the display name, the welcome screen, the microphone-permission copy, the store
+listing, the review notes, and the published privacy and support pages. The GitHub repository keeps
+the name `FretBoardCrazies`, so the Pages URLs stay
+`https://yann-b-b.github.io/FretBoardCrazies/{privacy,support}/`.
+
+**Why:** The bundle identifier can never be changed once an App Store Connect record exists, and no
+record had been created yet — this was the last moment the two could be aligned for free. Shipping
+an identifier that names a product called Crazies under an app called Mastery would have persisted
+into crash reports, extensions, and iCloud containers for the life of the app. The repository name
+was left alone because renaming it would break two URLs that are already live and verified, for no
+benefit Apple can see.
+
+**Considered:** Keeping `fretboardcrazies` as the identifier was rejected for the permanent mismatch
+above. Renaming the GitHub repository to match was rejected because the Pages URLs are already
+serving and a rename risks them for cosmetic consistency. Keeping the name FretBoard Crazies was
+argued for on discoverability grounds — it is a distinctive term the app would rank first for,
+whereas "Fretboard Mastery" is a phrase an incumbent (`Fretbrrd: Fretboard Mastery`) already holds,
+in a category that also contains a direct mechanical competitor (`Freta`, which likewise validates
+played notes by pitch detection rather than tapping). That argument was heard and the name was
+chosen anyway; an App Store name, unlike a bundle identifier, can be changed in any later version
+that is not in review.
+
+**Prompted by:** The App Store Connect New App form was about to be submitted with the leftover
+placeholder identifier `v.audio-listen` and macOS ticked alongside iOS, which surfaced both the
+identifier question and the name change before either became permanent.
+
+**Touches:** `audio_listen.xcodeproj/project.pbxproj` (six bundle identifiers, display name,
+microphone usage string), `audio_listen/Presentation/Welcome/WelcomeView.swift`,
+`audio_listen/Domain/Protocols/MicrophonePermission.swift`,
+`audio_listenTests/MicrophonePermissionTests.swift`, `scripts/capture_screenshots.py`,
+`scripts/build_app_icon.py`, `scripts/generate_art.py`, `docs/store/*`, `site/*`, `README.md`.
+
+**Note:** The App Store record must be created with **iOS only**. macOS needs its own icon set,
+screenshots, and review cycle, and shipping it was never a v1 decision.
+
 ## 2026-08-09 — Host the mandatory store URLs on GitHub Pages from a dedicated site/ folder
 **Choice:** The privacy-policy and support URLs App Store Connect requires are served by GitHub
 Pages from a `site/` folder containing hand-written HTML, deployed by a GitHub Actions workflow that
