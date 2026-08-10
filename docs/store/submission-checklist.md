@@ -84,24 +84,55 @@ capturing. Both sets are **landscape**, since the app pins landscape.
 Output lands in `build/screenshots/`. Five shots per device: drill, correct answer, progress, tuner,
 settings.
 
-## 6. Archive and upload
+## 6. Signing
+
+Three pieces must line up. Only the middle one is yours to create.
+
+| Piece | What it is | Made by |
+|---|---|---|
+| Apple Distribution certificate | Identifies you as the signer; the private key lives in this Mac's Keychain | Xcode, on demand |
+| App ID | The registered bundle identifier from step 2 | You, in the portal |
+| App Store provisioning profile | Binds the certificate to the App ID | Xcode, on demand |
+
+The project is set to `CODE_SIGN_STYLE = Automatic` with `DEVELOPMENT_TEAM = M8T92F2RKH`, so Xcode
+issues the distribution certificate and profile the first time you distribute. Do not create them by
+hand.
+
+Before archiving, check **Xcode → Settings → Accounts**: the team must read as a paid membership,
+not "(Personal Team)". Enrolment can take an hour to propagate; the refresh arrow forces a re-check.
+
+An `Apple Development` certificate is not enough to submit — that one only builds to your own
+devices. `Apple Distribution` is the one the App Store requires.
+
+**Moving machines later:** the certificate is useless without its private key. Export it from
+Keychain Access as a `.p12` before you migrate, or you will burn one of the two Apple Distribution
+certificates Apple allows per account.
+
+## 7. Archive and upload
+
+The scripted path:
 
 ```bash
 python3 scripts/release.py 1.1.0 --archive
 ```
 
-Writes an `.xcarchive` and exports an `.ipa` to `build/v1.1.0/`.
+Writes an `.xcarchive` and exports an `.ipa` to `build/v1.1.0/`. Upload it with **Transporter**
+(free, Mac App Store).
 
 This step has never run against a live signing certificate. Expect to resolve provisioning on the
-first attempt — that is normal, not a sign anything is wrong. If it fights you, Xcode → Product →
-Archive → Distribute App does the same thing with a GUI that explains its errors better.
+first attempt — that is normal, not a sign anything is wrong.
 
-Upload the `.ipa` with **Transporter** (free, Mac App Store) or from Xcode's Organizer.
+The GUI path, which explains its errors far better and is the better choice for a first submission:
 
-After upload, App Store Connect takes 10–30 minutes to finish processing before the build is
-selectable.
+1. **Product → Destination → Any iOS Device (arm64).** Archive stays greyed out while a simulator is
+   selected, which is a confusing five minutes if you do not know why.
+2. **Product → Archive.**
+3. Organizer → **Distribute App → App Store Connect → Upload.**
 
-## 7. Fill in the listing
+Either way, App Store Connect takes 10–30 minutes to process the upload before the build becomes
+selectable. It is not stuck.
+
+## 8. Fill in the listing
 
 Copy is written and ready in [`description.md`](description.md).
 
@@ -115,7 +146,7 @@ Copy is written and ready in [`description.md`](description.md).
 - [ ] Select build 3
 - [ ] App Review Information → paste [`review-notes.md`](review-notes.md). No demo account needed.
 
-## 8. Submit
+## 9. Submit
 
 Submit for Review. First reviews typically take 24–48 hours.
 
