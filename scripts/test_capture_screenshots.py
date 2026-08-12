@@ -92,3 +92,25 @@ def test_rotate_to_landscape_leaves_a_landscape_capture_alone(tmp_path):
     if not landscape.exists():
         pytest.skip("no source image available to build a fixture")
     assert rotate_to_landscape(landscape) == (400, 200)
+
+
+def test_rotate_to_landscape_honours_the_requested_direction(tmp_path):
+    portrait = tmp_path / "p.png"
+    subprocess.run(
+        [
+            "sips",
+            "-s",
+            "format",
+            "png",
+            "-z",
+            "400",
+            "200",
+            "/System/Library/CoreServices/DefaultDesktop.heic",
+            "--out",
+            str(portrait),
+        ],
+        capture_output=True,
+    )
+    if not portrait.exists():
+        pytest.skip("no source image available to build a fixture")
+    assert rotate_to_landscape(portrait, 90) == (400, 200)

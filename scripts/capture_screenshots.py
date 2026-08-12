@@ -123,28 +123,28 @@ def image_size(path):
     return values["pixelWidth"], values["pixelHeight"]
 
 
-def rotate_to_landscape(path):
+def rotate_to_landscape(path, degrees=270):
     width, height = image_size(path)
     if width >= height:
         return width, height
     result = subprocess.run(
-        ["sips", "-r", "270", str(path)], capture_output=True, text=True
+        ["sips", "-r", str(degrees), str(path)], capture_output=True, text=True
     )
     if result.returncode != 0:
         raise SystemExit(f"could not rotate {path}")
     return image_size(path)
 
 
-def capture(udid, destination):
+def capture(udid, destination, degrees=270):
     destination.parent.mkdir(parents=True, exist_ok=True)
     result = _run(["xcrun", "simctl", "io", udid, "screenshot", str(destination)])
     if result.returncode != 0:
         raise SystemExit(f"screenshot failed for {destination.name}")
-    width, height = rotate_to_landscape(destination)
+    width, height = rotate_to_landscape(destination, degrees)
     print(f"wrote {destination} ({width} x {height})")
 
 
-def capture_device(label, candidates, out_root, shots, pause):
+def capture_device(label, candidates, out_root, shots, pause, degrees):
     listing = _run(
         ["xcrun", "simctl", "list", "devices", "available", "-j"],
         capture_output=True,
@@ -167,7 +167,7 @@ def capture_device(label, candidates, out_root, shots, pause):
     time.sleep(pause)
     for index, shot in enumerate(shots, start=1):
         input(f"  [{index}/{len(shots)}] Show '{shot}', then press Return: ")
-        capture(udid, out_root / label / f"{index:02d}-{shot}.png")
+        capture(udid, out_root / label / f"{index:02d}-{shot}.png", degrees)
 
 
 def main(argv=None):
@@ -177,18 +177,23 @@ def main(argv=None):
     parser.add_argument("--out", default=str(REPO_ROOT / "build" / "screenshots"))
     parser.add_argument("--device", action="append", default=None)
     parser.add_argument("--pause", type=float, default=3.0)
+    parser.add_argument("--rotate", type=int, choices=[0, 90, 180, 270], default=270)
+    parser.add_argument("--label", default=None)
     args = parser.parse_args(argv)
 
     shots = ["drill", "correct", "progress", "tuner", "settings"]
     out_root = Path(args.out)
 
     targets = (
-        {f"custom-{i}": [name] for i, name in enumerate(args.device, start=1)}
+        {
+            (args.label or f"custom-{i}"): [name]
+            for i, name in enumerate(args.device, start=1)
+        }
         if args.device
         else REQUIRED_DEVICES
     )
     for label, candidates in targets.items():
-        capture_device(label, candidates, out_root, shots, args.pause)
+        capture_device(label, candidates, out_root, shots, args.pause, args.rotate)
 
     print(f"\nDone. Screenshots under {out_root}")
 
