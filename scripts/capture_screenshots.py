@@ -10,8 +10,16 @@ BUNDLE_ID = "com.yannbaglinbunod.fretboardmastery"
 DEVELOPER_DIR = "/Applications/Xcode.app/Contents/Developer"
 
 REQUIRED_DEVICES = {
-    "iphone-6.9": "iPhone 17 Pro Max",
-    "ipad-13": "iPad Pro 13-inch (M4)",
+    "iphone-6.9": [
+        "iPhone 17 Pro Max",
+        "iPhone 16 Pro Max",
+        "iPhone 15 Pro Max",
+    ],
+    "ipad-13": [
+        "iPad Pro 13-inch (M5)",
+        "iPad Pro 13-inch (M4)",
+        "iPad Pro 12.9-inch (6th generation)",
+    ],
 }
 
 
@@ -33,13 +41,14 @@ def available_devices(simctl_json):
     return found
 
 
-def resolve_device(name, available):
-    if name not in available:
-        raise SystemExit(
-            f"simulator '{name}' is not available. Install it in Xcode › Settings › Components, "
-            f"or pass --device with one of: {', '.join(sorted(available))}"
-        )
-    return available[name]
+def resolve_device(candidates, available):
+    for name in candidates:
+        if name in available:
+            return name, available[name]
+    raise SystemExit(
+        f"none of {candidates} is available. Install one in Xcode › Settings › Components, "
+        f"or pass --device with one of: {', '.join(sorted(available))}"
+    )
 
 
 def boot(udid):
@@ -89,15 +98,44 @@ def install_and_launch(udid, app):
         raise SystemExit("launch failed")
 
 
+def image_size(path):
+    result = subprocess.run(
+        ["sips", "-g", "pixelWidth", "-g", "pixelHeight", str(path)],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise SystemExit(f"could not read dimensions of {path}")
+    values = {}
+    for line in result.stdout.splitlines():
+        parts = line.split(":")
+        if len(parts) == 2 and parts[0].strip() in ("pixelWidth", "pixelHeight"):
+            values[parts[0].strip()] = int(parts[1])
+    return values["pixelWidth"], values["pixelHeight"]
+
+
+def rotate_to_landscape(path):
+    width, height = image_size(path)
+    if width >= height:
+        return width, height
+    result = subprocess.run(
+        ["sips", "-r", "270", str(path)], capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        raise SystemExit(f"could not rotate {path}")
+    return image_size(path)
+
+
 def capture(udid, destination):
     destination.parent.mkdir(parents=True, exist_ok=True)
     result = _run(["xcrun", "simctl", "io", udid, "screenshot", str(destination)])
     if result.returncode != 0:
         raise SystemExit(f"screenshot failed for {destination.name}")
-    print(f"wrote {destination}")
+    width, height = rotate_to_landscape(destination)
+    print(f"wrote {destination} ({width} x {height})")
 
 
-def capture_device(label, device_name, out_root, shots, pause):
+def capture_device(label, candidates, out_root, shots, pause):
     listing = _run(
         ["xcrun", "simctl", "list", "devices", "available", "-j"],
         capture_output=True,
@@ -105,7 +143,7 @@ def capture_device(label, device_name, out_root, shots, pause):
     )
     if listing.returncode != 0:
         raise SystemExit("could not list simulators")
-    udid = resolve_device(device_name, available_devices(listing.stdout))
+    device_name, udid = resolve_device(candidates, available_devices(listing.stdout))
 
     print(f"\n=== {label}: {device_name} ===")
     boot(udid)
@@ -136,12 +174,12 @@ def main(argv=None):
     out_root = Path(args.out)
 
     targets = (
-        {f"custom-{i}": name for i, name in enumerate(args.device, start=1)}
+        {f"custom-{i}": [name] for i, name in enumerate(args.device, start=1)}
         if args.device
         else REQUIRED_DEVICES
     )
-    for label, device_name in targets.items():
-        capture_device(label, device_name, out_root, shots, args.pause)
+    for label, candidates in targets.items():
+        capture_device(label, candidates, out_root, shots, args.pause)
 
     print(f"\nDone. Screenshots under {out_root}")
 
