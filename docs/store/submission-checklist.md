@@ -134,17 +134,60 @@ selectable. It is not stuck.
 
 ## 8. Fill in the listing
 
-Copy is written and ready in [`description.md`](description.md).
+Copy is written and ready in [`description.md`](description.md). Record identifiers for reference:
 
-- [ ] Subtitle, promotional text, description, keywords
-- [ ] Category: Education (primary), Music (secondary)
-- [ ] Screenshots from step 5
+| | |
+|---|---|
+| Apple ID | 6800564657 |
+| SKU | `fretboardmastery-ios` |
+| Bundle ID | `com.yannbaglinbunod.fretboardmastery` |
+
+The fields live on three different pages, which is the main reason things get missed.
+
+**App Information** (sidebar, app-level — applies to every version)
+
+- [x] Name — FretBoardMastery
+- [x] Subtitle
+- [ ] Category — Education (primary), Music (secondary)
+- [ ] Content Rights — the app contains no third-party content, so answer No
+- [ ] Age Ratings — No to every question → 4+
+- License Agreement — Apple's Standard is correct; nothing to do
+
+**App Privacy** (sidebar, app-level)
+
+- [x] Data Types → Data Not Collected
 - [ ] Privacy Policy URL — `https://yann-b-b.github.io/FretBoardCrazies/privacy/`
+- [ ] Press **Publish**. Submission is blocked while the declaration is unpublished. This publishes
+      only the privacy disclosure, not the app.
+
+**Version page** (`iOS App 1.1.0`)
+
+- [ ] **Version field must read `1.1.0`.** Xcode creates the record defaulting to `1.0`, and a build
+      is only offered when its `CFBundleShortVersionString` matches this string exactly. A missing
+      build almost always means this mismatch rather than a processing delay.
+- [x] Keywords
+- [ ] Description, promotional text
 - [ ] Support URL — `https://yann-b-b.github.io/FretBoardCrazies/support/`
-- [ ] Age rating questionnaire → answer No to everything → 4+
-- [ ] App Privacy → **Data Not Collected** → No to every data type
+- [ ] Marketing URL (optional) — `https://yann-b-b.github.io/FretBoardCrazies/`
+- [ ] Copyright — `2026 Yann Baglin-Bunod`
+- [ ] Screenshots — see the size table below
 - [ ] Select build 3
 - [ ] App Review Information → paste [`review-notes.md`](review-notes.md). No demo account needed.
+- Routing App Coverage File — leave empty, that is for maps apps
+
+### Screenshot slots
+
+Each device size is a separate drop zone and rejects anything not matching its exact dimensions.
+Only these two are required; Apple scales them down for smaller devices.
+
+| Slot | Required | Source |
+|---|---|---|
+| iPhone 6.9" Display | 2868 × 1320 | `build/screenshots/iphone-6.9/` |
+| iPad 13" Display | 2752 × 2064 | `build/screenshots/ipad-13/` |
+| iPhone 6.5" Display | 2778 × 1284 | leave empty |
+
+Lead with `02-correct` rather than `01-drill`: the first screenshot is what appears in search
+results, and `01-drill` is the idle state showing an empty fretboard.
 
 ## 9. Submit
 
