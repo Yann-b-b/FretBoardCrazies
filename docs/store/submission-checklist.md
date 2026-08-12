@@ -189,7 +189,43 @@ Only these two are required; Apple scales them down for smaller devices.
 Lead with `02-correct` rather than `01-drill`: the first screenshot is what appears in search
 results, and `01-drill` is the idle state showing an empty fretboard.
 
+## 8b. Pricing and Availability (blocks submission)
+
+A separate sidebar item, and submission is blocked until both halves are set.
+
+- [ ] Price — **Free**. Charging requires a Paid Applications agreement with banking and tax
+      details, which is its own approval process and would block the submission. Price is editable
+      later without a new build or another review.
+- [ ] Availability — all countries and regions.
+
+### Platform availability defaults to on — turn it off
+
+Both of these arrive **ticked**, and both would ship the iOS binary to a platform it has never been
+run on:
+
+- [ ] Untick **Apple Silicon Mac Availability**
+- [ ] Untick **Apple Vision Pro Availability**
+
+The app is landscape-only, its fretboard is tapped, and its core feature needs a microphone. None of
+that has been exercised with a mouse or with eye-and-pinch input. Ratings and reviews are shared
+across every platform on one listing, so a poor experience on an untested platform lands on the
+iPhone listing that actually matters. Enable them later, after testing.
+
+**App Distribution Method is permanent once approved.** Public is correct; Private is for enterprise
+distribution. The Apple School Manager volume-discount checkbox has no effect on a free app.
+
 ## 9. Submit
+
+App Review Information, on the version page:
+
+- [ ] **Untick "Sign-in required".** It defaults to checked. Left on, either submission blocks on the
+      empty credential fields or a reviewer tries to log into an app with no accounts and rejects it.
+- [ ] Contact name, phone with country code, email
+- [ ] Notes — paste [`review-notes.txt`](review-notes.txt), not the `.md`; the field is plain text
+      and renders Markdown syntax literally. `pbcopy < docs/store/review-notes.txt`
+- [ ] Release — **Manually release this version**, so approval at an odd hour does not put the app
+      live before the product page has been looked at.
+
 
 Submit for Review. First reviews typically take 24–48 hours.
 
