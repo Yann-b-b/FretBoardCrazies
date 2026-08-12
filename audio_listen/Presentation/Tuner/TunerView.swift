@@ -19,7 +19,9 @@ struct TunerView: View {
             Text("Guitar Tuner")
                 .font(.title)
             
-            if let error = viewModel.errorMessage {
+            if viewModel.isMicrophoneAccessDenied {
+                MicrophoneAccessNotice()
+            } else if let error = viewModel.errorMessage {
                 Text(error)
                     .foregroundStyle(.red)
                     .multilineTextAlignment(.center)

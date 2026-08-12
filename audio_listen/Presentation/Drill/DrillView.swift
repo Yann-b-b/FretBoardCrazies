@@ -45,15 +45,14 @@ struct DrillView: View {
         VStack(spacing: compact ? 10 : 20) {
             header
             comboBadge
-            if let error = viewModel.errorMessage {
+            if viewModel.isMicrophoneAccessDenied {
+                MicrophoneAccessNotice()
+            } else if let error = viewModel.errorMessage {
                 Text(error).foregroundStyle(.red).multilineTextAlignment(.center)
             }
             content
         }
         .padding(compact ? 12 : 24)
-        #if os(macOS)
-        .frame(minWidth: 640, minHeight: 480)
-        #endif
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: compact ? .top : .center)
         .background(
             Image("bg-drill")

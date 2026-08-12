@@ -1,6 +1,6 @@
-# FretBoardCrazies
+# FretBoardMastery
 
-`FretBoardCrazies` is a native SwiftUI guitar-training app that combines a note-finding game with a live tuner. The project is a single Xcode app target with lightweight unit and UI test targets, plus a small layered architecture that keeps UI, domain logic, and concrete audio/persistence code separate.
+`FretBoardMastery` is a native SwiftUI guitar-training app that combines a note-finding game with a live tuner. The project is a single Xcode app target with lightweight unit and UI test targets, plus a small layered architecture that keeps UI, domain logic, and concrete audio/persistence code separate.
 
 ## Features
 
@@ -21,7 +21,7 @@ Pitch is intended for **monophonic** use (one clear note at a time). Chords or m
 ## Repository Layout
 
 ```text
-FretBoardCrazies/
+FretBoardMastery/
 ├── audio_listen/                    # Main app source
 │   ├── DI/                          # Dependency assembly
 │   ├── Domain/                      # Models, protocols, use cases

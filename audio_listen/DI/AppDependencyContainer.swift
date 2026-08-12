@@ -15,8 +15,10 @@ final class AppDependencyContainer {
     let allowedNoteNamesStore: GameAllowedNoteNamesStore
     let drillProgressRepository: DrillProgressRepositoryProtocol
     let dailyHistoryStore = DailyHistoryStore()
+    let progressionSelectionStore = ProgressionSelectionStore()
 
     private let selectedInstrumentStore = SelectedInstrumentStore()
+    private let inputModeStore = InputModeStore()
     private let allowedNoteNamesProvider: AllowedNoteNamesProviding
 
     var currentInstrument: Instrument { selectedInstrumentStore.selectedInstrument }
@@ -32,7 +34,7 @@ final class AppDependencyContainer {
     func makeTunerViewModel() -> TunerViewModel {
         let adapter = AudioKitPitchAdapter()
         let detector = DebouncedPitchDetector(wrapping: adapter, stabilityDuration: 0.10)
-        return TunerViewModel(pitchDetector: detector)
+        return TunerViewModel(pitchDetector: detector, microphonePermission: SystemMicrophonePermission())
     }
 
     @MainActor
@@ -44,23 +46,27 @@ final class AppDependencyContainer {
         let touchMode = UserDefaults.standard.bool(forKey: GameSettingsKeys.touchMode)
 
         let input: NoteInputSource
+        let microphonePermission: MicrophonePermissionRequesting?
         let touchSubmit: ((FretPosition) -> Void)?
         let nameNoteProbability: Double
         if touchMode {
             let touch = TouchInputSource(instrument: instrument)
             input = touch
+            microphonePermission = nil
             touchSubmit = { [weak touch] position in touch?.submit(position) }
             nameNoteProbability = 0
         } else {
             let adapter = AudioKitPitchAdapter()
             let detector = DebouncedPitchDetector(wrapping: adapter, stabilityDuration: 0.10)
             input = MicNoteSource(detector: detector)
+            microphonePermission = SystemMicrophonePermission()
             touchSubmit = nil
             nameNoteProbability = 0.25
         }
 
         return DrillViewModel(
             input: input,
+            microphonePermission: microphonePermission,
             touchSubmit: touchSubmit,
             selectNextPrompt: SelectNextPromptUseCase(nameNoteProbability: nameNoteProbability, instrument: instrument),
             updateStats: UpdateItemStatsUseCase(),
@@ -81,6 +87,16 @@ final class AppDependencyContainer {
 
     @MainActor
     func makeRootViewModel() -> RootViewModel {
-        RootViewModel()
+        RootViewModel(inputModeStore: inputModeStore)
+    }
+
+    @MainActor
+    func makeProgressionSession() -> ProgressionSession {
+        ProgressionSession(
+            progression: progressionSelectionStore.progression,
+            tonic: progressionSelectionStore.tonic,
+            rootString: progressionSelectionStore.rootString,
+            displayMode: progressionSelectionStore.displayMode
+        )
     }
 }

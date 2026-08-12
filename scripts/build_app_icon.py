@@ -2,7 +2,7 @@ import os
 
 from PIL import Image, ImageDraw
 
-PROJECT = "/Users/yannbaglinbunod/Documents/Projects/Personal/FretBoardCrazies"
+PROJECT = "/Users/yannbaglinbunod/Documents/Projects/Personal/FretBoardMastery"
 SRC = os.path.join(PROJECT, "art/app-icon.png")
 OUT = os.path.join(PROJECT, "audio_listen/Assets.xcassets/AppIcon.appiconset")
 MASTER = 1024

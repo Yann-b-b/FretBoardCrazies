@@ -6,8 +6,10 @@ struct RootView: View {
     var body: some View {
         switch viewModel.route {
         case .welcome:
-            WelcomeView(onStart: { withAnimation(.easeInOut) { viewModel.enterApp() } })
-                .transition(.opacity)
+            WelcomeView(onStart: { mode in
+                withAnimation(.easeInOut) { viewModel.enterApp(using: mode) }
+            })
+            .transition(.opacity)
         case .main:
             ContentView()
                 .transition(.opacity)

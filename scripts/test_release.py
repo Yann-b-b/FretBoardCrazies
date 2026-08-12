@@ -7,6 +7,8 @@ from release import (
     bump_pbxproj,
     current_build_number,
     deslug,
+    development_team,
+    export_options_plist,
     finalize_entry,
     highlights_from_merges,
     highlights_plaintext,
@@ -14,6 +16,7 @@ from release import (
     pick_ios_simulator,
     render_changelog_entry,
     run_release,
+    version_sorts_above,
 )
 
 
@@ -253,3 +256,44 @@ def test_tag_message_uses_curated_highlights(tmp_path):
         tmp_path / "fastlane" / "metadata" / "en-US" / "release_notes.txt"
     ).read_text()
     assert notes == "Curated line one\nCurated line two\n"
+
+
+def test_version_sorts_above_accepts_a_higher_version():
+    assert version_sorts_above("1.1.0", "1.0.0")
+    assert version_sorts_above("1.10.0", "1.9.0")
+    assert version_sorts_above("2.0.0", "1.99.99")
+
+
+def test_version_sorts_above_rejects_equal_and_lower():
+    assert not version_sorts_above("1.0.0", "1.0.0")
+    assert not version_sorts_above("1.0.0", "1.1.0")
+    assert not version_sorts_above("1.9.0", "1.10.0")
+
+
+def test_run_release_rejects_a_version_that_does_not_move_forward(tmp_path):
+    _init_repo(tmp_path)
+    with pytest.raises(SystemExit) as excinfo:
+        run_release(tmp_path, "0.9.0", edit=_canned_edit)
+    assert "1.0" in str(excinfo.value)
+
+
+def test_run_release_rejects_reusing_the_current_version(tmp_path):
+    _init_repo(tmp_path)
+    with pytest.raises(SystemExit):
+        run_release(tmp_path, "1.0", edit=_canned_edit)
+
+
+def test_export_options_targets_the_app_store():
+    plist = export_options_plist("M8T92F2RKH")
+    assert "<string>app-store-connect</string>" in plist
+    assert "<string>M8T92F2RKH</string>" in plist
+
+
+def test_development_team_is_read_from_the_project():
+    pbx = PBX_SAMPLE + "\t\t\t\tDEVELOPMENT_TEAM = M8T92F2RKH;\n"
+    assert development_team(pbx) == "M8T92F2RKH"
+
+
+def test_development_team_raises_when_absent():
+    with pytest.raises(ValueError):
+        development_team(PBX_SAMPLE)
