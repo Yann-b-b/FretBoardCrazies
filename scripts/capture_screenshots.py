@@ -54,6 +54,15 @@ def resolve_device(candidates, available):
 def boot(udid):
     _run(["xcrun", "simctl", "boot", udid], capture_output=True, text=True)
     _run(["xcrun", "simctl", "bootstatus", udid, "-b"], capture_output=True, text=True)
+    show_simulator_window(udid)
+
+
+def show_simulator_window(udid):
+    _run(
+        ["open", "-a", "Simulator", "--args", "-CurrentDeviceUDID", udid],
+        capture_output=True,
+        text=True,
+    )
 
 
 def build_for_simulator(udid, derived_data):
