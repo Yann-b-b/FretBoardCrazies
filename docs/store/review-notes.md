@@ -8,27 +8,18 @@ renders Markdown syntax literally.
 pbcopy < docs/store/review-notes.txt
 ```
 
-The field caps at **4000 characters**. The current text is ~3990 with the device placeholder still in
-it, so check before pasting if you add anything:
+The field caps at **4000 characters** and the current text is **3976**, so check before pasting if
+you add anything:
 
 ```bash
 python3 -c "import pathlib; t=pathlib.Path('docs/store/review-notes.txt').read_text(); print(len(t), 4000-len(t))"
 ```
 
-## Before pasting: fill in the placeholder
+## The device line
 
-Line under `2. DEVICES AND OS TESTED` reads:
-
-```
-<<FILL IN: e.g. iPhone 15 Pro (iOS 26.1) — physical device>>
-```
-
-Replace it with the **physical** iPhone you actually ran the build on, and its iOS version. Do not
-guess and do not list a device you have not run it on — this is a question Apple can check against
-the screen recording, and a mismatch turns an information request into a credibility problem.
-
-If you have never run it on a real device, do that first. It is the same session that produces the
-recording.
+Item 2 and item 1 both name **iPhone 17 on iOS 26.6**. Keep them in step: Apple checks the stated
+device against the screen recording, and a mismatch turns an information request into a credibility
+problem. If you record on a different phone, change both lines.
 
 ## Responding to a Guideline 2.1 "Information Needed" rejection
 

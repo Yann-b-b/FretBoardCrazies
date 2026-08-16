@@ -14,12 +14,12 @@ The app is landscape-only on iPhone and iPad. A fretboard is a wide object; port
 ANSWERS TO THE SEVEN ITEMS REQUESTED
 
 1. SCREEN RECORDING
-Attached to this Resolution Center reply. Captured on a physical iPhone running the current release of iOS. It begins at launch and shows the welcome screen, the microphone prompt, the drill in both input modes, a correct answer, Progress, Tuner, and Settings.
+Attached to this Resolution Center reply. Captured on a physical iPhone 17 running iOS 26.6. It begins at launch and shows the welcome screen, the microphone prompt, the drill in both input modes, a correct answer, Progress, Tuner, and Settings.
 
 2. DEVICES AND OS TESTED
-<<FILL IN: e.g. iPhone 15 Pro (iOS 26.1) — physical device>>
-iPad Pro 13-inch (M5) simulator, iOS 26.
-iPhone 17 Pro Max simulator, iOS 26.
+iPhone 17 (iOS 26.6) — physical device.
+iPhone 17 Pro Max simulator, iOS 26.4 and 26.5.
+iPad Pro 13-inch (M5) simulator, iOS 26.4 and 26.5.
 Minimum supported version is iOS 18.2. Unit tests run against macOS and an iOS simulator on every release.
 
 3. FUNCTION AND TARGET AUDIENCE
