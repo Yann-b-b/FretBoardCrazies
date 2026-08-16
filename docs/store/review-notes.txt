@@ -27,7 +27,7 @@ FretBoardMastery teaches guitar and bass players where every note sits on the fr
 
 The problem: most beginners learn shapes and tab without learning the notes underneath them, which blocks sight-reading, improvisation, and playing with other musicians. Memorising a chart does not transfer to the instrument.
 
-The solution: a drill alternating two prompt types on a spaced-repetition schedule. About 75% of prompts name a note and string ("D — string 6") and you play or tap it; the other 25% highlight a fret and you name it. Wrong answers come back sooner. Progress is tracked per note-and-string pair and shown as accuracy, a streak, and a belt rank.
+The solution: a drill alternating two prompt types on a spaced-repetition schedule. About 75% of prompts name a note and string ("D — string 6") and you play or tap it; the other 25% highlight a fret and you name it. Touch mode uses the first type only. Wrong answers come back sooner. Progress is tracked per note-and-string pair and shown as accuracy, a streak, and a belt rank.
 
 Audience: beginner and intermediate guitarists and bassists, self-taught players, and music students. No theory knowledge required.
 
@@ -46,7 +46,7 @@ It links two MIT-licensed Swift packages, both running entirely on-device: Audio
 Microphone audio is analysed in real time to detect pitch and is never recorded, stored, or transmitted. The prompt appears only if you choose "I'm playing an instrument". Declining it shows an explanatory notice with a button into system Settings rather than failing silently.
 
 6. REGIONAL DIFFERENCES
-None. The app functions identically in every region. There is no server, no remote configuration, no geo-gating, and no region-specific content. It ships in English only.
+None. The app functions identically in every region. There is no server, no remote configuration, no geo-gating, and no region-specific content. English only.
 
 7. REGULATED INDUSTRY OR THIRD-PARTY MATERIAL
 Neither applies. The app is not in a regulated industry and contains no third-party or licensed content — no recordings, songs, tablature, or artwork from any other source. All content is generated from music theory: note names and their positions on a standard-tuned fretboard, which are facts rather than protected material. The two libraries in item 5 are used under the MIT licence.
