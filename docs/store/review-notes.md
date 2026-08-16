@@ -28,7 +28,7 @@ front, and it is close to routine for a first submission from a new account. **N
 new build number are required** — the binary was never the objection.
 
 1. Run the app on a physical iPhone and screen-record it (see below).
-2. Fill in the device placeholder in `review-notes.txt`.
+2. Check the device line in `review-notes.txt` still matches the phone you recorded on.
 3. Paste the file into **App Review Information → Notes** on the version page, replacing what is
    there. This is what Apple means by "include this information for future submissions" — it carries
    forward to every later version.
