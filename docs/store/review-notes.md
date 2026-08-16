@@ -1,39 +1,74 @@
 # App Review notes
 
-Paste the section below into App Review Information → Notes in App Store Connect.
+The notes themselves live in [`review-notes.txt`](review-notes.txt) — that file is the single copy.
+Paste it, do not retype it, and do not paste this file: the App Store Connect field is plain text and
+renders Markdown syntax literally.
 
-No demo account is needed — the app has no sign-in.
+```bash
+pbcopy < docs/store/review-notes.txt
+```
 
----
+The field caps at **4000 characters**. The current text is ~3990 with the device placeholder still in
+it, so check before pasting if you add anything:
 
-## You do not need a guitar to test this app
+```bash
+python3 -c "import pathlib; t=pathlib.Path('docs/store/review-notes.txt').read_text(); print(len(t), 4000-len(t))"
+```
 
-FretBoardMastery normally listens through the microphone to hear the notes you play. If you do not
-have an instrument to hand, the welcome screen offers a second way in:
+## Before pasting: fill in the placeholder
 
-1. Launch the app.
-2. On the welcome screen, tap **"I'll tap the fretboard"** (the second button).
-3. The drill now accepts taps directly on the on-screen fretboard. Tap the fret the prompt asks for.
+Line under `2. DEVICES AND OS TESTED` reads:
 
-You can switch between the two at any time in **Settings › Game › Touch mode**, or by relaunching
-and choosing the other button.
+```
+<<FILL IN: e.g. iPhone 15 Pro (iOS 26.1) — physical device>>
+```
 
-## Microphone
+Replace it with the **physical** iPhone you actually ran the build on, and its iOS version. Do not
+guess and do not list a device you have not run it on — this is a question Apple can check against
+the screen recording, and a mismatch turns an information request into a credibility problem.
 
-The microphone permission prompt appears only if you choose "I'm playing an instrument". Audio is
-analysed on-device in real time to detect pitch. It is never recorded, stored, or transmitted. The
-app makes no network requests of any kind, which is why the privacy declaration reports no data
-collection.
+If you have never run it on a real device, do that first. It is the same session that produces the
+recording.
 
-If you decline the permission, the app shows an explanatory notice with a button into system
-Settings rather than failing silently.
+## Responding to a Guideline 2.1 "Information Needed" rejection
 
-## Orientation
+This is not a bug report and not a metadata violation. It is Apple asking for the review package up
+front, and it is close to routine for a first submission from a new account. **No new build and no
+new build number are required** — the binary was never the objection.
 
-The app is landscape-only on both iPhone and iPad. A fretboard is a wide object; portrait would
-either shrink it below usability or crop it.
+1. Run the app on a physical iPhone and screen-record it (see below).
+2. Fill in the device placeholder in `review-notes.txt`.
+3. Paste the file into **App Review Information → Notes** on the version page, replacing what is
+   there. This is what Apple means by "include this information for future submissions" — it carries
+   forward to every later version.
+4. Go to **Resolution Center**, attach the recording, and reply. Answer in the same 1–7 order Apple
+   used so the reviewer can tick them off; say the notes field has been updated with the same text.
+5. Replying returns the app to the review queue on its own. Do not resubmit and do not upload a new
+   build.
 
-## What is in this build
+### The screen recording
 
-Four screens: **Drill** (find the prompted note on the fretboard), **Progress** (accuracy, streaks,
-and belt rank), **Tuner** (live pitch and tuning readout), and **Settings**.
+Apple is specific: a **physical device**, **current iOS**, starting from launch.
+
+- Install to your iPhone from Xcode, or via TestFlight.
+- Control Centre → Screen Recording. Keep it under about two minutes.
+- Cover, in order: launch → welcome screen → tap **"I'm playing an instrument"** so the microphone
+  permission prompt is on camera → the drill answering a prompt → back to welcome → tap **"I'll tap
+  the fretboard"** → answer a prompt by tapping → Progress → Tuner → Settings.
+- Showing **both** input modes is the point. It answers the permission-prompt question in item 1 and
+  pre-empts a reviewer who has no guitar, which is the app's main standing rejection risk.
+
+## What the seven answers commit us to
+
+These are checkable claims. If any stops being true, the notes must change in the same commit as the
+code:
+
+| Claim | Verify with |
+|---|---|
+| No network requests of any kind | `grep -rn --include="*.swift" "URLSession\|NWConnection" audio_listen/` returns nothing |
+| Only AudioKit and SoundpipeAudioKit are linked | `XCRemoteSwiftPackageReference` entries in `project.pbxproj` |
+| No accounts, IAP, subscriptions, ads, or user content | none present in the target |
+| 75/25 prompt split | `nameNoteProbability: Double = 0.25` in `SelectNextPromptUseCase` |
+| Guitar and bass only | `Instruments.all` |
+| Minimum iOS 18.2 | `IPHONEOS_DEPLOYMENT_TARGET` |
+| Four screens ship | `ReleaseScope.shippingTabs` |

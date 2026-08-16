@@ -160,3 +160,37 @@ platforms, display name, export-compliance key), `audio_listen/PrivacyInfo.xcpri
 **Note:** `macosx` stays in `SUPPORTED_PLATFORMS` even though macOS is not a v1 App Store target —
 `scripts/release.py --verify` runs the unit test suite against `platform=macOS`, and removing it
 would break that check. Shipping to the Mac App Store remains a separate, explicit decision.
+
+## 2026-08-15 — Answer App Review's seven questions in the notes field, permanently
+**Choice:** `docs/store/review-notes.txt` is expanded from a guitar-free testing guide into the full
+review package, answering Apple's seven Guideline 2.1 questions in their own numbering: screen
+recording, devices tested, function and audience, setup, external services, regional differences, and
+third-party material. It stays the single copy of that text; `review-notes.md` stops duplicating it
+and becomes the procedure for replying plus a table mapping each factual claim to the one-line
+command that verifies it. No new build is cut.
+
+**Why:** The rejection was Guideline 2.1 *Information Needed*, not a defect — the binary was never
+the objection, so a resubmission would have burned a review cycle without changing anything. Apple's
+message says to include this information "for future submissions", and the notes field persists
+across versions, which makes the expanded text a permanent fixture rather than a one-off reply. The
+answers assert checkable things (no network calls, two MIT libraries, a 75/25 prompt split, no
+accounts or IAP); pairing each with its verification command is what stops the notes drifting from
+the code and turning an information request into a credibility problem on a later submission.
+
+**Considered:** Replying only in Resolution Center was rejected because the next version would arrive
+with the same thin notes and invite the same rejection. Keeping the long form in `review-notes.md`
+and hand-trimming a paste version was rejected as two copies that will diverge — the field is plain
+text and caps at 4000 characters, so the `.txt` has to be the authoritative one. Naming a physical
+test device on our behalf was rejected outright: the recording Apple asked for would contradict a
+guess, so the line carries an explicit placeholder the developer must fill.
+
+**Prompted by:** FretBoardMastery 1.1.0 (build 3) was rejected under Guideline 2.1 on 2026-08-15,
+hours after submission, with a seven-item information request and a demand for a screen recording
+captured on a physical device running current iOS.
+
+**Touches:** `docs/store/review-notes.txt`, `docs/store/review-notes.md`,
+`docs/store/submission-checklist.md`.
+
+**Note:** The app has still never been run on a physical device — every test has been simulator or
+macOS. Producing the recording is therefore also the first real-hardware run, and is the one step
+here that could surface a genuine bug.

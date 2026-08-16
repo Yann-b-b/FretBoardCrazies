@@ -235,9 +235,26 @@ each resubmission needs a new build number only if you changed the binary.
 
 ## Most likely rejection causes, in order
 
-1. **Reviewer cannot get past the drill.** Mitigated by the welcome-screen fork and the review notes,
+1. **Guideline 2.1 — Information Needed.** What actually happened on the first submission, and close
+   to routine for a new account. Apple asks seven questions and wants a screen recording from a
+   physical device. Nothing is wrong with the binary. `review-notes.txt` now answers all seven; see
+   [`review-notes.md`](review-notes.md) for how to reply. **No new build is needed.**
+2. **Reviewer cannot get past the drill.** Mitigated by the welcome-screen fork and the review notes,
    which is why those notes lead with it. If it still happens, reply in Resolution Center pointing at
    the second button — do not resubmit blind.
-2. **A dead privacy-policy or support URL.** Both return 200 today; re-check right before submitting.
-3. **Screenshots that do not match the app.** Do not add marketing frames or text that show features
+3. **A dead privacy-policy or support URL.** Both return 200 today; re-check right before submitting.
+4. **Screenshots that do not match the app.** Do not add marketing frames or text that show features
    the four-tab build does not have.
+
+## Before every submission from now on
+
+The expanded notes are not a one-off apology for the first rejection — Apple's message says to
+include this information "for future submissions", and the field carries forward between versions.
+
+- [ ] The device line in `review-notes.txt` names a **physical** device you actually ran this build
+      on, with its iOS version.
+- [ ] A screen recording from that device, starting at launch, showing both input modes and the
+      microphone prompt. Re-record it whenever the UI changes materially.
+- [ ] The seven answers still match the code — the verification table at the bottom of
+      [`review-notes.md`](review-notes.md) lists the one-line check for each.
+- [ ] Notes pasted as plain text and under 4000 characters.

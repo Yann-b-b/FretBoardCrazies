@@ -6,20 +6,49 @@ FretBoardMastery normally listens through the microphone to hear the notes you p
 2. On the welcome screen, tap "I'll tap the fretboard" (the second button).
 3. The drill now accepts taps directly on the on-screen fretboard. Tap the fret the prompt asks for.
 
-You can switch between the two at any time in Settings > Game > Touch mode, or by relaunching and choosing the other button.
+You can switch between the two at any time in Settings > Game > Touch mode.
 
-MICROPHONE
+The app is landscape-only on iPhone and iPad. A fretboard is a wide object; portrait would shrink it below usability.
 
-The microphone permission prompt appears only if you choose "I'm playing an instrument". Audio is analysed on-device in real time to detect pitch. It is never recorded, stored, or transmitted. The app makes no network requests of any kind, which is why the privacy declaration reports no data collection.
 
-If you decline the permission, the app shows an explanatory notice with a button into system Settings rather than failing silently.
+ANSWERS TO THE SEVEN ITEMS REQUESTED
 
-ORIENTATION
+1. SCREEN RECORDING
+Attached to this Resolution Center reply. Captured on a physical iPhone running the current release of iOS. It begins at launch and shows the welcome screen, the microphone prompt, the drill in both input modes, a correct answer, Progress, Tuner, and Settings.
 
-The app is landscape-only on both iPhone and iPad. A fretboard is a wide object; portrait would either shrink it below usability or crop it.
+2. DEVICES AND OS TESTED
+<<FILL IN: e.g. iPhone 15 Pro (iOS 26.1) — physical device>>
+iPad Pro 13-inch (M5) simulator, iOS 26.
+iPhone 17 Pro Max simulator, iOS 26.
+Minimum supported version is iOS 18.2. Unit tests run against macOS and an iOS simulator on every release.
 
-WHAT IS IN THIS BUILD
+3. FUNCTION AND TARGET AUDIENCE
+FretBoardMastery teaches guitar and bass players where every note sits on the fretboard.
 
-Four screens: Drill (find the prompted note on the fretboard), Progress (accuracy, streaks, and belt rank), Tuner (live pitch and tuning readout), and Settings.
+The problem: most beginners learn shapes and tab without learning the notes underneath them, which blocks sight-reading, improvisation, and playing with other musicians. Memorising a chart does not transfer to the instrument.
 
-No account or sign-in is required.
+The solution: a drill alternating two prompt types on a spaced-repetition schedule. About 75% of prompts name a note and string ("D — string 6") and you play or tap it; the other 25% highlight a fret and you name it. Wrong answers come back sooner. Progress is tracked per note-and-string pair and shown as accuracy, a streak, and a belt rank.
+
+Audience: beginner and intermediate guitarists and bassists, self-taught players, and music students. No theory knowledge required.
+
+4. SETUP AND ACCESS
+No login, no account, no demo credentials or sample files. Every feature is available immediately at first launch.
+
+Launch > choose an input mode on the welcome screen > the drill starts. Four tabs across the bottom: Drill, Progress, Tuner, Settings.
+
+Settings holds three options: limit frets to the first twelve, enable the answer countdown, and touch mode (the same toggle as the welcome-screen choice). Instrument switches between guitar and bass.
+
+5. EXTERNAL SERVICES AND TOOLS
+None. The app makes no network requests of any kind — no URLSession, no networking framework, and no analytics, advertising, authentication, payment, or AI service anywhere in the binary. This is why the privacy declaration reports no data collection.
+
+It links two MIT-licensed Swift packages, both running entirely on-device: AudioKit (5.6.5) for audio input and SoundpipeAudioKit (5.6.0) for pitch detection. Neither transmits anything.
+
+Microphone audio is analysed in real time to detect pitch and is never recorded, stored, or transmitted. The prompt appears only if you choose "I'm playing an instrument". Declining it shows an explanatory notice with a button into system Settings rather than failing silently.
+
+6. REGIONAL DIFFERENCES
+None. The app functions identically in every region. There is no server, no remote configuration, no geo-gating, and no region-specific content. It ships in English only.
+
+7. REGULATED INDUSTRY OR THIRD-PARTY MATERIAL
+Neither applies. The app is not in a regulated industry and contains no third-party or licensed content — no recordings, songs, tablature, or artwork from any other source. All content is generated from music theory: note names and their positions on a standard-tuned fretboard, which are facts rather than protected material. The two libraries in item 5 are used under the MIT licence.
+
+There are no accounts, no user-generated content, no in-app purchases, no subscriptions, and no advertising.
