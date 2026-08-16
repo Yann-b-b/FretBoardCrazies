@@ -29,7 +29,7 @@ The problem: most beginners learn shapes and tab without learning the notes unde
 
 The solution: a drill alternating two prompt types on a spaced-repetition schedule. About 75% of prompts name a note and string ("D — string 6") and you play or tap it; the other 25% highlight a fret and you name it. Touch mode uses the first type only. Wrong answers come back sooner. Progress is tracked per note-and-string pair and shown as accuracy, a streak, and a belt rank.
 
-Audience: beginner and intermediate guitarists and bassists, self-taught players, and music students. No theory knowledge required.
+Audience: beginner and intermediate guitarists and bassists, self-taught players, and music students. No theory needed.
 
 4. SETUP AND ACCESS
 No login, no account, no demo credentials or sample files. Every feature is available immediately at first launch.
