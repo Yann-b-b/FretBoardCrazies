@@ -194,3 +194,59 @@ captured on a physical device running current iOS.
 **Note:** The app has still never been run on a physical device — every test has been simulator or
 macOS. Producing the recording is therefore also the first real-hardware run, and is the one step
 here that could surface a genuine bug.
+
+## 2026-09-06 — Pick note-naming system by locale on first read, with a Settings override
+**Choice:** The app gains a notation preference (letters vs fixed-do solfège) that defaults from
+the device locale (fr/es/it/pt → solfège, everything else → letters) the first time it is read,
+and is overridable from a picker in SettingsView. The preference is display-only: `NoteName`
+remains the single identity for the twelve pitches, and solfège appears solely where
+`displayName` strings are rendered. Solfège spellings mirror the letter strings one-for-one:
+do, do#, ré, ré#, mi, fa, fa#, sol, sol#, la, la#, si — accented ré, `#` for sharps, octave
+suffix unchanged (`la4`). Long-form accidentals ("do dièse") were rejected because two-character
+labels are a layout assumption across fret labels, answer buttons, and the tuner readout;
+unaccented "re" was rejected as a misspelling to the very users the feature serves.
+
+**Why:** Solfège users are defined by where they learned music, which locale approximates well
+enough to make the common case zero-config, while the override respects players who learned the
+other system. Display-only keeps game logic, answer checking, and every UserDefaults store
+untouched, since they all traffic in `NoteName` raw values, never strings.
+
+**Considered:** A parallel `SolfegeNoteName` enum was rejected because it duplicates identity —
+every store, comparison, and signature would need to know which enum it holds or convert between
+them. A Settings-only toggle (no locale default) was rejected as leaving the majority of solfège
+users to discover a buried setting. Locale-only with no override was rejected as magic with no
+escape hatch and painful to test.
+
+**Prompted by:** Feature request to display "do re mi" note names, raised 2026-09-06, with the
+explicit constraint of changing as little existing code as possible.
+
+**Touches:** `audio_listen/Domain/Models/Note.swift` (display path), a new notation store in
+`Infrastructure/Game/`, `Presentation/Settings/SettingsView.swift`; remaining display call sites
+to be enumerated in the design spec.
+
+## 2026-09-06 — Deliver the notation choice as observed state, not a hidden global
+**Choice:** The notation preference flows to the UI as a parameter: `displayName(style:)` on
+`NoteName`/`Note`/`ChordNaming`, with a `NotationSettings` ObservableObject injected via the
+environment (views) and the DI container (TunerViewModel, DrillViewModel). Roughly a dozen
+call sites change by one line each; the no-argument `displayName` stays as the `.letters`
+default. Long form: `docs/superpowers/specs/2026-09-06-notation-style-design.md`.
+
+**Why:** SwiftUI re-renders only on tracked dependencies. The call-site edits are what register
+the dependency, so every screen flips the moment the Settings picker changes. The chord screens
+behind `AppTab.shippingTabs` are converted too — they are compiled, tested, and one line from
+shipping, so skipping them plants a bug that detonates at reveal.
+
+**Considered:** Having `displayName` read a global `NotationStyle.current` was rejected despite
+being the smallest diff: the read is invisible to SwiftUI, so continuously-updating screens
+(tuner) would flip while static ones kept letters — the app disagreeing with itself. A
+`NoteNameFormatting` protocol through the DI container was rejected as more files and churn for
+identical behavior.
+
+**Prompted by:** The "do re mi" display feature (entry above) needed a route from the stored
+preference to twelve render sites without touching game logic.
+
+**Touches:** `Domain/Models/Note.swift`, `Domain/Models/NotationStyle.swift` (new),
+`Domain/UseCases/ChordNaming.swift`, `Infrastructure/Game/NotationStyleStore.swift` (new),
+`Presentation/Settings/NotationSettings.swift` (new), `SettingsView`, `ContentView`,
+`DrillView`, `DrillViewModel`, `TunerViewModel`, `ChordSuggesterView`, `ChordProgressionView`,
+`DI/AppDependencyContainer.swift`.
