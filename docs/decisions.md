@@ -250,3 +250,23 @@ preference to twelve render sites without touching game logic.
 `Presentation/Settings/NotationSettings.swift` (new), `SettingsView`, `ContentView`,
 `DrillView`, `DrillViewModel`, `TunerViewModel`, `ChordSuggesterView`, `ChordProgressionView`,
 `DI/AppDependencyContainer.swift`.
+
+## 2026-09-20 — Mix touch-mode game sounds over other apps' audio with `.ambient`
+**Choice:** Touch mode configures the shared `AVAudioSession` with the `.ambient` category so
+combo dings layer over whatever the user is already playing (Spotify, Apple Music) instead of
+pausing it. Mic-driven paths (tuner, guitar drill) keep `.playAndRecord` untouched — recording
+legitimately owns the session there.
+**Why:** Today touch mode never configures the session, so the first `AVAudioPlayer.play()`
+implicitly activates it under the default `.soloAmbient`, a non-mixable category whose
+activation tells iOS to pause other apps' audio. `.ambient` is the mixable sibling built
+exactly for game feedback sounds, and it obeys the ring/silent switch — a muted phone stays
+quiet, which matches user expectations for a game.
+**Considered:** `.playback` + `.mixWithOthers` also mixes but ignores the silent switch, so
+dings would sound on a muted phone; that suits apps whose audio is the product, not feedback
+blips. Doing nothing per-mode (one app-wide `.ambient` at launch) fails once the tuner runs,
+because categories are sticky and the session would stay `.playAndRecord` afterwards.
+**Prompted by:** Playing touch-mode drills while listening to music kills the music on the
+first correct-answer ding, reported 2026-09-20.
+**Touches:** Touch-mode session configuration (placement under design — likely
+`Infrastructure/Input/TouchInputSource.swift`), leaving
+`Infrastructure/Audio/AudioKitPitchAdapter.swift` and `ComboSoundPlayer.swift` behavior intact.
