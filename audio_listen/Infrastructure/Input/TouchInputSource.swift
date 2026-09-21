@@ -1,3 +1,4 @@
+import AVFoundation
 import Combine
 
 final class TouchInputSource: NoteInputSource {
@@ -10,7 +11,11 @@ final class TouchInputSource: NoteInputSource {
 
     var notes: AnyPublisher<Note, Never> { subject.eraseToAnyPublisher() }
 
-    func start() throws {}
+    func start() throws {
+        #if os(iOS)
+        try AVAudioSession.sharedInstance().setCategory(.ambient)
+        #endif
+    }
     func stop() {}
 
     func submit(_ position: FretPosition) {
